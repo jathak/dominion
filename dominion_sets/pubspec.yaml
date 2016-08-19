@@ -1,0 +1,14 @@
+name: dominion_sets
+description: Implementation of various Dominion kingdom card sets
+version: 0.0.1
+#author: Jack Thakar <email@example.com>
+#homepage: https://www.example.com
+environment:
+  sdk: '>=1.13.0 <2.0.0'
+
+dependencies:
+    dominion_core:
+        path: "../dominion_core"
+        
+dev_dependencies:
+    test: ^0.12.5
