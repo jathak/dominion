@@ -45,6 +45,12 @@ class Game {
       safeSend(socket, msg);
     }
   }
+  
+  encodeSupply(Card card) {
+    var stub = encodeOption(card);
+    stub['count'] = engine.supply.supplyOf(card).count;
+    return stub;
+  }
 
   join(String username, WebSocket socket) {
     if (!sockets.containsKey(username)) {
@@ -174,11 +180,6 @@ class Game {
 
   makeSupplyStateMsg() {
     var supply = engine.supply;
-    encodeSupply(Card card) {
-      var stub = encodeOption(card);
-      stub['count'] = supply.supplyOf(card).count;
-      return stub;
-    }
     var kingdom = new CardBuffer();
     var treasures = new CardBuffer();
     var vps = new CardBuffer();
@@ -242,7 +243,7 @@ class NetworkController extends PlayerController {
       'event': event.toString(),
       'currentPlayer': game.engine.currentPlayer.name,
       'allowNone': allowNone,
-      'validCards': supplyCards.where(conditions.allowsFor).map(encodeOption).toList()
+      'validCards': supplyCards.where(conditions.allowsFor).map(game.encodeSupply).toList()
     };
     var result = await game.requestFromUser(name, 'selectCardFromSupply', metadata);
     return CardRegistry.find(result);

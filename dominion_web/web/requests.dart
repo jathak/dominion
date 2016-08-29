@@ -82,7 +82,6 @@ cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
       confirm.classes.remove('enabled');
     }
   }
-  int count = 0;
   for (CardStub stub in stubs) {
     var cardEl;
     if (stub is CardStub) {

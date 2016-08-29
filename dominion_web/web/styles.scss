@@ -24,8 +24,8 @@ html, body {
   border: 8px solid transparent;
   box-sizing: border-box;
   transition: -webkit-filter 0.35s, border-color 0.35s;
+  position: relative;
   .status {
-    display: none;
     color: #fff;
     background: #57f;
   }
@@ -118,12 +118,6 @@ html, body {
   .basic {
     @include card-scale(40%);
     .treasures, .vps {display: inline-block;}
-  }
-  .card {
-    position: relative;
-    .status {
-      display: block;
-    }
   }
 }
 

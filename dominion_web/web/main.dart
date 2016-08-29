@@ -150,7 +150,7 @@ Element makeCardElement(CardStub card) {
   if (name == 'platinum' || name == 'colony') expansion = 'prosperity';
   var el = new DivElement();
   el.classes = ['card', 'set-$expansion', 'type-$name'];
-  if (card.count > 0) {
+  if (card.count != null && card.count > 0) {
     var status = new DivElement()
       ..text = "${card.count}"
       ..classes = ['status'];
@@ -179,7 +179,7 @@ Element makeHeaderElement(CardStub card) {
 
 class CardStub {
   String name, expansion;
-  int count = 0;
+  int count = null;
   bool selectable = false;
   CardStub(this.name, [this.expansion = null]);
 
