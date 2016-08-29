@@ -1,4 +1,4 @@
-name: 'dominion'
+name: 'dominion_web'
 version: 0.0.1
 description: An absolute bare-bones web app.
 #author: Jack Thakar <email@example.com>
@@ -10,6 +10,8 @@ environment:
 dependencies:
   browser: '>=0.10.0 <0.11.0'
   dart_to_js_script_rewriter: '^0.1.0'
+  sass: '^0.4.2'
 
 transformers:
 - dart_to_js_script_rewriter
+- sass

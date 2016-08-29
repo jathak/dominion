@@ -1,25 +1,31 @@
 <!DOCTYPE html>
-
-<!--
-  Copyright (c) 2015, Jack Thakar. All rights reserved. Use of this source code
-  is governed by a BSD-style license that can be found in the LICENSE file.
--->
-
 <html>
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="scaffolded-by" content="https://github.com/google/stagehand">
-    <title>dominion</title>
-    <link rel="stylesheet" href="styles.css">
-    <script async src="main.dart" type="application/dart"></script>
-    <script async src="packages/browser/dart.js"></script>
+    <title>Dominion - Create Game</title>
+    <link rel="stylesheet" href="create.css">
+    <script>
+      function load() {
+        var kingdom = document.getElementById("kingdomCards");
+        kingdom.addEventListener('input', function (event) {
+          window.localStorage['kingdom'] = kingdom.value;
+        });
+        if (window.localStorage['kingdom'] != undefined) {
+          kingdom.value = window.localStorage['kingdom'];
+        }
+      }
+    </script>
 </head>
 
-<body>
-
-  <div id="output"></div>
-
+<body onload="load()">
+  <form action="create-game" method="post">
+    Kingdom cards (one per line):<br>
+    <textarea id="kingdomCards" name="kingdomCards" rows="10"></textarea><br>
+    Use Platinum and Colony cards: <input type="checkbox" name="useProsperity"/><br>
+    Spectate: <input type="checkbox" name="spectate" checked/><br>
+    <input type="submit" value="Create Game"/>
+  </form>
 </body>
 </html>

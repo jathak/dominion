@@ -1,0 +1,180 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    overflow-x: hidden;
+}
+
+@function cards-wide($n, $scale) {
+  @return $n * $scale / 100% * 296px;
+}
+
+@function cards-tall($n, $scale) {
+  @return $n * $scale / 100% * 473px;
+}
+
+.card {
+  width: 296px;
+  height: 473px;
+  background-size: 100%;
+  display: inline-block;
+  border-radius: 16px;
+  border: 8px solid transparent;
+  box-sizing: border-box;
+  transition: -webkit-filter 0.35s, border-color 0.35s;
+  .status {
+    display: none;
+    color: #fff;
+    background: #57f;
+  }
+}
+
+.card-header {
+  width: 296px;
+  height: 40px;
+  background-size: 100%;
+  background-position: 0% 4%;
+  display:block;
+  border: 8px solid transparent;
+  box-sizing: border-box;
+  transition: -webkit-filter 0.25s, border-color 0.25s;
+}
+
+.disabled {
+  -webkit-filter: contrast(50%) saturate(20%);
+}
+
+.button {
+  padding: 12px;
+  text-align:center;
+  font-size: 24px;
+  min-width: 150px;
+  border-radius: 8px;
+  border: 4px solid transparent;
+  box-sizing: border-box;
+  background: #444;
+  color: #ccc;
+  cursor: default;
+  transition: color 0.5s, background 0.5s, border 0.5s;
+}
+
+.button.enabled {
+  background: #57f;
+  color: #fff;
+  cursor: pointer;
+}
+
+.button.enabled:hover {
+  border: 4px solid #57f;
+  color: #000;
+  background: #fff;
+}
+
+.selectable {
+  cursor: pointer;
+}
+
+.selectable:hover {
+  border-color: #57f;
+  -webkit-filter: saturate(200%);
+  cursor: pointer;
+}
+
+.selected, .selected:hover {
+  border-color: #4caf50;
+}
+
+@mixin card-scale($scale) {
+  $ratio: $scale / 100%;
+  .card {
+    width: 296px * $ratio;
+    height: 473px * $ratio;
+    border-radius: 16px * $ratio;
+    border-width: 8px * $ratio;
+    .status {
+      border-radius: 12px ;//* $ratio;
+      font-size: 16px ;//* $ratio;
+      position: absolute;
+      padding: 2px 4px;
+      //padding: 2px * $ratio 4px * $ratio;
+      top: 20px * $ratio;
+      right: 16px * $ratio;
+    }
+  }
+}
+
+.supply {
+  position: absolute;
+  width: 70%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  .kingdom {
+    @include card-scale(65%);
+    max-width: cards-wide(5, 65%);
+  }
+  .basic {
+    @include card-scale(40%);
+    .treasures, .vps {display: inline-block;}
+  }
+  .card {
+    position: relative;
+    .status {
+      display: block;
+    }
+  }
+}
+
+.overlay {
+  display: none;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  text-align: center;
+  .prompt {
+    width: 100%;
+    font-size: 30px;
+    padding: 4px;
+  }
+  .subprompt {
+    width: 100%;
+    font-size: 18px;
+    padding-bottom: 16px;
+  }
+  .cards {
+    position: absolute;
+    text-align: center;
+    display: inline;
+    @include card-scale(75%);
+    width: 100%;
+    left: 0;
+    margin-top: 15px;
+  }
+  .confirm {
+    position: absolute;
+    margin: 24px;
+    bottom: 0;
+    width: 300px;
+    left: 50%;
+    margin-left: -150px;
+  }
+}
+
+.controls {
+  position: absolute;
+  width: 30%;
+  right: 0;
+  top: 0;
+  .log {
+    width: 100%;
+    height: 200px;
+  }
+}
