@@ -33,7 +33,7 @@ confirmAction(var metadata) {
 
 askQuestion(var metadata) {
   var question = metadata['question'];
-  var options = metadata['cards'].map((c)=> c is String ? c : CardStub.fromMsg(c));
+  var options = metadata['cards'].map((c) => c is String ? c : CardStub.fromMsg(c));
   return firstOrNull(cardSelector(options, question, 1, 1));
 }
 
@@ -59,11 +59,12 @@ firstOrNull(var futureList) async {
   return list.first;
 }
 
-cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max, [bool selectAll=false]) async {
+cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
+    [bool selectAll = false]) async {
   var overlay = querySelector('.overlay');
-  var promptEl = overlay.querySelector('.prompt')..innerHtml="";
-  var subpromptEl = overlay.querySelector('.subprompt')..innerHtml="";
-  var cardsEl = overlay.querySelector('.cards')..innerHtml="";
+  var promptEl = overlay.querySelector('.prompt')..innerHtml = "";
+  var subpromptEl = overlay.querySelector('.subprompt')..innerHtml = "";
+  var cardsEl = overlay.querySelector('.cards')..innerHtml = "";
   var confirm = overlay.querySelector('.confirm');
   promptEl.text = prompt;
   String subprompt = "Select at least $min and at most $max";
@@ -115,7 +116,7 @@ cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max, [bool se
   }
   updateButton();
   overlay.style.display = 'block';
-  await confirm.onClick.firstWhere((e)=>selected.length >= min && selected.length <= max);
+  await confirm.onClick.firstWhere((e) => selected.length >= min && selected.length <= max);
   overlay.style.display = 'none';
-  return selected.map((stub)=>stub is CardStub ? stub.name: "$stub").toList();
+  return selected.map((stub) => stub is CardStub ? stub.name : "$stub").toList();
 }

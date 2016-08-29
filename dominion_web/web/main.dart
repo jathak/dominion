@@ -20,15 +20,11 @@ Map<String, Function> handlers = {};
 var log = querySelector('.log');
 
 main() async {
-  ident = Uri.base.toString().split('#').last;
-  bool spectating = false;
-  if (ident.endsWith('-spectate')) {
-    ident = ident.split('-')[0];
-    spectating = true;
-  }
-  // for testing:
-  socket = new WebSocket("ws://${Uri.base.host}:7777");
-  //socket = new WebSocket('ws://${Uri.base.host}:${Uri.base.port}');
+  var params = Uri.base.queryParameters;
+  ident = params['id'];
+  bool spectating = params.containsKey("spectate");
+  var socketUrl = params.containsKey("url") ? params['url'] : '${Uri.base.host}:${Uri.base.port}';
+  socket = new WebSocket("ws://$socketUrl");
   await socket.onOpen.first;
   if (spectating) {
     startSpectating();
@@ -36,10 +32,8 @@ main() async {
     joinGame();
   }
   loadHandlers();
-  querySelector(".start-game").onClick.listen((e){
-    var msg = {
-      'type': 'start-game'
-    };
+  querySelector(".start-game").onClick.listen((e) {
+    var msg = {'type': 'start-game'};
     socket.send(JSON.encode(msg));
   });
   if (spectating) querySelector('.start-game').style.display = 'none';
@@ -60,10 +54,7 @@ main() async {
 }
 
 startSpectating() {
-  var msg = {
-    'type': 'spectate-game',
-    'game-id': ident
-  };
+  var msg = {'type': 'spectate-game', 'game-id': ident};
   socket.send(JSON.encode(msg));
 }
 
@@ -75,11 +66,7 @@ joinGame() {
     return;
   }
   username = username.trim();
-  var msg = {
-    'type': 'join-game',
-    'game-id': ident,
-    'username': username
-  };
+  var msg = {'type': 'join-game', 'game-id': ident, 'username': username};
   socket.send(JSON.encode(msg));
 }
 
@@ -100,7 +87,7 @@ void loadHandlers() {
   };
   handlers['log'] = (msg) {
     String message = msg['message'];
-    log.appendText(message+'\n');
+    log.appendText(message + '\n');
     log.scrollTop = log.scrollHeight;
   };
   handlers['request'] = (msg) async {
@@ -164,7 +151,9 @@ Element makeCardElement(CardStub card) {
   var el = new DivElement();
   el.classes = ['card', 'set-$expansion', 'type-$name'];
   if (card.count > 0) {
-    var status = new DivElement()..text = "${card.count}"..classes=['status'];
+    var status = new DivElement()
+      ..text = "${card.count}"
+      ..classes = ['status'];
     el.append(status);
   } else {
     el.classes.add('disabled');
@@ -192,7 +181,7 @@ class CardStub {
   String name, expansion;
   int count = 0;
   bool selectable = false;
-  CardStub(this.name, [this.expansion=null]);
+  CardStub(this.name, [this.expansion = null]);
 
   static CardStub fromMsg(cardMsg) {
     var stub = new CardStub(cardMsg['name'], cardMsg['expansion']);

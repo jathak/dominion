@@ -7,14 +7,28 @@ import 'package:dominion_server/game.dart' as game;
 
 main() async {
   game.load();
-  var path = Platform.script.resolve('../../dominion_web/web/').toFilePath();
+  var path = Platform.script.resolve('../../dominion_web/build/web/').toFilePath();
   print(path);
   var staticFiles = new VirtualDirectory(path);
   staticFiles.allowDirectoryListing = true;
 
   var server = await HttpServer.bind('0.0.0.0', 7777);
   print("Server running on port 7777");
-  games["test"] = new game.Game("test", ["Cellar", "Moat", "Village", "Gardens", "Militia", "Smithy", "Throne Room", "Council Room", "Laboratory", "Market"], false);
+  games["test"] = new game.Game(
+      "test",
+      [
+        "Cellar",
+        "Moat",
+        "Village",
+        "Gardens",
+        "Militia",
+        "Smithy",
+        "Throne Room",
+        "Council Room",
+        "Laboratory",
+        "Market"
+      ],
+      false);
   await for (var request in server) {
     if (WebSocketTransformer.isUpgradeRequest(request)) {
       upgradeRequest(request);
@@ -23,7 +37,8 @@ main() async {
       var httpBody = await HttpBodyHandler.processRequest(request);
       var body = httpBody.body;
       var kingdom = body['kingdomCards'].trim().split('\n');
-      bool useProsperity = body.containsKey('useProsperity') ? body['useProsperity'] == 'on' : false;
+      bool useProsperity =
+          body.containsKey('useProsperity') ? body['useProsperity'] == 'on' : false;
       bool spectate = body.containsKey('spectate') ? body['spectate'] == 'on' : false;
       var id = randomString(5);
       while (games.containsKey(id)) {
@@ -31,7 +46,7 @@ main() async {
       }
       var newGame = new game.Game(id, kingdom, useProsperity);
       games[id] = newGame;
-      request.response.redirect('/game.html#$id' + (spectate ? '-spectate' : ''));
+      request.response.redirect('/game.html?id=$id' + (spectate ? '&spectate' : ''));
       continue;
     }
     var requestPath = request.uri.path.substring(1);

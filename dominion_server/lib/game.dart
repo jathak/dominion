@@ -12,10 +12,7 @@ load() {
 }
 
 encodeOption(var option) {
-  return option is Card ? {
-    'name': option.name,
-    'expansion': option.expansion
-  } : option.toString();
+  return option is Card ? {'name': option.name, 'expansion': option.expansion} : option.toString();
 }
 
 class Game {
@@ -28,7 +25,7 @@ class Game {
   Map<String, List<WebSocket>> sockets = {};
   List<WebSocket> allSockets = [];
   Game(this.id, List<String> kingdom, this.expensiveBasics) {
-    kingdomCards = kingdom.map((c)=>CardRegistry.find(c));
+    kingdomCards = kingdom.map((c) => CardRegistry.find(c));
   }
 
   startGame(String initiatingUser) {
@@ -53,12 +50,12 @@ class Game {
     if (!sockets.containsKey(username)) {
       if (engine != null) {
         logTo(socket, "You can't join a game that's already in progress!");
-        return [(m)=>null, ([e])=>null];
+        return [(m) => null, ([e]) => null];
       }
       sockets[username] = [];
     }
     sockets[username].add(socket);
-    var onDone = ([e]){
+    var onDone = ([e]) {
       allSockets.remove(socket);
       sockets[username].remove(socket);
       if (sockets[username].isEmpty) {
@@ -66,10 +63,10 @@ class Game {
           sockets.remove(username);
           controllers.remove(username);
           logToAll("$username has left the game. ${controllers.length} "
-                   "players connected.");
+              "players connected.");
         } else {
           logToAll("$username has left the game. Someone must connect as them"
-                   " for the game to continue.");
+              " for the game to continue.");
         }
       } else {
         logTo(sockets[username], "One of your clients disconnected");
@@ -114,19 +111,19 @@ class Game {
       safeSend(socket, makeSupplyStateMsg());
     }
     logToAll("A spectator joined. ${spectators.length} users now spectating.");
-    return ([e]){
+    return ([e]) {
       allSockets.remove(socket);
       spectators.remove(socket);
       logToAll("A spectator left. ${spectators.length} users now spectating.");
     };
   }
 
-  logTo(var socket, String message, [bool serverLog=true]) {
-    if (serverLog) print ("LogTo: $message");
+  logTo(var socket, String message, [bool serverLog = true]) {
+    if (serverLog) print("LogTo: $message");
     if (socket is WebSocket) {
       safeSend(socket, {'type': 'log', 'message': message});
     } else if (socket is Iterable) {
-      socket.forEach((s)=>logTo(s, message, false));
+      socket.forEach((s) => logTo(s, message, false));
     } else {
       throw new Exception("Can't log to $socket");
     }
@@ -150,10 +147,7 @@ class Game {
 
   updateHand(Player player) {
     var cards = player.hand.asList().map(encodeOption).toList();
-    var msg = {
-      'type': 'hand-update',
-      'hand': cards
-    };
+    var msg = {'type': 'hand-update', 'hand': cards};
     for (var socket in sockets[player.name]) {
       safeSend(socket, msg);
     }
@@ -190,10 +184,10 @@ class Game {
     var vps = new CardBuffer();
     var starter = new CardBuffer.from(supply.cardsInSupply);
     starter.filterInto((card) {
-      if ([Copper.instance, Silver.instance, Gold.instance, Platinum.instance,
-        Potion.instance].contains(card)) return treasures;
-      if ([Estate.instance, Duchy.instance, Province.instance, Colony.instance,
-        Curse.instance].contains(card)) return vps;
+      if ([Copper.instance, Silver.instance, Gold.instance, Platinum.instance, Potion.instance]
+          .contains(card)) return treasures;
+      if ([Estate.instance, Duchy.instance, Province.instance, Colony.instance, Curse.instance]
+          .contains(card)) return vps;
       return kingdom;
     });
     return {
@@ -227,8 +221,9 @@ class NetworkController extends PlayerController {
   /// returns an ordered list of cards
   /// selected from those meeting conditions
   /// If max is < 0, there is no maximum
-  Future<List<Card>> selectCardsFromHand(Card context, CardConditions conditions, int min, int max) async {
-    var metadata= {
+  Future<List<Card>> selectCardsFromHand(
+      Card context, CardConditions conditions, int min, int max) async {
+    var metadata = {
       'context': encodeOption(context),
       'currentPlayer': game.engine.currentPlayer.name,
       'min': min,
@@ -240,9 +235,10 @@ class NetworkController extends PlayerController {
   }
 
   /// returns a card meeting conditions or null to select no card if allowNone is true
-  Future<Card> selectCardFromSupply(EventType event, CardConditions conditions, bool allowNone) async {
+  Future<Card> selectCardFromSupply(
+      EventType event, CardConditions conditions, bool allowNone) async {
     var supplyCards = game.engine.supply.cardsInSupply;
-    var metadata= {
+    var metadata = {
       'event': event.toString(),
       'currentPlayer': game.engine.currentPlayer.name,
       'allowNone': allowNone,
@@ -254,7 +250,7 @@ class NetworkController extends PlayerController {
 
   /// returns true to complete action, false to not
   Future<bool> confirmAction(Card context, String question) {
-    var metadata= {
+    var metadata = {
       'context': encodeOption(context),
       'currentPlayer': game.engine.currentPlayer.name,
       'question': question
@@ -291,7 +287,7 @@ class NetworkController extends PlayerController {
   /// returns an ActionCard or null to prematurely end action phase
   Future<ActionCard> selectActionCard() async {
     var metadata = {
-      'cards': player.hand.asList().where((c)=>c is ActionCard).map(encodeOption).toList()
+      'cards': player.hand.asList().where((c) => c is ActionCard).map(encodeOption).toList()
     };
     var result = await game.requestFromUser(name, 'selectActionCard', metadata);
     return CardRegistry.find(result);
@@ -300,7 +296,7 @@ class NetworkController extends PlayerController {
   /// returns a list of TreasureCards or an empty list to stop playing treasures
   Future<List<TreasureCard>> selectTreasureCards() async {
     var metadata = {
-      'cards': player.hand.asList().where((c)=>c is TreasureCard).map(encodeOption).toList()
+      'cards': player.hand.asList().where((c) => c is TreasureCard).map(encodeOption).toList()
     };
     var result = await game.requestFromUser(name, 'selectTreasureCards', metadata);
     return result.map(CardRegistry.find).toList();
