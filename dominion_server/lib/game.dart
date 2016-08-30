@@ -25,7 +25,7 @@ class Game {
   Map<String, List<WebSocket>> sockets = {};
   List<WebSocket> allSockets = [];
   Game(this.id, List<String> kingdom, this.expensiveBasics) {
-    kingdomCards = kingdom.map((c) => CardRegistry.find(c));
+    kingdomCards = kingdom.map((c) => CardRegistry.find(c.trim()));
   }
 
   startGame(String initiatingUser) {
@@ -94,6 +94,7 @@ class Game {
         if (request.playerName == username) safeSend(socket, request.msg);
       }
     }
+    logTo(socket, "Playing with ${kingdomCards.toList()}");
     var onMessage = (msg) {
       if (msg['type'] == 'request-response') {
         var id = msg['request-id'];
