@@ -52,6 +52,8 @@ class Turn {
   Map misc = {};
 }
 
+String cardWord(int count) => count == 1 ? 'card' : 'cards';
+
 enum Phase { Action, Buy, Cleanup }
 
 enum EventType { Attack, GainCard, BuyCard, BlockCard, GuessCard, GainForOpponent }

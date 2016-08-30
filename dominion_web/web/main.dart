@@ -190,4 +190,6 @@ class CardStub {
     }
     return stub;
   }
+
+  operator == (other) => identical(this, other);
 }

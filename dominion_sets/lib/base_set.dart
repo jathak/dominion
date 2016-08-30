@@ -297,12 +297,13 @@ class Spy extends ActionCard with BaseSet, Attack {
       if (buffer.length == 0) continue;
       bool discard;
       Card card = buffer[0];
+      var question;
       if (p == player) {
-        discard = await player.controller.confirmAction(card, "Spy: Discard your ${card.name}?");
+        question = "Spy: Discard your ${card.name}?";
       } else {
-        discard =
-            await player.controller.confirmAction(card, "Spy: Discard ${p.name}'s ${card.name}?");
+        question = "Spy: Discard ${p.name}'s ${card.name}?";
       }
+      discard = await player.controller.confirmAction(card, question);
       if (discard) {
         await p.discardFrom(buffer);
       } else {
@@ -338,8 +339,8 @@ class Thief extends ActionCard with BaseSet, Attack {
         }
       }
       if (options.length == 1) {
-        bool trash = await player.controller
-            .confirmAction(options[0], "Thief: Trash ${p.name}'s ${options[0].name}?");
+        var question = "Thief: Trash ${p.name}'s ${options[0].name}?";
+        bool trash = await player.controller.confirmAction(options[0], question);
         if (trash) {
           Card card = options[0];
           await p.trashDraw(options);
@@ -349,8 +350,8 @@ class Thief extends ActionCard with BaseSet, Attack {
         }
       } else if (options.length == 2) {
         List choices = [options[0], options[1], "Neither"];
-        var selection = await player.controller
-            .askQuestion(this, "Thief: Which of ${p.name}'s cards do you want to trash?", choices);
+        var question = "Thief: Which of ${p.name}'s cards do you want to trash?";
+        var selection = await player.controller.askQuestion(this, question, choices);
         if (selection is Card) {
           await p.trashFrom(selection, options);
           trashed.add(selection);
@@ -362,8 +363,8 @@ class Thief extends ActionCard with BaseSet, Attack {
       }
     }
     if (trashed.length > 0) {
-      List<Card> keeping = await player.controller
-          .selectCardsFrom(trashed, "Thief: Select treasure(s) to take from trash.", 0, -1);
+      var question = "Thief: Select treasure(s) to take from trash.";
+      List<Card> keeping = await player.controller.selectCardsFrom(trashed, question, 0, -1);
       for (Card c in keeping) {
         player.engine.trashPile.moveTo(c, player.discarded);
         c.onGain(player, false);
@@ -384,10 +385,12 @@ class ThroneRoom extends ActionCard with BaseSet {
     if (card != null) {
       player.hand.moveTo(card, player.turn.played);
       player.turn.actionsPlayed += 1;
-      player.announce("plays $card");
+      player.notify("You play a $card");
+      player.announce("plays a $card");
       await card.onPlay(player);
       player.turn.actionsPlayed += 1;
-      player.announce("plays $card again");
+      player.notify("You play the $card again");
+      player.announce("plays the $card again");
       await card.onPlay(player);
     }
   }
@@ -401,8 +404,8 @@ class CouncilRoom extends ActionCard with BaseSet {
   final String name = "Council Room";
 
   onPlay(Player player) async {
-    player.draw(3); // they get the 4th card from below
-    for (Player p in player.engine.playersFrom(player)) {
+    player.draw(4);
+    for (Player p in player.engine.playersAfter(player)) {
       p.draw(1);
     }
     player.turn.buys += 1;

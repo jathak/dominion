@@ -74,7 +74,8 @@ cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
   if (min == 0 && max == -1) subprompt = "Select any amount (including none)";
   if (max == -1) max = stubs.length;
   subpromptEl.text = subprompt;
-  List<CardStub> selected = selectAll ? stubs.toList() : [];
+  List<CardStub> selected = [];
+  if (selectAll) selected.addAll(stubs);
   updateButton() {
     if (selected.length >= min && selected.length <= max) {
       confirm.classes.add('enabled');
@@ -82,6 +83,7 @@ cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
       confirm.classes.remove('enabled');
     }
   }
+  var orders = [];
   for (CardStub stub in stubs) {
     var cardEl;
     if (stub is CardStub) {
@@ -93,12 +95,31 @@ cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
       cardEl.style.color = "#fff";
       cardEl.text = stub.toString();
     }
+    var order = new DivElement()..classes=['order'];
+    cardEl.append(order);
+    orders.add(order);
     cardEl.classes = ['card', 'selectable'];
-    if (selectAll) cardEl.classes.add('selected');
+    if (selectAll) {
+      order.text = "${orders.length}";
+      cardEl.classes.add('selected');
+    }
     cardEl.onClick.listen((e) {
+      print(cardEl.classes);
       if (cardEl.classes.contains('selected')) {
+        print(selected.map((x)=>x.name).toList());
         selected.remove(stub);
+        print(selected.map((x)=>x.name).toList());
         cardEl.classes.remove('selected');
+        var myText = cardEl.querySelector('.order').text;
+        int current = int.parse(myText);
+        for (var order in orders) {
+          int orderNum = int.parse(order.text, onError: (s)=>0);
+          if (orderNum == current) {
+            order.text = "";
+          } else if (orderNum > current) {
+            order.text = "${orderNum - 1}";
+          }
+        }
       } else {
         if (max == 1) {
           selected.clear();
@@ -107,8 +128,12 @@ cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
         if (selected.length < max) {
           selected.add(stub);
           cardEl.classes.add('selected');
+          if (max > 1) {
+            cardEl.querySelector('.order').text = "${selected.length}";
+          }
         }
       }
+      print(cardEl.classes);
       updateButton();
     });
     cardsEl.append(cardEl);

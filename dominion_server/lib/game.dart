@@ -45,7 +45,7 @@ class Game {
       safeSend(socket, msg);
     }
   }
-  
+
   encodeSupply(Card card) {
     var stub = encodeOption(card);
     stub['count'] = engine.supply.supplyOf(card).count;
@@ -154,6 +154,17 @@ class Game {
   updateHand(Player player) {
     var cards = player.hand.asList().map(encodeOption).toList();
     var msg = {'type': 'hand-update', 'hand': cards};
+    msg['currentPlayer'] = engine.currentPlayer.name;
+    msg['deckSize'] = player.deck.length;
+    if (player.turn != null) {
+      msg['turn'] = {
+        'actions': player.turn.actions,
+        'buys': player.turn.buys,
+        'coins': player.turn.coins,
+        'phase': player.turn.phase.toString(),
+        'played': player.turn.played.asList().map(encodeOption).toList()
+      };
+    }
     for (var socket in sockets[player.name]) {
       safeSend(socket, msg);
     }
@@ -238,7 +249,8 @@ class NetworkController extends PlayerController {
   /// returns a card meeting conditions or null to select no card if allowNone is true
   Future<Card> selectCardFromSupply(
       EventType event, CardConditions conditions, bool allowNone) async {
-    var supplyCards = game.engine.supply.cardsInSupply;
+    var supply = game.engine.supply;
+    var supplyCards = supply.cardsInSupply.where((c) => supply.supplyOf(c).count > 0);
     var metadata = {
       'event': event.toString(),
       'currentPlayer': game.engine.currentPlayer.name,
@@ -305,7 +317,13 @@ class NetworkController extends PlayerController {
 
   void log(String msg) {
     game.logTo(game.sockets[name], msg);
-    if (player != null) game.updateHand(player);
+    if (player != null && game.engine != null) {
+      game.updateHand(player);
+      var msg = game.makeSupplyStateMsg();
+      for (var socket in game.sockets[name]) {
+        game.safeSend(socket, msg);
+      }
+    }
   }
 
   /// override this to reset state when game is reset (called after player is changed)

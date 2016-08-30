@@ -29,6 +29,13 @@ html, body {
     color: #fff;
     background: #57f;
   }
+  .order {
+    color: #fff;
+    background: #4caf50;
+  }
+  .order:blank {
+    display: none;
+  }
 }
 
 .card-header {
@@ -78,7 +85,7 @@ html, body {
 
 .selectable:hover {
   border-color: #57f;
-  -webkit-filter: saturate(200%);
+  -webkit-filter: saturate(150%);
   cursor: pointer;
 }
 
@@ -101,6 +108,11 @@ html, body {
       //padding: 2px * $ratio 4px * $ratio;
       top: 20px * $ratio;
       right: 16px * $ratio;
+    }
+    .order {
+      @extend .status;
+      top: auto;
+      bottom: 20px * $ratio;
     }
   }
 }
@@ -147,7 +159,7 @@ html, body {
     position: absolute;
     text-align: center;
     display: inline;
-    @include card-scale(75%);
+    @include card-scale(60%);
     width: 100%;
     left: 0;
     margin-top: 15px;

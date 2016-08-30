@@ -172,6 +172,7 @@ class ShantyTown extends ActionCard with Intrigue {
 
   onPlay(Player player) async {
     player.turn.actions += 2;
+    player.notify("You reveal your hand");
     player.announce("reveals hand of ${player.hand}");
     if (!player.hasActions()) {
       player.draw(2);
@@ -238,14 +239,17 @@ class WishingWell extends ActionCard with Intrigue {
     player.turn.actions += 1;
     CardConditions conds = new CardConditions();
     Card guess = await player.controller.selectCardFromSupply(EventType.GuessCard, conds, false);
+    player.notify("You guess $guess");
+    player.announce("guesses $guess");
     CardBuffer buffer = new CardBuffer();
     player.drawTo(buffer);
-    player.announce("reveals ${buffer[0]}");
     if (buffer[0] == guess) {
-      player.announce("guessed correctly!");
+      player.notify("You reveal ${buffer[0]}. You guessed correctly!");
+      player.announce("reveals ${buffer[0]}. They guessed correctly!");
       buffer.drawTo(player.hand);
     } else {
-      player.announce("guessed incorrectly");
+      player.notify("You reveal ${buffer[0]}. You guessed incorrectly");
+      player.announce("reveals ${buffer[0]}. They guessed incorrectly");
       buffer.drawTo(player.deck.top);
     }
   }
@@ -267,8 +271,8 @@ class Baron extends ActionCard with Intrigue {
         break;
       }
     }
-    if (hasEstate &&
-        await player.controller.confirmAction(this, "Discard an Estate for +4 coins?")) {
+    var question = "Discard an Estate for +4 coins?";
+    if (hasEstate && await player.controller.confirmAction(this, question)) {
       player.turn.coins += 4;
     } else {
       await player.gain(Estate.instance);
@@ -418,8 +422,8 @@ class Minion extends ActionCard with Intrigue {
       beingAttacked.add(p);
     }
     String a = "+2 Coins";
-    String b =
-        "Discard your hand for +4 Cards and each other player with at least 5 cards in hand discards their hand and draws 4 cards";
+    String b = "Discard your hand for +4 Cards and each other player with at "
+               "least 5 cards in hand discards their hand and draws 4 cards";
     String option = await player.controller.askQuestion(this, "Choose one", [a, b]);
     if (option == a) {
       player.turn.coins += 2;
@@ -530,7 +534,8 @@ class Tribute extends ActionCard with Intrigue {
     CardBuffer buffer = new CardBuffer();
     left.drawTo(buffer);
     left.drawTo(buffer);
-    left.announce("reveals $buffer");
+    left.notify("You reveal and discard $buffer");
+    left.announce("reveals and discards $buffer");
     Set drawn = new Set.from(buffer.asList());
     while (buffer.length > 0) {
       await left.discardFrom(buffer);
@@ -590,8 +595,8 @@ class Nobles extends VictoryCard with ActionCard, Intrigue {
   onPlay(Player player) async {
     String threeCards = "+3 Cards";
     String twoActions = "+2 Actions";
-    String result = await player.controller
-        .askQuestion(this, "Nobles: Which action do you want to take?", [threeCards, twoActions]);
+    var question = "Nobles: Which action do you want to take?";
+    String result = await player.controller.askQuestion(this, question, [threeCards, twoActions]);
     if (result == threeCards) {
       player.draw(3);
     } else if (result == twoActions) {

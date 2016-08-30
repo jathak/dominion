@@ -16,6 +16,9 @@ class DominionEngine {
       player.controller.player = player;
     }
     currentPlayer = _players[0];
+    for (var player in _players) {
+      player.draw(5);
+    }
   }
 
   reset() {
@@ -124,7 +127,6 @@ class Player extends Object with CardSource {
     deck.shuffle();
     hand = new CardBuffer();
     discarded = new CardBuffer();
-    draw(5);
   }
 
   Future<Card> selectCardToGain({CardConditions conditions, bool allowNone: false}) {
@@ -151,21 +153,28 @@ class Player extends Object with CardSource {
     return false;
   }
 
-  log(String msg, [bool private = true]) {
-    if (private)
+  log(String msg, [String type='everyone']) {
+    if (type == 'player') {
       controller.log(msg);
-    else
+    } else if (type == 'others') {
+      for (var player in engine.playersAfter(this)) {
+        player.controller.log(msg);
+      }
+    } else {
       engine.log(msg);
+    }
   }
 
-  notify(String msg) => log("$name: $msg", true);
-  announce(String msg) => log("$name: $msg", false);
+  notify(String msg) => log(msg, 'player');
+  announce(String msg) => log("$name $msg", 'others');
+  announceAll(String msg) => log("$name $msg", 'everyone');
 
   Future playAction(ActionCard card) async {
     hand.moveTo(card, turn.played);
     turn.actions -= 1;
     turn.actionsPlayed += 1;
-    announce("plays $card");
+    notify("You play a $card");
+    announce("plays a $card");
     await card.onPlay(this);
   }
 
@@ -176,7 +185,8 @@ class Player extends Object with CardSource {
 
   Future takeTurn() async {
     turn = new Turn();
-    notify("starts turn with $hand");
+    notify("It's your turn!");
+    announce("starts turn");
     // play actions
     while (turn.actions > 0 && hasActions()) {
       ActionCard actionCard = await controller.selectActionCard();
@@ -213,7 +223,8 @@ class Player extends Object with CardSource {
     }
     turn = null;
     draw(5);
-    notify("ends turn");
+    notify("Your turn ends");
+    announce("ends turn");
   }
 
   int calculateScore() {
@@ -247,6 +258,7 @@ class Player extends Object with CardSource {
       var response =
           await controller.askQuestion(context, "Select a Reaction card to reveal.", options);
       if (response is Reaction) {
+        notify("You reveal $response");
         announce("reveals $response");
         revealed.add(response);
         bool result = await response.onReact(this);
@@ -287,11 +299,13 @@ class Player extends Object with CardSource {
     for (int i = 0; i < numCards; i++) {
       card = drawTo(hand);
       if (card == null) {
-        notify("draws $i cards. Hand is now $hand");
+        notify("You draw $i ${cardWord(i)}");
+          notify("draws $i ${cardWord(i)}");
         return null;
       }
     }
-    notify("draws $numCards cards. Hand is now $hand");
+    notify("You draw $numCards ${cardWord(numCards)}");
+    announce("draws $numCards ${cardWord(numCards)}");
     return card;
   }
 
@@ -309,6 +323,7 @@ class Player extends Object with CardSource {
   Future<Card> trashDraw(CardSource source) async {
     // hooks of some sort
     Card card = source.drawTo(engine.trashPile);
+    notify("You trash a $card");
     announce("trashes a $card");
     return card;
   }
@@ -316,6 +331,7 @@ class Player extends Object with CardSource {
   Future<bool> trashFrom(Card card, CardSource source) async {
     // hooks of some sort
     bool result = source.moveTo(card, engine.trashPile);
+    notify("You trash a $card");
     announce("trashes a $card");
     return result;
   }
@@ -323,9 +339,11 @@ class Player extends Object with CardSource {
   Future<bool> gain(Card card) async {
     bool result = await engine.supply.gain(card, this);
     if (result) {
-      announce("gains $card. ${engine.supply.supplyOf(card).count} remain.");
+      var remain = "${engine.supply.supplyOf(card).count} remain";
+      notify("You gain a $card. $remain");
+      announce("gains a $card. $remain");
     } else {
-      log("$card cannot be gained!");
+      notify("$card cannot be gained!");
     }
     return result;
   }
@@ -334,9 +352,11 @@ class Player extends Object with CardSource {
     bool result = await engine.supply.buy(card, this);
     if (!result) return false;
     if (result) {
-      announce("buys $card. ${engine.supply.supplyOf(card).count} remain.");
+      var remain = "${engine.supply.supplyOf(card).count} remain";
+      notify("You buy a $card. $remain");
+      announce("buys a $card. $remain");
     } else {
-      log("$card cannot be bought!");
+      notify("$card cannot be bought!");
     }
     return result;
   }
