@@ -21,13 +21,27 @@
   <div class="controls">
     <textarea class="log" readonly></textarea>
     <div class="start-game button enabled">Start Game</div>
+    <h2 class="current-player"></h2>
+    <div class="turn-wrapper">
+      <div><span class="phase"></span> Phase</div>
+      <div><span class="actions">#</span> Actions</div>
+      <div><span class="buys">#</span> Buys</div>
+      <div><span class="coins">#</span> Coins</div>
+      <h3>In Play</h3>
+      <div class="played"></div>
+    </div>
+    <h3 class="hand-label"></h3>
     <div class="hand"></div>
+    <div class="deck-size"></div>
   </div>
   <div class="overlay">
     <div class="prompt"></div>
     <div class="subprompt"></div>
     <div class="cards"></div>
     <div class="confirm button">Confirm</div>
+  </div>
+  <div class="disconnected">
+    <div>Disconnected!</div>
   </div>
 </body>
 </html>

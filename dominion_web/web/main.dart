@@ -22,10 +22,17 @@ var log = querySelector('.log');
 main() async {
   var params = Uri.base.queryParameters;
   ident = params['id'];
+  username = params['username'];
   bool spectating = params.containsKey("spectate");
   var socketUrl = params.containsKey("url") ? params['url'] : '${Uri.base.host}:${Uri.base.port}';
   socket = new WebSocket("ws://$socketUrl");
+  socket.onClose.listen(socketClosed);
+  socket.onError.listen(socketClosed);
   await socket.onOpen.first;
+  if (params.containsKey('attempt-refresh')) {
+    var allBut = window.location.href.substring(0, window.location.href.length - 16);
+    window.location.href = allBut;
+  }
   if (spectating) {
     startSpectating();
   } else {
@@ -37,10 +44,6 @@ main() async {
     socket.send(JSON.encode(msg));
   });
   if (spectating) querySelector('.start-game').style.display = 'none';
-  socket.onClose.listen((e) {
-    log.appendText('Disconnected from server.\n');
-    log.scrollTop = log.scrollHeight;
-  });
   await for (var event in socket.onMessage) {
     try {
       var msg = JSON.decode(event.data);
@@ -52,18 +55,37 @@ main() async {
     }
   }
 }
+socketClosed(e) {
+  log.appendText('Disconnected from server.\n');
+  log.scrollTop = log.scrollHeight;
+  if (!Uri.base.queryParameters.containsKey('attempt-refresh')) {
+    window.location.href += '&attempt-refresh';
+  } else {
+    var disc = querySelector('.disconnected');
+    disc.style.display = 'block';
+    disc.onClick.listen((e)=>window.location.reload());
+  }
+}
 
 startSpectating() {
   var msg = {'type': 'spectate-game', 'game-id': ident};
   socket.send(JSON.encode(msg));
+  var hand = querySelector('.hand');
+  var handLabel = querySelector('.hand-label');
+  hand.onClick.listen((e)=>hand.style.display='none');
+  handLabel.onClick.listen((e)=>hand.style.display='block');
 }
 
 joinGame() {
-  username = context['prompt'].apply(['Enter username']);
-  if (username == null || username.trim() == '') {
-    window.location.hash += '-spectator';
-    startSpectating();
-    return;
+  if (username == null) {
+    username = context['prompt'].apply(['Enter username']);
+    if (username == null || username.trim() == '') {
+      window.location.href += '&spectate';
+      return;
+    } else {
+      window.location.href += '&username=$username';
+      return;
+    }
   }
   username = username.trim();
   var msg = {'type': 'join-game', 'game-id': ident, 'username': username};
@@ -83,7 +105,26 @@ void loadHandlers() {
   };
   handlers['hand-update'] = (msg) {
     var hand = msg['hand'].map(CardStub.fromMsg);
-    makeHand(hand);
+    makeHeaders(hand, querySelector('.hand'));
+    querySelector('.current-player').text = "${msg['currentPlayer']}'s Turn";
+    querySelector('.deck-size').text= "${msg['deckSize']} cards left in deck";
+    var label = querySelector('.hand-label');
+    if (username == null) {
+      label.text = 'Their Hand';
+    } else {
+      label.text = 'Your Hand';
+    }
+    if (msg.containsKey('turn')) {
+      var turn = msg['turn'];
+      querySelector('.turn-wrapper').style.display = 'block';
+      querySelector('.phase').text = turn['phase'].split('.').last;
+      querySelector('.actions').text = turn['actions'].toString();
+      querySelector('.buys').text = turn['buys'].toString();
+      querySelector('.coins').text = turn['coins'].toString();
+      makeHeaders(turn['played'].map(CardStub.fromMsg), querySelector(".played"));
+    } else {
+      querySelector('.turn-wrapper').style.display = 'none';
+    }
   };
   handlers['log'] = (msg) {
     String message = msg['message'];
@@ -124,10 +165,9 @@ void loadHandlers() {
   };
 }
 
-void makeHand(Iterable<CardStub> hand) {
-  var element = querySelector('.hand');
+void makeHeaders(Iterable<CardStub> stubs, var element) {
   element.innerHtml = "";
-  hand.forEach(makeHeaderAdder(element));
+  stubs.forEach(makeHeaderAdder(element));
 }
 
 void makeSupply(Iterable<CardStub> kingdom, Iterable<CardStub> treasures, Iterable<CardStub> vps) {
@@ -190,6 +230,4 @@ class CardStub {
     }
     return stub;
   }
-
-  operator == (other) => identical(this, other);
 }

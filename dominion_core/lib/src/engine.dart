@@ -77,7 +77,10 @@ class DominionEngine {
     }
   }
 
+  Function onLog;
+
   void log(String msg) {
+    if (onLog != null) onLog(msg);
     for (Player p in players) {
       p.controller.log(msg);
     }
@@ -157,6 +160,7 @@ class Player extends Object with CardSource {
     if (type == 'player') {
       controller.log(msg);
     } else if (type == 'others') {
+      if (engine.onLog != null) engine.onLog(msg);
       for (var player in engine.playersAfter(this)) {
         player.controller.log(msg);
       }
@@ -245,11 +249,10 @@ class Player extends Object with CardSource {
   // return true if event is blocked
   Future<bool> reactTo(EventType event, Card context) async {
     bool blocked = false;
-    List<Reaction> revealed = [];
     while (true) {
       List options = [];
       for (int i = 0; i < hand.length; i++) {
-        if (!revealed.contains(hand[i]) && hand[i] is Reaction && hand[i].canReactTo(event)) {
+        if (hand[i] is Reaction && hand[i].canReactTo(event, context)) {
           options.add(hand[i]);
         }
       }
@@ -260,7 +263,6 @@ class Player extends Object with CardSource {
       if (response is Reaction) {
         notify("You reveal $response");
         announce("reveals $response");
-        revealed.add(response);
         bool result = await response.onReact(this);
         if (result) blocked = true;
       } else {
@@ -277,6 +279,8 @@ class Player extends Object with CardSource {
     } else {
       source.moveTo(card, discarded);
     }
+    notify("You discard a $card");
+    announce("discards a card");
     await card.onDiscard(this);
   }
 
@@ -438,13 +442,27 @@ class Supply {
     return true;
   }
 
-  bool isGameOver() {
-    if (supplyOf(Province.instance).count == 0) return true;
-    if (_eb && supplyOf(Colony.instance).count == 0) return true;
+  bool isGameOver([engine=null]) {
+    if (supplyOf(Province.instance).count == 0) {
+      engine?.log("All Provinces are gone!");
+      return true;
+    }
+    if (_eb && supplyOf(Colony.instance).count == 0) {
+      engine?.log("All Colonies are gone!");
+      return true;
+    }
     int empty = 0;
     for (Card c in cardsInSupply) {
       if (supplyOf(c).count == 0) empty++;
     }
-    return empty >= 4 || (_pc < 5 && empty >= 3);
+    if (_pc < 5 && empty >= 3) {
+      engine?.log("Three supplies are empty!");
+      return true;
+    }
+    if (empty >= 4) {
+      engine?.log("Four supplies are empty!");
+      return true;
+    }
+    return false;
   }
 }

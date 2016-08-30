@@ -33,7 +33,7 @@ confirmAction(var metadata) {
 
 askQuestion(var metadata) {
   var question = metadata['question'];
-  var options = metadata['cards'].map((c) => c is String ? c : CardStub.fromMsg(c));
+  var options = metadata['options'].map((c) => c is String ? c : CardStub.fromMsg(c));
   return firstOrNull(cardSelector(options, question, 1, 1));
 }
 
@@ -59,8 +59,9 @@ firstOrNull(var futureList) async {
   return list.first;
 }
 
-cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
+cardSelector(Iterable<CardStub> stubsIter, String prompt, int min, int max,
     [bool selectAll = false]) async {
+  var stubs = stubsIter.toList();
   var overlay = querySelector('.overlay');
   var promptEl = overlay.querySelector('.prompt')..innerHtml = "";
   var subpromptEl = overlay.querySelector('.subprompt')..innerHtml = "";
@@ -91,9 +92,9 @@ cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
     } else {
       cardEl = new DivElement();
       cardEl.classes = ['card', 'selectable'];
-      cardEl.style.background = "#444";
+      cardEl.style.backgroundColor = "#444";
       cardEl.style.color = "#fff";
-      cardEl.text = stub.toString();
+      cardEl.append(new DivElement()..text = stub.toString()..classes=['text']);
     }
     var order = new DivElement()..classes=['order'];
     cardEl.append(order);
@@ -104,20 +105,19 @@ cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
       cardEl.classes.add('selected');
     }
     cardEl.onClick.listen((e) {
-      print(cardEl.classes);
       if (cardEl.classes.contains('selected')) {
-        print(selected.map((x)=>x.name).toList());
         selected.remove(stub);
-        print(selected.map((x)=>x.name).toList());
         cardEl.classes.remove('selected');
         var myText = cardEl.querySelector('.order').text;
-        int current = int.parse(myText);
-        for (var order in orders) {
-          int orderNum = int.parse(order.text, onError: (s)=>0);
-          if (orderNum == current) {
-            order.text = "";
-          } else if (orderNum > current) {
-            order.text = "${orderNum - 1}";
+        if (max > 1) {
+          int current = int.parse(myText);
+          for (var order in orders) {
+            int orderNum = int.parse(order.text, onError: (s)=>0);
+            if (orderNum == current) {
+              order.text = "";
+            } else if (orderNum > current) {
+              order.text = "${orderNum - 1}";
+            }
           }
         }
       } else {
@@ -133,7 +133,6 @@ cardSelector(Iterable<CardStub> stubs, String prompt, int min, int max,
           }
         }
       }
-      print(cardEl.classes);
       updateButton();
     });
     cardsEl.append(cardEl);

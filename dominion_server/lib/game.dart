@@ -32,6 +32,10 @@ class Game {
     logToAll("Starting game...");
     var supply = new Supply(kingdomCards, controllers.length, expensiveBasics);
     engine = new DominionEngine(supply, controllers.values.toList());
+    engine.onLog = (msg) {
+      updateSupplyState();
+      logTo(spectators, msg);
+    };
     updateSupplyState();
     for (var player in engine.players) {
       updateHand(player);
@@ -118,6 +122,9 @@ class Game {
       safeSend(socket, makeSupplyStateMsg());
     }
     logToAll("A spectator joined. ${spectators.length} users now spectating.");
+    if (engine != null) {
+      updateHand(engine.currentPlayer);
+    }
     return ([e]) {
       allSockets.remove(socket);
       spectators.remove(socket);
@@ -126,7 +133,8 @@ class Game {
   }
 
   logTo(var socket, String message, [bool serverLog = true]) {
-    if (serverLog) print("LogTo: $message");
+    if (message == null) return;
+    //if (serverLog) print("LogTo: $message");
     if (socket is WebSocket) {
       safeSend(socket, {'type': 'log', 'message': message});
     } else if (socket is Iterable) {
@@ -147,7 +155,7 @@ class Game {
   }
 
   logToAll(String message) {
-    print("LogToAll: $message");
+    //print("LogToAll: $message");
     logTo(sockets.values, message, false);
     logTo(spectators, message, false);
   }
@@ -157,6 +165,7 @@ class Game {
     var msg = {'type': 'hand-update', 'hand': cards};
     msg['currentPlayer'] = engine.currentPlayer.name;
     msg['deckSize'] = player.deck.length;
+    var toSendTo = []..addAll(sockets[player.name]);
     if (player.turn != null) {
       msg['turn'] = {
         'actions': player.turn.actions,
@@ -165,8 +174,9 @@ class Game {
         'phase': player.turn.phase.toString(),
         'played': player.turn.played.asList().map(encodeOption).toList()
       };
+      toSendTo.addAll(spectators);
     }
-    for (var socket in sockets[player.name]) {
+    for (var socket in toSendTo) {
       safeSend(socket, msg);
     }
   }
@@ -175,6 +185,8 @@ class Game {
   Map<int, PlayerRequest> activeRequests = {};
 
   requestFromUser(String username, String request, var metadata) {
+    var player = controllers[username].player;
+    if (player != null) updateHand(player);
     var controller = new StreamController();
     var msg = {
       'type': 'request',
@@ -320,10 +332,6 @@ class NetworkController extends PlayerController {
     game.logTo(game.sockets[name], msg);
     if (player != null && game.engine != null) {
       game.updateHand(player);
-      var msg = game.makeSupplyStateMsg();
-      for (var socket in game.sockets[name]) {
-        game.safeSend(socket, msg);
-      }
     }
   }
 
