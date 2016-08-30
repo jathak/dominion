@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:http_server/http_server.dart';
 import 'package:dominion_server/game.dart' as game;
+import 'package:dominion_core/dominion_core.dart';
 
 main() async {
   game.load();
@@ -14,21 +15,10 @@ main() async {
 
   var server = await HttpServer.bind('0.0.0.0', 7777);
   print("Server running on port 7777");
-  games["test"] = new game.Game(
-      "test",
-      [
-        "Cellar",
-        "Moat",
-        "Village",
-        "Gardens",
-        "Militia",
-        "Smithy",
-        "Throne Room",
-        "Council Room",
-        "Laboratory",
-        "Market"
-      ],
-      false);
+  var testKingdom = [ "Cellar", "Moat", "Village",
+    "Gardens", "Militia", "Smithy", "Throne Room",
+    "Council Room", "Laboratory", "Market"];
+  games["test"] = new game.Game("test", testKingdom, false);
   await for (var request in server) {
     if (WebSocketTransformer.isUpgradeRequest(request)) {
       upgradeRequest(request);
@@ -47,6 +37,18 @@ main() async {
       var newGame = new game.Game(id, kingdom, useProsperity);
       games[id] = newGame;
       request.response.redirect('/game.html?id=$id' + (spectate ? '&spectate' : ''));
+      continue;
+    } else if (request.method == 'GET' && request.uri.path == '/random') {
+      var cards = CardRegistry.getCards()..shuffle();
+      var kingdom = new List.generate(10, (x) => cards[x].name);
+      bool useProsperity = false;
+      var id = randomString(5);
+      while (games.containsKey(id)) {
+        id = randomString(5);
+      }
+      var newGame = new game.Game(id, kingdom, useProsperity);
+      games[id] = newGame;
+      request.response.redirect('/game.html?id=$id');
       continue;
     }
     var requestPath = request.uri.path.substring(1);
