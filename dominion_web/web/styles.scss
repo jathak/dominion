@@ -38,17 +38,6 @@ html, body {
   }
 }
 
-.card-header {
-  width: 296px;
-  height: 40px;
-  background-size: 100%;
-  background-position: 0% 4%;
-  display: block;
-  border: 8px solid transparent;
-  box-sizing: border-box;
-  transition: -webkit-filter 0.25s, border-color 0.25s;
-}
-
 .disabled {
   -webkit-filter: contrast(50%) saturate(20%);
 }
@@ -119,7 +108,7 @@ html, body {
 
 .supply {
   position: absolute;
-  width: 70%;
+  width: calc(100% - #{cards-wide(1, 100%)});
   height: 100%;
   left: 0;
   top: 0;
@@ -205,11 +194,36 @@ html, body {
 
 .controls {
   position: absolute;
-  width: 30%;
+  width: cards-wide(1, 100%);
   right: 0;
   top: 0;
   .log {
     width: 100%;
     height: 200px;
+  }
+}
+
+.card-header {
+  width: 296px;
+  height: 40px;
+  background-size: 100%;
+  background-position: 0 -20px;
+  display: block;
+  border: 8px solid transparent;
+  box-sizing: border-box;
+  transition: -webkit-filter 0.25s, border-color 0.25s;
+}
+
+@media (max-width: #{cards-wide(1, 100%) + cards-wide(1.2, 65%)}) {
+  .supply {
+    display: none;
+  }
+  .controls {
+    width: 100%;
+    .card-header {
+      width: 100vw;
+      height: 12vw;
+      background-position: 0 -8vw;
+    }
   }
 }

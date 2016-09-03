@@ -40,7 +40,15 @@ main() async {
       continue;
     } else if (request.method == 'GET' && request.uri.path == '/random') {
       var cards = CardRegistry.getCards()..shuffle();
-      var kingdom = new List.generate(10, (x) => cards[x].name);
+      var kingdom = new List.generate(10, (x) {
+        var card;
+        while (true) {
+          card = cards.removeAt(0);
+          if (card.expansion != null) {
+            return card.name;
+          }
+        }
+      });
       bool useProsperity = false;
       var id = randomString(5);
       while (games.containsKey(id)) {

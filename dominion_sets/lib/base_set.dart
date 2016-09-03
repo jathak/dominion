@@ -176,6 +176,8 @@ class Bureaucrat extends ActionCard with BaseSet, Attack {
         if (cards.length == 1) {
           p.hand.moveTo(cards[0], p.deck.top);
         }
+      } else {
+        p.announce("reveals hand of ${p.hand}");
       }
     }
   }

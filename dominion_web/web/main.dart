@@ -106,7 +106,8 @@ void loadHandlers() {
   handlers['hand-update'] = (msg) {
     var hand = msg['hand'].map(CardStub.fromMsg);
     makeHeaders(hand, querySelector('.hand'));
-    querySelector('.current-player').text = "${msg['currentPlayer']}'s Turn";
+    var player = msg['currentPlayer'];
+    querySelector('.current-player').text = player == username ? "Your Turn" : "$player's Turn";
     querySelector('.deck-size').text= "${msg['deckSize']} cards left in deck";
     var label = querySelector('.hand-label');
     if (username == null) {
