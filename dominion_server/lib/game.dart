@@ -26,6 +26,7 @@ class Game {
   List<WebSocket> allSockets = [];
   Game(this.id, List<String> kingdom, this.expensiveBasics) {
     kingdomCards = kingdom.map((c) => CardRegistry.find(c.trim()));
+    kingdomCards = kingdomCards.toList()..sort();
   }
 
   startGame(String initiatingUser) {

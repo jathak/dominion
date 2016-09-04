@@ -106,6 +106,7 @@ class Chancellor extends ActionCard with BaseSet {
         await player.controller.confirmAction(this, "Chancellor: Place deck in discard pile?");
     if (discardDeck) {
       player.deck.dumpTo(player.discarded);
+      player.notifyAnnounce("Your discard your", "discards their", "deck");
     }
   }
 }
@@ -177,7 +178,7 @@ class Bureaucrat extends ActionCard with BaseSet, Attack {
           p.hand.moveTo(cards[0], p.deck.top);
         }
       } else {
-        p.announce("reveals hand of ${p.hand}");
+        p.notifyAnnounce("You reveal", "reveals", "hand of ${p.hand}");
       }
     }
   }

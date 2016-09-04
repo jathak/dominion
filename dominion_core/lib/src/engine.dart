@@ -173,12 +173,16 @@ class Player extends Object with CardSource {
   announce(String msg) => log("$name $msg", 'others');
   announceAll(String msg) => log("$name $msg", 'everyone');
 
+  notifyAnnounce(String playerOnly, String othersOnly, [both=""]) {
+    notify("$playerOnly $both");
+    announce("$othersOnly $both");
+  }
+
   Future playAction(ActionCard card) async {
     hand.moveTo(card, turn.played);
     turn.actions -= 1;
     turn.actionsPlayed += 1;
-    notify("You play a $card");
-    announce("plays a $card");
+    notifyAnnounce("You play", "plays", "a $card");
     await card.onPlay(this);
   }
 
@@ -189,8 +193,7 @@ class Player extends Object with CardSource {
 
   Future takeTurn() async {
     turn = new Turn();
-    notify("It's your turn!");
-    announce("starts turn");
+    notifyAnnounce("It's your turn!", "starts turn");
     // play actions
     while (turn.actions > 0 && hasActions()) {
       ActionCard actionCard = await controller.selectActionCard();
@@ -227,8 +230,7 @@ class Player extends Object with CardSource {
     }
     turn = null;
     draw(5);
-    notify("Your turn ends");
-    announce("ends turn");
+    notifyAnnounce("Your turn ends", "ends turn");
   }
 
   int calculateScore() {
@@ -261,8 +263,7 @@ class Player extends Object with CardSource {
       var response =
           await controller.askQuestion(context, "Select a Reaction card to reveal.", options);
       if (response is Reaction) {
-        notify("You reveal $response");
-        announce("reveals $response");
+        notifyAnnounce("You reveal", "reveals", "a $response");
         bool result = await response.onReact(this);
         if (result) blocked = true;
       } else {
@@ -279,8 +280,7 @@ class Player extends Object with CardSource {
     } else {
       source.moveTo(card, discarded);
     }
-    notify("You discard a $card");
-    announce("discards a card");
+    notifyAnnounce("You discard", "discards", "a $card");
     await card.onDiscard(this);
   }
 
@@ -303,13 +303,11 @@ class Player extends Object with CardSource {
     for (int i = 0; i < numCards; i++) {
       card = drawTo(hand);
       if (card == null) {
-        notify("You draw $i ${cardWord(i)}");
-          notify("draws $i ${cardWord(i)}");
+        notifyAnnounce("You draw", "draws", "$i ${cardWord(i)}");
         return null;
       }
     }
-    notify("You draw $numCards ${cardWord(numCards)}");
-    announce("draws $numCards ${cardWord(numCards)}");
+    notifyAnnounce("You draw", "draws", "$numCards ${cardWord(numCards)}");
     return card;
   }
 
@@ -327,16 +325,14 @@ class Player extends Object with CardSource {
   Future<Card> trashDraw(CardSource source) async {
     // hooks of some sort
     Card card = source.drawTo(engine.trashPile);
-    notify("You trash a $card");
-    announce("trashes a $card");
+    notifyAnnounce("You trash", "trashes", "a $card");
     return card;
   }
 
   Future<bool> trashFrom(Card card, CardSource source) async {
     // hooks of some sort
     bool result = source.moveTo(card, engine.trashPile);
-    notify("You trash a $card");
-    announce("trashes a $card");
+    notifyAnnounce("You trash", "trashes", "a $card");
     return result;
   }
 
@@ -344,8 +340,7 @@ class Player extends Object with CardSource {
     bool result = await engine.supply.gain(card, this);
     if (result) {
       var remain = "${engine.supply.supplyOf(card).count} remain";
-      notify("You gain a $card. $remain");
-      announce("gains a $card. $remain");
+      notifyAnnounce("You gain", "gains", "a $card. $remain");
     } else {
       notify("$card cannot be gained!");
     }
@@ -357,8 +352,7 @@ class Player extends Object with CardSource {
     if (!result) return false;
     if (result) {
       var remain = "${engine.supply.supplyOf(card).count} remain";
-      notify("You buy a $card. $remain");
-      announce("buys a $card. $remain");
+      notifyAnnounce("You buy", "buys", "a $card. $remain");
     } else {
       notify("$card cannot be bought!");
     }

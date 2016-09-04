@@ -4,7 +4,7 @@ html, body {
     margin: 0;
     padding: 0;
     font-family: 'Roboto', sans-serif;
-    overflow-x: hidden;
+    overflow-x: none;
 }
 
 @function cards-wide($n, $scale) {
@@ -89,7 +89,7 @@ html, body {
     height: 473px * $ratio;
     border-radius: 16px * $ratio;
     border-width: 8px * $ratio;
-    .status {
+    .status, .order {
       border-radius: 12px ;//* $ratio;
       font-size: 16px ;//* $ratio;
       position: absolute;
@@ -99,7 +99,6 @@ html, body {
       right: 16px * $ratio;
     }
     .order {
-      @extend .status;
       top: auto;
       bottom: 20px * $ratio;
     }
@@ -149,7 +148,9 @@ html, body {
   display: none;
   position: absolute;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
+  overflow-y: scroll;
+  overflow-x: none;
   margin: 0;
   top: 0;
   left: 0;
@@ -174,6 +175,7 @@ html, body {
     @include card-scale(60%);
     width: 100%;
     left: 0;
+    padding-bottom: 60px;
     margin-top: 15px;
     .card {
       vertical-align: top;
@@ -225,5 +227,14 @@ html, body {
       height: 12vw;
       background-position: 0 -8vw;
     }
+  }
+  .overlay {
+    .prompt {
+      font-size: 24px;
+    }
+    .cards, .confirm {
+      position: relative;
+    }
+    @include card-scale(50%);
   }
 }
