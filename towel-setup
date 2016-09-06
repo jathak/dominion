@@ -2,6 +2,7 @@
 
 cd dominion_web
 echo "Building client-side web code..."
+pub get
 pub build
 
 cd ../dominion_server
