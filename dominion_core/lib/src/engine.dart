@@ -199,6 +199,7 @@ class Player extends Object with CardSource {
       ActionCard actionCard = await controller.selectActionCard();
       if (actionCard == null) break;
       await playAction(actionCard);
+      log(null);
     }
     turn.phase = Phase.Buy;
     // play treasures
@@ -207,6 +208,7 @@ class Player extends Object with CardSource {
       if (treasures.length == 0) break;
       for (TreasureCard treasure in treasures) {
         await playTreasure(treasure);
+        log(null);
       }
     }
     // buy cards

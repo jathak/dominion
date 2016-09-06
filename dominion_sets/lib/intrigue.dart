@@ -52,6 +52,8 @@ class Courtyard extends ActionCard with Intrigue {
     List<Card> cards = await player.controller.selectCardsFromHand(this, conds, 1, 1);
     if (cards.length == 1) {
       player.hand.moveTo(cards[0], player.deck.top);
+      player.notifyAnnounce("You return a ${cards[0]} to your deck",
+                            "returns a card to their deck");
     }
   }
 }
@@ -114,6 +116,9 @@ class SecretChamber extends ActionCard with Reaction, Intrigue {
     for (Card c in cards) {
       player.hand.moveTo(c, player.deck.top);
     }
+    var descrip = "${cards.length} ${cardWord(cards.length)}";
+    player.notifyAnnounce("You return $descrip to your deck",
+                          "returns $descrip cards to their deck");
     return false;
   }
 }
@@ -144,18 +149,19 @@ class Masquerade extends ActionCard with Intrigue {
     player.draw(2);
     CardConditions conds = new CardConditions();
     Map<Player, Card> passing = {};
-    for (Player p in player.engine.playersFrom(player)) {
+    await Future.wait(player.engine.playersFrom(player).map((p) async {
       List<Card> selected = await player.controller.selectCardsFromHand(this, conds, 1, 1);
       if (selected.length == 1) {
         passing[p] = selected[0];
       }
-    }
+    }));
     for (Player p in player.engine.playersFrom(player)) {
       if (passing.containsKey(p)) {
         Player left = player.engine.toLeftOf(p);
         p.hand.moveTo(passing[p], left.hand);
       }
     }
+    player.log("All players pass a card to their left");
     List<Card> trashing = await player.controller.selectCardsFromHand(this, conds, 0, 1);
     if (trashing.length == 1) {
       await player.trashFrom(trashing[0], player.hand);
@@ -172,8 +178,7 @@ class ShantyTown extends ActionCard with Intrigue {
 
   onPlay(Player player) async {
     player.turn.actions += 2;
-    player.notify("You reveal your hand");
-    player.announce("reveals hand of ${player.hand}");
+    player.notifyAnnounce("You reveal your", "reveals", "hand of ${player.hand}");
     if (!player.hasActions()) {
       player.draw(2);
     }
@@ -239,17 +244,14 @@ class WishingWell extends ActionCard with Intrigue {
     player.turn.actions += 1;
     CardConditions conds = new CardConditions();
     Card guess = await player.controller.selectCardFromSupply(EventType.GuessCard, conds, false);
-    player.notify("You guess $guess");
-    player.announce("guesses $guess");
+    player.notifyAnnounce("You guess", "guesses", "$guess");
     CardBuffer buffer = new CardBuffer();
     player.drawTo(buffer);
     if (buffer[0] == guess) {
-      player.notify("You reveal ${buffer[0]}. You guessed correctly!");
-      player.announce("reveals ${buffer[0]}. They guessed correctly!");
+      player.notifyAnnounce("You reveal", "reveals" "${buffer[0]}. Correct guess!");
       buffer.drawTo(player.hand);
     } else {
-      player.notify("You reveal ${buffer[0]}. You guessed incorrectly");
-      player.announce("reveals ${buffer[0]}. They guessed incorrectly");
+      player.notifyAnnounce("You reveal", "reveals" "${buffer[0]}. Incorrect guess");
       buffer.drawTo(player.deck.top);
     }
   }
@@ -372,7 +374,7 @@ class Scout extends ActionCard with Intrigue {
     player.turn.actions += 1;
     CardBuffer buffer = new CardBuffer();
     for (int i = 0; i < 4; i++) player.drawTo(buffer);
-    player.announce("reveals $buffer");
+    player.notifyAnnounce("You reveal", "reveals" "$buffer");
     for (Card c in buffer.asList()) {
       if (c is VictoryCard) {
         buffer.moveTo(c, player.hand);
@@ -488,7 +490,7 @@ class Torturer extends ActionCard with Intrigue {
       if (attackBlocked) continue;
       String a = "Discard two cards";
       String b = "Gain a curse";
-      String option = await player.controller.askQuestion(this, "Choose one", [a, b]);
+      String option = await p.controller.askQuestion(this, "Choose one", [a, b]);
       if (option == a) {
         List<Card> cards = await p.controller.selectCardsFromHand(this, new CardConditions(), 2, 2);
         for (Card c in cards) {
@@ -534,8 +536,7 @@ class Tribute extends ActionCard with Intrigue {
     CardBuffer buffer = new CardBuffer();
     left.drawTo(buffer);
     left.drawTo(buffer);
-    left.notify("You reveal and discard $buffer");
-    left.announce("reveals and discards $buffer");
+    left.notifyAnnounce("You reveal and discard", "reveals and discards" "$buffer");
     Set drawn = new Set.from(buffer.asList());
     while (buffer.length > 0) {
       await left.discardFrom(buffer);

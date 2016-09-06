@@ -27,8 +27,10 @@ selectCardFromSupply(var metadata) {
   return firstOrNull(cardSelector(stubs, question, metadata['allowNone'] ? 0 : 1, 1));
 }
 
-confirmAction(var metadata) {
-  return context['confirm'].apply([metadata['question']]);
+confirmAction(var metadata) async {
+  var question = metadata['question'];
+  var answer = await cardSelector(['Yes', 'No'], question, 1, 1);
+  return answer == 'Yes';
 }
 
 askQuestion(var metadata) {

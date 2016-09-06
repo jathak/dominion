@@ -341,3 +341,18 @@ class NetworkController extends PlayerController {
     // nothing yet
   }
 }
+
+List<String> generateKingdom([List<String> existing]) {
+  if (existing == null) existing = [];
+  List<Card> cards = existing.map(CardRegistry.find)
+                             .where((c)=> c is Card)
+                             .toList(growable: true);
+  var registry = CardRegistry.getCards()..shuffle();
+  while (cards.length < 10) {
+    var card = registry.removeAt(0);
+    if (card.expansion != null && !cards.contains(card)) {
+      cards.add(card);
+    }
+  }
+  return cards.map((c)=>c.name).toList();
+}

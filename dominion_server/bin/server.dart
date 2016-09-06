@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:math';
 import 'package:http_server/http_server.dart';
 import 'package:dominion_server/game.dart' as game;
-import 'package:dominion_core/dominion_core.dart';
 
 main() async {
   game.load();
@@ -26,7 +25,8 @@ main() async {
     } else if (request.method == 'POST' && request.uri.path == '/create-game') {
       var httpBody = await HttpBodyHandler.processRequest(request);
       var body = httpBody.body;
-      var kingdom = body['kingdomCards'].trim().split('\n');
+      var kingdom = body['kingdomCards'].replaceAll('\r\n', '\n').trim().split('\n');
+      kingdom = game.generateKingdom(kingdom);
       bool useProsperity =
           body.containsKey('useProsperity') ? body['useProsperity'] == 'on' : false;
       bool spectate = body.containsKey('spectate') ? body['spectate'] == 'on' : false;
@@ -39,16 +39,7 @@ main() async {
       request.response.redirect('/game.html?id=$id' + (spectate ? '&spectate' : ''));
       continue;
     } else if (request.method == 'GET' && request.uri.path == '/random') {
-      var cards = CardRegistry.getCards()..shuffle();
-      var kingdom = new List.generate(10, (x) {
-        var card;
-        while (true) {
-          card = cards.removeAt(0);
-          if (card.expansion != null) {
-            return card.name;
-          }
-        }
-      });
+      var kingdom = game.generateKingdom();
       bool useProsperity = false;
       var id = randomString(5);
       while (games.containsKey(id)) {
@@ -109,6 +100,9 @@ send(msg, socket) {
 }
 
 String randomString(int length) {
+  if (!games.containsKey('first')) {
+    return "first";
+  }
   var r = new Random();
   fn(i) {
     var number = r.nextInt(52);

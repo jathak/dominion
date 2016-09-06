@@ -300,16 +300,18 @@ class Spy extends ActionCard with BaseSet, Attack {
       if (buffer.length == 0) continue;
       bool discard;
       Card card = buffer[0];
+      p.notifyAnnounce("You reveal", "reveals", "a $card");
       var question;
       if (p == player) {
-        question = "Spy: Discard your ${card.name}?";
+        question = "Spy: Discard your $card?";
       } else {
-        question = "Spy: Discard ${p.name}'s ${card.name}?";
+        question = "Spy: Discard ${p.name}'s $card?";
       }
       discard = await player.controller.confirmAction(card, question);
       if (discard) {
         await p.discardFrom(buffer);
       } else {
+        p.notify("${player.name} returns your $card to your deck");
         buffer.drawTo(p.deck.top);
       }
     }
@@ -331,6 +333,7 @@ class Thief extends ActionCard with BaseSet, Attack {
       CardBuffer buffer = new CardBuffer();
       p.drawTo(buffer);
       p.drawTo(buffer);
+      p.notifyAnnounce("You reveal", "reveals", "$buffer");
       CardBuffer options = new CardBuffer();
       CardBuffer discarding = new CardBuffer();
       int length = buffer.length;
@@ -362,7 +365,7 @@ class Thief extends ActionCard with BaseSet, Attack {
         options.dumpTo(discarding);
       }
       while (discarding.length > 0) {
-        p.discardFrom(discarding);
+        await p.discardFrom(discarding);
       }
     }
     if (trashed.length > 0) {
@@ -370,6 +373,7 @@ class Thief extends ActionCard with BaseSet, Attack {
       List<Card> keeping = await player.controller.selectCardsFrom(trashed, question, 0, -1);
       for (Card c in keeping) {
         player.engine.trashPile.moveTo(c, player.discarded);
+        notifyAnnounce("You gain", "gains", "a $card from the trash");
         c.onGain(player, false);
       }
     }
@@ -388,12 +392,10 @@ class ThroneRoom extends ActionCard with BaseSet {
     if (card != null) {
       player.hand.moveTo(card, player.turn.played);
       player.turn.actionsPlayed += 1;
-      player.notify("You play a $card");
-      player.announce("plays a $card");
+      player.notifyAnnounce("You play", "plays", "a $card");
       await card.onPlay(player);
       player.turn.actionsPlayed += 1;
-      player.notify("You play the $card again");
-      player.announce("plays the $card again");
+      player.notifyAnnounce("You play", "plays", "the $card again");
       await card.onPlay(player);
     }
   }
