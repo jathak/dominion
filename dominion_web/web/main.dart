@@ -25,7 +25,8 @@ main() async {
   username = params['username'];
   bool spectating = params.containsKey("spectate");
   var socketUrl = params.containsKey("url") ? params['url'] : '${Uri.base.host}:${Uri.base.port}';
-  socket = new WebSocket("ws://$socketUrl");
+  var socketScheme = Uri.base.scheme == 'https' ? 'wss://' : 'ws://';
+  socket = new WebSocket(socketScheme + socketUrl);
   socket.onClose.listen(socketClosed);
   socket.onError.listen(socketClosed);
   await socket.onOpen.first;
