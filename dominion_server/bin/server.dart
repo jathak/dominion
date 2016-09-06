@@ -5,15 +5,16 @@ import 'dart:math';
 import 'package:http_server/http_server.dart';
 import 'package:dominion_server/game.dart' as game;
 
-main() async {
+main(var args) async {
+  int port = args.length == 1 ? int.parse(args[0]) : 7777;
   game.load();
   var path = Platform.script.resolve('../../dominion_web/build/web/').toFilePath();
   print(path);
   var staticFiles = new VirtualDirectory(path);
   staticFiles.allowDirectoryListing = true;
 
-  var server = await HttpServer.bind('0.0.0.0', 7777);
-  print("Server running on port 7777");
+  var server = await HttpServer.bind('0.0.0.0', port);
+  print("Server running on port $port");
   var testKingdom = [ "Cellar", "Moat", "Village",
     "Gardens", "Militia", "Smithy", "Throne Room",
     "Council Room", "Laboratory", "Market"];

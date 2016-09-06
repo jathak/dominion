@@ -1,0 +1,12 @@
+#!/bin/sh
+
+git pull origin master
+
+cd dominion_web
+echo "Building client-side web code..."
+pub get
+pub build
+
+cd ../dominion_server
+echo "Fetching server dependencies..."
+pub get
