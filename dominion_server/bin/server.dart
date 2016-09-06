@@ -19,41 +19,45 @@ main() async {
     "Council Room", "Laboratory", "Market"];
   games["test"] = new game.Game("test", testKingdom, false);
   await for (var request in server) {
-    if (WebSocketTransformer.isUpgradeRequest(request)) {
-      upgradeRequest(request);
-      continue;
-    } else if (request.method == 'POST' && request.uri.path == '/create-game') {
-      var httpBody = await HttpBodyHandler.processRequest(request);
-      var body = httpBody.body;
-      var kingdom = body['kingdomCards'].replaceAll('\r\n', '\n').trim().split('\n');
-      kingdom = game.generateKingdom(kingdom);
-      bool useProsperity =
-          body.containsKey('useProsperity') ? body['useProsperity'] == 'on' : false;
-      bool spectate = body.containsKey('spectate') ? body['spectate'] == 'on' : false;
-      var id = randomString(5);
-      while (games.containsKey(id)) {
-        id = randomString(5);
+    try {
+      if (WebSocketTransformer.isUpgradeRequest(request)) {
+        upgradeRequest(request);
+        continue;
+      } else if (request.method == 'POST' && request.uri.path == '/create-game') {
+        var httpBody = await HttpBodyHandler.processRequest(request);
+        var body = httpBody.body;
+        var kingdom = body['kingdomCards'].replaceAll('\r\n', '\n').trim().split('\n');
+        kingdom = game.generateKingdom(kingdom);
+        bool useProsperity =
+            body.containsKey('useProsperity') ? body['useProsperity'] == 'on' : false;
+        bool spectate = body.containsKey('spectate') ? body['spectate'] == 'on' : false;
+        var id = randomString(5);
+        while (games.containsKey(id)) {
+          id = randomString(5);
+        }
+        var newGame = new game.Game(id, kingdom, useProsperity);
+        games[id] = newGame;
+        request.response.redirect('/game.html?id=$id' + (spectate ? '&spectate' : ''));
+        continue;
+      } else if (request.method == 'GET' && request.uri.path == '/random') {
+        var kingdom = game.generateKingdom();
+        bool useProsperity = false;
+        var id = randomString(5);
+        while (games.containsKey(id)) {
+          id = randomString(5);
+        }
+        var newGame = new game.Game(id, kingdom, useProsperity);
+        games[id] = newGame;
+        request.response.redirect('/game.html?id=$id');
+        continue;
       }
-      var newGame = new game.Game(id, kingdom, useProsperity);
-      games[id] = newGame;
-      request.response.redirect('/game.html?id=$id' + (spectate ? '&spectate' : ''));
-      continue;
-    } else if (request.method == 'GET' && request.uri.path == '/random') {
-      var kingdom = game.generateKingdom();
-      bool useProsperity = false;
-      var id = randomString(5);
-      while (games.containsKey(id)) {
-        id = randomString(5);
-      }
-      var newGame = new game.Game(id, kingdom, useProsperity);
-      games[id] = newGame;
-      request.response.redirect('/game.html?id=$id');
-      continue;
+      var requestPath = request.uri.path.substring(1);
+      if (requestPath == '') requestPath = 'index.html';
+      var uri = new Uri.file(path).resolve(requestPath);
+      staticFiles.serveFile(new File(uri.toFilePath()), request);
+    } catch (e) {
+      print(e);
     }
-    var requestPath = request.uri.path.substring(1);
-    if (requestPath == '') requestPath = 'index.html';
-    var uri = new Uri.file(path).resolve(requestPath);
-    staticFiles.serveFile(new File(uri.toFilePath()), request);
   }
 }
 
