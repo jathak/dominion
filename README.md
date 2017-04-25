@@ -5,6 +5,9 @@ This is an implementation of the [Dominion][wiki] card game in Dart.
 While it's playable, please play the [official online implementation][online]
 or buy the [physical game][board-game] from your local game store instead.
 
+This code should be for personal use only. Please do not host a publicly
+available server of this. Support the official version instead!
+
 I wrote this as a personal project to play around with, though I'm posting the
 source code because I imagine it could be useful in playtesting custom cards or
 writing bots.
