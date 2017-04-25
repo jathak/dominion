@@ -44,13 +44,13 @@ class Turn {
   CardBuffer played = new CardBuffer();
   Phase phase = Phase.Action;
 
-  /// each card processor should be in form (card, oldCost) => newCost
-  /// minimizing to 0 while be handled automatically
-  List<Function> costProcessors = [];
+  List<CostProcessor> costProcessors = [];
 
   /// used by various cards to store data that should only persist for one turn
   Map misc = {};
 }
+
+typedef int CostProcessor(Card card, int oldCost);
 
 String cardWord(int count) => count == 1 ? 'card' : 'cards';
 

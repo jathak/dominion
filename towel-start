@@ -1,3 +1,5 @@
 #!/bin/sh
 
+# This is a setup script for my own web server. Feel free to ignore
+
 exec dart dominion_server/bin/server.dart $1

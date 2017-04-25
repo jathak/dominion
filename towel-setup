@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# This is a setup script for my own web server. Feel free to ignore
+
 cd dominion_web
 echo "Building client-side web code..."
 pub get
