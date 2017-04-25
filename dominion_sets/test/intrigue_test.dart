@@ -11,7 +11,6 @@ TestController ctrlA;
 TestController ctrlB;
 
 main() {
-  load();
   setUp(() {
     ctrlA = new TestController("A");
     ctrlB = new TestController("B");

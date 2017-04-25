@@ -1,20 +1,15 @@
 import 'package:dominion_core/dominion_core.dart';
-import 'package:dominion_sets/base_set.dart' as base;
-import 'package:dominion_sets/intrigue.dart' as intrigue;
+// ignore: unused_import
+import 'package:dominion_sets/base_set.dart';
+// ignore: unused_import
+import 'package:dominion_sets/intrigue.dart';
 
 import 'dart:io';
 import 'dart:async';
-
-load() {
-  base.load();
-  intrigue.load();
-}
-
 List<String> expansions = [];
 
 main(var args) {
   expansions = args;
-  load();
   start();
 }
 

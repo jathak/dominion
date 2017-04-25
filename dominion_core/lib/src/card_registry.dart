@@ -1,24 +1,29 @@
 part of dominion_core;
 
 class CardRegistry {
-  static Map<String, Card> _cards = {
-    Copper.instance.name: Copper.instance,
-    Silver.instance.name: Silver.instance,
-    Gold.instance.name: Gold.instance,
-    Platinum.instance.name: Platinum.instance,
-    Estate.instance.name: Estate.instance,
-    Duchy.instance.name: Duchy.instance,
-    Province.instance.name: Province.instance,
-    Colony.instance.name: Colony.instance,
-    Curse.instance.name: Curse.instance,
-    Potion.instance.name: Potion.instance,
-  };
+  static Map<String, Card> _cards = null;
+  
+  static _init() {
+    _cards = {};
+    for (LibraryMirror lib in currentMirrorSystem().libraries.values) {
+      for (DeclarationMirror decl in lib.declarations.values) {
+        if (decl is ClassMirror) {
+          if (decl.metadata.contains(reflect(card))) {
+            Card instance = decl.getField(new Symbol('instance')).reflectee as Card;
+            _cards[instance.name] = instance;
+          }
+        }
+      }
+    }
+  }
 
-  static Card find(String name) => _cards[name];
-
-  static register(Card card) => _cards[card.name] = card;
+  static Card find(String name) {
+    if (_cards == null) _init();
+    return _cards[name];
+  }
 
   static cardsWithConditions([CardConditions conditions]) sync* {
+    if (_cards == null) _init();
     if (conditions == null) conditions = new CardConditions();
     var allCards = getCards();
     allCards.shuffle();

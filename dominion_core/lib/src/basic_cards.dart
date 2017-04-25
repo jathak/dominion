@@ -2,6 +2,7 @@ part of dominion_core;
 
 // Basic Treasure Cards
 
+@card
 class Copper extends TreasureCard {
   Copper._();
   static Copper instance = new Copper._();
@@ -23,6 +24,7 @@ class Copper extends TreasureCard {
   }
 }
 
+@card
 class Silver extends TreasureCard {
   Silver._();
   static Silver instance = new Silver._();
@@ -35,6 +37,7 @@ class Silver extends TreasureCard {
   int supplyCount(int playerCount) => 40;
 }
 
+@card
 class Gold extends TreasureCard {
   Gold._();
   static Gold instance = new Gold._();
@@ -47,6 +50,7 @@ class Gold extends TreasureCard {
   int supplyCount(int playerCount) => 30;
 }
 
+@card
 class Platinum extends TreasureCard {
   Platinum._();
   static Platinum instance = new Platinum._();
@@ -61,6 +65,7 @@ class Platinum extends TreasureCard {
 
 // Basic Victory Point Cards
 
+@card
 class Estate extends VictoryCard {
   Estate._();
   static Estate instance = new Estate._();
@@ -71,6 +76,7 @@ class Estate extends VictoryCard {
   final int points = 1;
 }
 
+@card
 class Duchy extends VictoryCard {
   Duchy._();
   static Duchy instance = new Duchy._();
@@ -81,6 +87,7 @@ class Duchy extends VictoryCard {
   final int points = 3;
 }
 
+@card
 class Province extends VictoryCard {
   Province._();
   static Province instance = new Province._();
@@ -98,6 +105,7 @@ class Province extends VictoryCard {
   }
 }
 
+@card
 class Colony extends VictoryCard {
   Colony._();
   static Colony instance = new Colony._();
@@ -109,6 +117,7 @@ class Colony extends VictoryCard {
 }
 
 // Curse card
+@card
 class Curse extends CurseCard {
   Curse._();
   static Curse instance = new Curse._();
@@ -122,6 +131,7 @@ class Curse extends CurseCard {
 }
 
 // Potion card
+@card
 class Potion extends TreasureCard {
   Potion._();
   static Potion instance = new Potion._();

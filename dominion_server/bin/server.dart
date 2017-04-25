@@ -5,9 +5,8 @@ import 'dart:math';
 import 'package:http_server/http_server.dart';
 import 'package:dominion_server/game.dart' as game;
 
-main(var args) async {
+Future main(var args) async {
   int port = args.length == 1 ? int.parse(args[0]) : 7777;
-  game.load();
   var path = Platform.script.resolve('../../dominion_web/build/web/').toFilePath();
   print(path);
   var staticFiles = new VirtualDirectory(path);
@@ -38,7 +37,7 @@ main(var args) async {
         }
         var newGame = new game.Game(id, kingdom, useProsperity);
         games[id] = newGame;
-        request.response.redirect('/game.html?id=$id' + (spectate ? '&spectate' : ''));
+        request.response.redirect(Uri.parse('/game.html?id=$id' + (spectate ? '&spectate' : '')));
         continue;
       } else if (request.method == 'GET' && request.uri.path == '/random') {
         var kingdom = game.generateKingdom();
@@ -49,7 +48,7 @@ main(var args) async {
         }
         var newGame = new game.Game(id, kingdom, useProsperity);
         games[id] = newGame;
-        request.response.redirect('/game.html?id=$id');
+        request.response.redirect(Uri.parse('/game.html?id=$id'));
         continue;
       }
       var requestPath = request.uri.path.substring(1);

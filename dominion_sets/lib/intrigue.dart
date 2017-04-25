@@ -7,38 +7,11 @@ import 'package:dominion_core/dominion_core.dart';
 
 import 'dart:async';
 
-void load() {
-  CardRegistry.register(Courtyard.instance);
-  CardRegistry.register(Pawn.instance);
-  CardRegistry.register(SecretChamber.instance);
-  CardRegistry.register(GreatHall.instance);
-  CardRegistry.register(Masquerade.instance);
-  CardRegistry.register(ShantyTown.instance);
-  CardRegistry.register(Steward.instance);
-  CardRegistry.register(Swindler.instance);
-  CardRegistry.register(WishingWell.instance);
-  CardRegistry.register(Baron.instance);
-  CardRegistry.register(Bridge.instance);
-  CardRegistry.register(Conspirator.instance);
-  CardRegistry.register(Coppersmith.instance);
-  CardRegistry.register(Ironworks.instance);
-  CardRegistry.register(MiningVillage.instance);
-  CardRegistry.register(Scout.instance);
-  CardRegistry.register(Duke.instance);
-  CardRegistry.register(Minion.instance);
-  CardRegistry.register(Saboteur.instance);
-  CardRegistry.register(Torturer.instance);
-  CardRegistry.register(TradingPost.instance);
-  CardRegistry.register(Tribute.instance);
-  CardRegistry.register(Upgrade.instance);
-  CardRegistry.register(Harem.instance);
-  CardRegistry.register(Nobles.instance);
-}
-
 abstract class Intrigue {
   final String expansion = "Intrigue";
 }
 
+@card
 class Courtyard extends ActionCard with Intrigue {
   Courtyard._();
   static Courtyard instance = new Courtyard._();
@@ -58,6 +31,7 @@ class Courtyard extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Pawn extends ActionCard with Intrigue {
   Pawn._();
   static Pawn instance = new Pawn._();
@@ -91,6 +65,7 @@ class Pawn extends ActionCard with Intrigue {
   }
 }
 
+@card
 class SecretChamber extends ActionCard with Reaction, Intrigue {
   SecretChamber._();
   static SecretChamber instance = new SecretChamber._();
@@ -123,6 +98,7 @@ class SecretChamber extends ActionCard with Reaction, Intrigue {
   }
 }
 
+@card
 class GreatHall extends VictoryCard with ActionCard, Intrigue {
   GreatHall._();
   static GreatHall instance = new GreatHall._();
@@ -138,6 +114,7 @@ class GreatHall extends VictoryCard with ActionCard, Intrigue {
   }
 }
 
+@card
 class Masquerade extends ActionCard with Intrigue {
   Masquerade._();
   static Masquerade instance = new Masquerade._();
@@ -169,6 +146,7 @@ class Masquerade extends ActionCard with Intrigue {
   }
 }
 
+@card
 class ShantyTown extends ActionCard with Intrigue {
   ShantyTown._();
   static ShantyTown instance = new ShantyTown._();
@@ -185,6 +163,7 @@ class ShantyTown extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Steward extends ActionCard with Intrigue {
   Steward._();
   static Steward instance = new Steward._();
@@ -211,6 +190,7 @@ class Steward extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Swindler extends ActionCard with Attack, Intrigue {
   Swindler._();
   static Swindler instance = new Swindler._();
@@ -232,6 +212,7 @@ class Swindler extends ActionCard with Attack, Intrigue {
   }
 }
 
+@card
 class WishingWell extends ActionCard with Intrigue {
   WishingWell._();
   static WishingWell instance = new WishingWell._();
@@ -257,6 +238,7 @@ class WishingWell extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Baron extends ActionCard with Intrigue {
   Baron._();
   static Baron instance = new Baron._();
@@ -282,6 +264,7 @@ class Baron extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Bridge extends ActionCard with Intrigue {
   Bridge._();
   static Bridge instance = new Bridge._();
@@ -296,6 +279,7 @@ class Bridge extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Conspirator extends ActionCard with Intrigue {
   Conspirator._();
   static Conspirator instance = new Conspirator._();
@@ -312,6 +296,7 @@ class Conspirator extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Coppersmith extends ActionCard with Intrigue {
   Coppersmith._();
   static Coppersmith instance = new Coppersmith._();
@@ -327,6 +312,7 @@ class Coppersmith extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Ironworks extends ActionCard with Intrigue {
   Ironworks._();
   static Ironworks instance = new Ironworks._();
@@ -343,6 +329,7 @@ class Ironworks extends ActionCard with Intrigue {
   }
 }
 
+@card
 class MiningVillage extends ActionCard with Intrigue {
   MiningVillage._();
   static MiningVillage instance = new MiningVillage._();
@@ -363,6 +350,7 @@ class MiningVillage extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Scout extends ActionCard with Intrigue {
   Scout._();
   static Scout instance = new Scout._();
@@ -391,6 +379,7 @@ class Scout extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Duke extends VictoryCard with Intrigue {
   Duke._();
   static Duke instance = new Duke._();
@@ -408,6 +397,7 @@ class Duke extends VictoryCard with Intrigue {
   }
 }
 
+@card
 class Minion extends ActionCard with Intrigue {
   Minion._();
   static Minion instance = new Minion._();
@@ -446,6 +436,7 @@ class Minion extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Saboteur extends ActionCard with Intrigue {
   Saboteur._();
   static Saboteur instance = new Saboteur._();
@@ -476,6 +467,7 @@ class Saboteur extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Torturer extends ActionCard with Intrigue {
   Torturer._();
   static Torturer instance = new Torturer._();
@@ -504,6 +496,7 @@ class Torturer extends ActionCard with Intrigue {
   }
 }
 
+@card
 class TradingPost extends ActionCard with Intrigue {
   TradingPost._();
   static TradingPost instance = new TradingPost._();
@@ -524,6 +517,7 @@ class TradingPost extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Tribute extends ActionCard with Intrigue {
   Tribute._();
   static Tribute instance = new Tribute._();
@@ -551,6 +545,7 @@ class Tribute extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Upgrade extends ActionCard with Intrigue {
   Upgrade._();
   static Upgrade instance = new Upgrade._();
@@ -573,6 +568,7 @@ class Upgrade extends ActionCard with Intrigue {
   }
 }
 
+@card
 class Harem extends VictoryCard with TreasureCard, Intrigue {
   Harem._();
   static Harem instance = new Harem._();
@@ -584,6 +580,7 @@ class Harem extends VictoryCard with TreasureCard, Intrigue {
   final int points = 2;
 }
 
+@card
 class Nobles extends VictoryCard with ActionCard, Intrigue {
   Nobles._();
   static Nobles instance = new Nobles._();

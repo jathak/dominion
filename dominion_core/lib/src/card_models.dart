@@ -80,7 +80,7 @@ abstract class VPCard extends Card {
   int getVictoryPoints(Player player) => points;
 }
 
-abstract class VictoryCard extends VPCard {
+abstract class VictoryCard extends VPCard {   
   int supplyCount(int playerCount) {
     if (playerCount == 2) return 8;
     return 12;

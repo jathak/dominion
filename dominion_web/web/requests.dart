@@ -29,7 +29,7 @@ selectCardFromSupply(var metadata) {
 
 confirmAction(var metadata) async {
   var question = metadata['question'];
-  var answer = await cardSelector(['Yes', 'No'], question, 1, 1);
+  var answer = await firstOrNull(cardSelector(['Yes', 'No'], question, 1, 1));
   return answer == 'Yes';
 }
 

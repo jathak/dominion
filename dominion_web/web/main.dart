@@ -19,7 +19,7 @@ Map<String, Function> handlers = {};
 
 var log = querySelector('.log');
 
-main() async {
+Future main() async {
   var params = Uri.base.queryParameters;
   ident = params['id'];
   username = params['username'];

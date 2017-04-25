@@ -7,38 +7,11 @@ import 'package:dominion_core/dominion_core.dart';
 
 import 'dart:async';
 
-void load() {
-  CardRegistry.register(Cellar.instance);
-  CardRegistry.register(Chapel.instance);
-  CardRegistry.register(Moat.instance);
-  CardRegistry.register(Chancellor.instance);
-  CardRegistry.register(Village.instance);
-  CardRegistry.register(Woodcutter.instance);
-  CardRegistry.register(Workshop.instance);
-  CardRegistry.register(Bureaucrat.instance);
-  CardRegistry.register(Feast.instance);
-  CardRegistry.register(Gardens.instance);
-  CardRegistry.register(Militia.instance);
-  CardRegistry.register(Moneylender.instance);
-  CardRegistry.register(Remodel.instance);
-  CardRegistry.register(Smithy.instance);
-  CardRegistry.register(Spy.instance);
-  CardRegistry.register(Thief.instance);
-  CardRegistry.register(ThroneRoom.instance);
-  CardRegistry.register(CouncilRoom.instance);
-  CardRegistry.register(Festival.instance);
-  CardRegistry.register(Laboratory.instance);
-  CardRegistry.register(Library.instance);
-  CardRegistry.register(Market.instance);
-  CardRegistry.register(Mine.instance);
-  CardRegistry.register(Witch.instance);
-  CardRegistry.register(Adventurer.instance);
-}
-
 abstract class BaseSet {
   final String expansion = "Base";
 }
 
+@card
 class Cellar extends ActionCard with BaseSet {
   Cellar._();
   static Cellar instance = new Cellar._();
@@ -57,6 +30,7 @@ class Cellar extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Chapel extends ActionCard with BaseSet {
   Chapel._();
   static Chapel instance = new Chapel._();
@@ -73,6 +47,7 @@ class Chapel extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Moat extends ActionCard with BaseSet, Reaction {
   Moat._();
   static Moat instance = new Moat._();
@@ -93,6 +68,7 @@ class Moat extends ActionCard with BaseSet, Reaction {
   }
 }
 
+@card
 class Chancellor extends ActionCard with BaseSet {
   Chancellor._();
   static Chancellor instance = new Chancellor._();
@@ -111,6 +87,7 @@ class Chancellor extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Village extends ActionCard with BaseSet {
   Village._();
   static Village instance = new Village._();
@@ -124,6 +101,7 @@ class Village extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Woodcutter extends ActionCard with BaseSet {
   Woodcutter._();
   static Woodcutter instance = new Woodcutter._();
@@ -137,6 +115,7 @@ class Woodcutter extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Workshop extends ActionCard with BaseSet {
   Workshop._();
   static Workshop instance = new Workshop._();
@@ -152,6 +131,7 @@ class Workshop extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Bureaucrat extends ActionCard with BaseSet, Attack {
   Bureaucrat._();
   static Bureaucrat instance = new Bureaucrat._();
@@ -184,6 +164,7 @@ class Bureaucrat extends ActionCard with BaseSet, Attack {
   }
 }
 
+@card
 class Feast extends ActionCard with BaseSet {
   Feast._();
   static Feast instance = new Feast._();
@@ -200,6 +181,7 @@ class Feast extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Gardens extends VictoryCard with BaseSet {
   Gardens._();
   static Gardens instance = new Gardens._();
@@ -213,6 +195,7 @@ class Gardens extends VictoryCard with BaseSet {
   }
 }
 
+@card
 class Militia extends ActionCard with BaseSet, Attack {
   Militia._();
   static Militia instance = new Militia._();
@@ -235,6 +218,7 @@ class Militia extends ActionCard with BaseSet, Attack {
   }
 }
 
+@card
 class Moneylender extends ActionCard with BaseSet {
   Moneylender._();
   static Moneylender instance = new Moneylender._();
@@ -249,6 +233,7 @@ class Moneylender extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Remodel extends ActionCard with BaseSet {
   Remodel._();
   static Remodel instance = new Remodel._();
@@ -268,6 +253,7 @@ class Remodel extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Smithy extends ActionCard with BaseSet {
   Smithy._();
   static Smithy instance = new Smithy._();
@@ -280,6 +266,7 @@ class Smithy extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Spy extends ActionCard with BaseSet, Attack {
   Spy._();
   static Spy instance = new Spy._();
@@ -318,6 +305,7 @@ class Spy extends ActionCard with BaseSet, Attack {
   }
 }
 
+@card
 class Thief extends ActionCard with BaseSet, Attack {
   Thief._();
   static Thief instance = new Thief._();
@@ -373,13 +361,14 @@ class Thief extends ActionCard with BaseSet, Attack {
       List<Card> keeping = await player.controller.selectCardsFrom(trashed, question, 0, -1);
       for (Card c in keeping) {
         player.engine.trashPile.moveTo(c, player.discarded);
-        notifyAnnounce("You gain", "gains", "a $card from the trash");
+        player.notifyAnnounce("You gain", "gains", "a $c from the trash");
         c.onGain(player, false);
       }
     }
   }
 }
 
+@card
 class ThroneRoom extends ActionCard with BaseSet {
   ThroneRoom._();
   static ThroneRoom instance = new ThroneRoom._();
@@ -401,6 +390,7 @@ class ThroneRoom extends ActionCard with BaseSet {
   }
 }
 
+@card
 class CouncilRoom extends ActionCard with BaseSet {
   CouncilRoom._();
   static CouncilRoom instance = new CouncilRoom._();
@@ -417,6 +407,7 @@ class CouncilRoom extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Festival extends ActionCard with BaseSet {
   Festival._();
   static Festival instance = new Festival._();
@@ -431,6 +422,7 @@ class Festival extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Laboratory extends ActionCard with BaseSet {
   Laboratory._();
   static Laboratory instance = new Laboratory._();
@@ -444,6 +436,7 @@ class Laboratory extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Library extends ActionCard with BaseSet {
   Library._();
   static Library instance = new Library._();
@@ -469,6 +462,7 @@ class Library extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Market extends ActionCard with BaseSet {
   Market._();
   static Market instance = new Market._();
@@ -484,6 +478,7 @@ class Market extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Mine extends ActionCard with BaseSet {
   Mine._();
   static Mine instance = new Mine._();
@@ -506,6 +501,7 @@ class Mine extends ActionCard with BaseSet {
   }
 }
 
+@card
 class Witch extends ActionCard with BaseSet, Attack {
   Witch._();
   static Witch instance = new Witch._();
@@ -524,6 +520,7 @@ class Witch extends ActionCard with BaseSet, Attack {
   }
 }
 
+@card
 class Adventurer extends ActionCard with BaseSet {
   Adventurer._();
   static Adventurer instance = new Adventurer._();
