@@ -12,4 +12,7 @@ part 'src/card_structs.dart';
 part 'src/engine.dart';
 part 'src/engine_structs.dart';
 
-const card = "card";
+
+class _CardAnnotation { const _CardAnnotation(); }
+
+const card = const _CardAnnotation();
