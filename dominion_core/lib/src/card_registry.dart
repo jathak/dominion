@@ -2,14 +2,15 @@ part of dominion_core;
 
 class CardRegistry {
   static Map<String, Card> _cards = null;
-  
+
   static _init() {
     _cards = {};
     for (LibraryMirror lib in currentMirrorSystem().libraries.values) {
       for (DeclarationMirror decl in lib.declarations.values) {
         if (decl is ClassMirror) {
           if (decl.metadata.contains(reflect(card))) {
-            Card instance = decl.getField(new Symbol('instance')).reflectee as Card;
+            Card instance =
+                decl.getField(new Symbol('instance')).reflectee as Card;
             _cards[instance.name] = instance;
           }
         }
@@ -22,7 +23,7 @@ class CardRegistry {
     return _cards[name];
   }
 
-  static cardsWithConditions([CardConditions conditions]) sync* {
+  static Iterable<Card> cardsWithConditions([CardConditions conditions]) sync* {
     if (_cards == null) _init();
     if (conditions == null) conditions = new CardConditions();
     var allCards = getCards();
@@ -73,7 +74,8 @@ class CardConditions {
 
   /// returns true if conditions allow for this card
   bool allowsFor(Card card, [Player player]) {
-    if (allowedExpansions.length > 0 && !allowedExpansions.contains(card.expansion)) {
+    if (allowedExpansions.length > 0 &&
+        !allowedExpansions.contains(card.expansion)) {
       return false;
     }
     int cardCost = card.cost;
@@ -81,16 +83,16 @@ class CardConditions {
     if (minCost > -1 && cardCost < minCost) return false;
     if (maxCost > -1 && cardCost > maxCost) return false;
     bool meetsReq = requiredTypes.length == 0;
-    if (card is ActionCard) {
+    if (card is Action) {
       if (invalidTypes.contains(CardType.Action)) return false;
       if (requiredTypes.contains(CardType.Action)) meetsReq = true;
-    } else if (card is TreasureCard) {
+    } else if (card is Treasure) {
       if (invalidTypes.contains(CardType.Treasure)) return false;
       if (requiredTypes.contains(CardType.Treasure)) meetsReq = true;
-    } else if (card is VictoryCard) {
+    } else if (card is Victory) {
       if (invalidTypes.contains(CardType.Victory)) return false;
       if (requiredTypes.contains(CardType.Victory)) meetsReq = true;
-    } else if (card is CurseCard) {
+    } else if (card is Curse) {
       if (invalidTypes.contains(CardType.Curse)) return false;
       if (requiredTypes.contains(CardType.Curse)) meetsReq = true;
     } else if (card is Duration) {

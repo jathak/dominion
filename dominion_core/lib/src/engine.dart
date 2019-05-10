@@ -132,31 +132,35 @@ class Player extends Object with CardSource {
     discarded = new CardBuffer();
   }
 
-  Future<Card> selectCardToGain({CardConditions conditions, bool allowNone: false}) {
+  Future<Card> selectCardToGain(
+      {CardConditions conditions, bool allowNone: false}) {
     if (conditions == null) conditions = new CardConditions();
-    return controller.selectCardFromSupply(EventType.GainCard, conditions, allowNone);
+    return controller.selectCardFromSupply(
+        EventType.GainCard, conditions, allowNone);
   }
 
-  Future<Card> selectCardToBuy({CardConditions conditions, bool allowNone: true}) {
+  Future<Card> selectCardToBuy(
+      {CardConditions conditions, bool allowNone: true}) {
     if (conditions == null) conditions = new CardConditions();
-    return controller.selectCardFromSupply(EventType.BuyCard, conditions, allowNone);
+    return controller.selectCardFromSupply(
+        EventType.BuyCard, conditions, allowNone);
   }
 
   bool hasActions() {
     for (int i = 0; i < hand.length; i++) {
-      if (hand[i] is ActionCard) return true;
+      if (hand[i] is Action) return true;
     }
     return false;
   }
 
   bool hasTreasures() {
     for (int i = 0; i < hand.length; i++) {
-      if (hand[i] is TreasureCard) return true;
+      if (hand[i] is Treasure) return true;
     }
     return false;
   }
 
-  log(String msg, [String type='everyone']) {
+  log(String msg, [String type = 'everyone']) {
     if (type == 'player') {
       controller.log(msg);
     } else if (type == 'others') {
@@ -173,12 +177,12 @@ class Player extends Object with CardSource {
   announce(String msg) => log("$name $msg", 'others');
   announceAll(String msg) => log("$name $msg", 'everyone');
 
-  notifyAnnounce(String playerOnly, String othersOnly, [both=""]) {
+  notifyAnnounce(String playerOnly, String othersOnly, [both = ""]) {
     notify("$playerOnly $both");
     announce("$othersOnly $both");
   }
 
-  Future playAction(ActionCard card) async {
+  Future playAction(Action card) async {
     hand.moveTo(card, turn.played);
     turn.actions -= 1;
     turn.actionsPlayed += 1;
@@ -186,7 +190,7 @@ class Player extends Object with CardSource {
     await card.onPlay(this);
   }
 
-  Future playTreasure(TreasureCard card) async {
+  Future playTreasure(Treasure card) async {
     hand.moveTo(card, turn.played);
     await card.onPlay(this);
   }
@@ -196,7 +200,7 @@ class Player extends Object with CardSource {
     notifyAnnounce("It's your turn!", "starts turn");
     // play actions
     while (turn.actions > 0 && hasActions()) {
-      ActionCard actionCard = await controller.selectActionCard();
+      Action actionCard = await controller.selectActionCard();
       if (actionCard == null) break;
       await playAction(actionCard);
       log(null);
@@ -204,9 +208,9 @@ class Player extends Object with CardSource {
     turn.phase = Phase.Buy;
     // play treasures
     while (hasTreasures()) {
-      List<TreasureCard> treasures = await controller.selectTreasureCards();
+      List<Treasure> treasures = await controller.selectTreasureCards();
       if (treasures.length == 0) break;
-      for (TreasureCard treasure in treasures) {
+      for (Treasure treasure in treasures) {
         await playTreasure(treasure);
         log(null);
       }
@@ -241,7 +245,7 @@ class Player extends Object with CardSource {
     if (turn != null) buffers.add(turn.played);
     for (CardBuffer buffer in buffers) {
       for (int i = 0; i < buffer.length; i++) {
-        if (buffer[i] is VPCard) {
+        if (buffer[i] is VP) {
           score += buffer[i].getVictoryPoints(this);
         }
       }
@@ -262,8 +266,8 @@ class Player extends Object with CardSource {
       }
       if (options.length == 0) return blocked;
       options.add("None");
-      var response =
-          await controller.askQuestion(context, "Select a Reaction card to reveal.", options);
+      var response = await controller.askQuestion(
+          context, "Select a Reaction card to reveal.", options);
       if (response is Reaction) {
         notifyAnnounce("You reveal", "reveals", "a $response");
         bool result = await response.onReact(this);
@@ -438,7 +442,7 @@ class Supply {
     return true;
   }
 
-  bool isGameOver([engine=null]) {
+  bool isGameOver([engine = null]) {
     if (supplyOf(Province.instance).count == 0) {
       engine?.log("All Provinces are gone!");
       return true;

@@ -9,7 +9,7 @@ abstract class Intrigue {
 }
 
 @card
-class Courtyard extends ActionCard with Intrigue {
+class Courtyard extends Card with Action, Intrigue {
   Courtyard._();
   static Courtyard instance = new Courtyard._();
 
@@ -19,17 +19,18 @@ class Courtyard extends ActionCard with Intrigue {
   onPlay(Player player) async {
     player.draw(3);
     CardConditions conds = new CardConditions();
-    List<Card> cards = await player.controller.selectCardsFromHand(this, conds, 1, 1);
+    List<Card> cards =
+        await player.controller.selectCardsFromHand(this, conds, 1, 1);
     if (cards.length == 1) {
       player.hand.moveTo(cards[0], player.deck.top);
       player.notifyAnnounce("You return a ${cards[0]} to your deck",
-                            "returns a card to their deck");
+          "returns a card to their deck");
     }
   }
 }
 
 @card
-class Pawn extends ActionCard with Intrigue {
+class Pawn extends Card with Action, Intrigue {
   Pawn._();
   static Pawn instance = new Pawn._();
 
@@ -43,10 +44,12 @@ class Pawn extends ActionCard with Intrigue {
     String d = "+1 Coin";
     var options = [a, b, c, d];
     var chosen = [];
-    String option1 = await player.controller.askQuestion(this, "Pawn: First Choice", options);
+    String option1 = await player.controller
+        .askQuestion(this, "Pawn: First Choice", options);
     chosen.add(option1);
     options.remove(option1);
-    String option2 = await player.controller.askQuestion(this, "Pawn: Second Choice", options);
+    String option2 = await player.controller
+        .askQuestion(this, "Pawn: Second Choice", options);
     chosen.add(option2);
     for (String selected in chosen) {
       if (selected == a) {
@@ -63,7 +66,7 @@ class Pawn extends ActionCard with Intrigue {
 }
 
 @card
-class SecretChamber extends ActionCard with Reaction, Intrigue {
+class SecretChamber extends Card with Action, Reaction, Intrigue {
   SecretChamber._();
   static SecretChamber instance = new SecretChamber._();
 
@@ -72,7 +75,8 @@ class SecretChamber extends ActionCard with Reaction, Intrigue {
 
   onPlay(Player player) async {
     CardConditions conds = new CardConditions();
-    List<Card> cards = await player.controller.selectCardsFromHand(this, conds, 0, -1);
+    List<Card> cards =
+        await player.controller.selectCardsFromHand(this, conds, 0, -1);
     for (Card c in cards) {
       await player.discard(c);
     }
@@ -84,19 +88,20 @@ class SecretChamber extends ActionCard with Reaction, Intrigue {
   Future<bool> onReact(Player player) async {
     player.draw(2);
     CardConditions conds = new CardConditions();
-    List<Card> cards = await player.controller.selectCardsFromHand(this, conds, 2, 2);
+    List<Card> cards =
+        await player.controller.selectCardsFromHand(this, conds, 2, 2);
     for (Card c in cards) {
       player.hand.moveTo(c, player.deck.top);
     }
     var descrip = "${cards.length} ${cardWord(cards.length)}";
     player.notifyAnnounce("You return $descrip to your deck",
-                          "returns $descrip cards to their deck");
+        "returns $descrip cards to their deck");
     return false;
   }
 }
 
 @card
-class GreatHall extends VictoryCard with ActionCard, Intrigue {
+class GreatHall extends Card with Action, Victory, Intrigue {
   GreatHall._();
   static GreatHall instance = new GreatHall._();
 
@@ -112,7 +117,7 @@ class GreatHall extends VictoryCard with ActionCard, Intrigue {
 }
 
 @card
-class Masquerade extends ActionCard with Intrigue {
+class Masquerade extends Card with Action, Intrigue {
   Masquerade._();
   static Masquerade instance = new Masquerade._();
 
@@ -124,7 +129,8 @@ class Masquerade extends ActionCard with Intrigue {
     CardConditions conds = new CardConditions();
     Map<Player, Card> passing = {};
     await Future.wait(player.engine.playersFrom(player).map((p) async {
-      List<Card> selected = await player.controller.selectCardsFromHand(this, conds, 1, 1);
+      List<Card> selected =
+          await player.controller.selectCardsFromHand(this, conds, 1, 1);
       if (selected.length == 1) {
         passing[p] = selected[0];
       }
@@ -136,7 +142,8 @@ class Masquerade extends ActionCard with Intrigue {
       }
     }
     player.log("All players pass a card to their left");
-    List<Card> trashing = await player.controller.selectCardsFromHand(this, conds, 0, 1);
+    List<Card> trashing =
+        await player.controller.selectCardsFromHand(this, conds, 0, 1);
     if (trashing.length == 1) {
       await player.trashFrom(trashing[0], player.hand);
     }
@@ -144,7 +151,7 @@ class Masquerade extends ActionCard with Intrigue {
 }
 
 @card
-class ShantyTown extends ActionCard with Intrigue {
+class ShantyTown extends Card with Action, Intrigue {
   ShantyTown._();
   static ShantyTown instance = new ShantyTown._();
 
@@ -153,7 +160,8 @@ class ShantyTown extends ActionCard with Intrigue {
 
   onPlay(Player player) async {
     player.turn.actions += 2;
-    player.notifyAnnounce("You reveal your", "reveals", "hand of ${player.hand}");
+    player.notifyAnnounce(
+        "You reveal your", "reveals", "hand of ${player.hand}");
     if (!player.hasActions()) {
       player.draw(2);
     }
@@ -161,7 +169,7 @@ class ShantyTown extends ActionCard with Intrigue {
 }
 
 @card
-class Steward extends ActionCard with Intrigue {
+class Steward extends Card with Action, Intrigue {
   Steward._();
   static Steward instance = new Steward._();
 
@@ -172,14 +180,16 @@ class Steward extends ActionCard with Intrigue {
     String a = "+2 Cards";
     String b = "+2 Coins";
     String c = "Trash 2 cards from your hand";
-    String option = await player.controller.askQuestion(this, "Choose one", [a, b, c]);
+    String option =
+        await player.controller.askQuestion(this, "Choose one", [a, b, c]);
     if (option == a) {
       player.draw(2);
     } else if (option == b) {
       player.turn.coins += 2;
     } else if (option == c) {
       CardConditions conds = new CardConditions();
-      List<Card> trashing = await player.controller.selectCardsFromHand(this, conds, 2, 2);
+      List<Card> trashing =
+          await player.controller.selectCardsFromHand(this, conds, 2, 2);
       for (Card c in trashing) {
         await player.trashFrom(c, player.hand);
       }
@@ -188,7 +198,7 @@ class Steward extends ActionCard with Intrigue {
 }
 
 @card
-class Swindler extends ActionCard with Attack, Intrigue {
+class Swindler extends Card with Action, Attack, Intrigue {
   Swindler._();
   static Swindler instance = new Swindler._();
 
@@ -201,16 +211,17 @@ class Swindler extends ActionCard with Attack, Intrigue {
       bool attackBlocked = await p.reactTo(EventType.Attack, this);
       if (attackBlocked) continue;
       Card trashed = await p.trashDraw(p);
-      CardConditions conds = new CardConditions()..cost = trashed.calculateCost(player.turn);
-      Card selected =
-          await player.controller.selectCardFromSupply(EventType.GainForOpponent, conds, false);
+      CardConditions conds = new CardConditions()
+        ..cost = trashed.calculateCost(player.turn);
+      Card selected = await player.controller
+          .selectCardFromSupply(EventType.GainForOpponent, conds, false);
       await p.gain(selected);
     }
   }
 }
 
 @card
-class WishingWell extends ActionCard with Intrigue {
+class WishingWell extends Card with Action, Intrigue {
   WishingWell._();
   static WishingWell instance = new WishingWell._();
 
@@ -221,22 +232,25 @@ class WishingWell extends ActionCard with Intrigue {
     player.draw(1);
     player.turn.actions += 1;
     CardConditions conds = new CardConditions();
-    Card guess = await player.controller.selectCardFromSupply(EventType.GuessCard, conds, false);
+    Card guess = await player.controller
+        .selectCardFromSupply(EventType.GuessCard, conds, false);
     player.notifyAnnounce("You guess", "guesses", "$guess");
     CardBuffer buffer = new CardBuffer();
     player.drawTo(buffer);
     if (buffer[0] == guess) {
-      player.notifyAnnounce("You reveal", "reveals" "${buffer[0]}. Correct guess!");
+      player.notifyAnnounce(
+          "You reveal", "reveals" "${buffer[0]}. Correct guess!");
       buffer.drawTo(player.hand);
     } else {
-      player.notifyAnnounce("You reveal", "reveals" "${buffer[0]}. Incorrect guess");
+      player.notifyAnnounce(
+          "You reveal", "reveals" "${buffer[0]}. Incorrect guess");
       buffer.drawTo(player.deck.top);
     }
   }
 }
 
 @card
-class Baron extends ActionCard with Intrigue {
+class Baron extends Card with Action, Intrigue {
   Baron._();
   static Baron instance = new Baron._();
 
@@ -262,7 +276,7 @@ class Baron extends ActionCard with Intrigue {
 }
 
 @card
-class Bridge extends ActionCard with Intrigue {
+class Bridge extends Card with Action, Intrigue {
   Bridge._();
   static Bridge instance = new Bridge._();
 
@@ -277,7 +291,7 @@ class Bridge extends ActionCard with Intrigue {
 }
 
 @card
-class Conspirator extends ActionCard with Intrigue {
+class Conspirator extends Card with Action, Intrigue {
   Conspirator._();
   static Conspirator instance = new Conspirator._();
 
@@ -294,7 +308,7 @@ class Conspirator extends ActionCard with Intrigue {
 }
 
 @card
-class Coppersmith extends ActionCard with Intrigue {
+class Coppersmith extends Card with Action, Intrigue {
   Coppersmith._();
   static Coppersmith instance = new Coppersmith._();
 
@@ -310,7 +324,7 @@ class Coppersmith extends ActionCard with Intrigue {
 }
 
 @card
-class Ironworks extends ActionCard with Intrigue {
+class Ironworks extends Card with Action, Intrigue {
   Ironworks._();
   static Ironworks instance = new Ironworks._();
 
@@ -320,14 +334,14 @@ class Ironworks extends ActionCard with Intrigue {
   onPlay(Player player) async {
     CardConditions conds = new CardConditions()..maxCost = 4;
     Card gaining = await player.selectCardToGain(conditions: conds);
-    if (gaining is ActionCard) player.turn.actions += 1;
-    if (gaining is TreasureCard) player.turn.coins += 1;
-    if (gaining is VictoryCard) player.draw(1);
+    if (gaining is Action) player.turn.actions += 1;
+    if (gaining is Treasure) player.turn.coins += 1;
+    if (gaining is Victory) player.draw(1);
   }
 }
 
 @card
-class MiningVillage extends ActionCard with Intrigue {
+class MiningVillage extends Card with Action, Intrigue {
   MiningVillage._();
   static MiningVillage instance = new MiningVillage._();
 
@@ -337,7 +351,8 @@ class MiningVillage extends ActionCard with Intrigue {
   onPlay(Player player) async {
     player.draw(1);
     player.turn.actions += 2;
-    bool trash = await player.controller.confirmAction(this, "Trash Mining Village for +2 coins?");
+    bool trash = await player.controller
+        .confirmAction(this, "Trash Mining Village for +2 coins?");
     if (trash) {
       bool didTrash = await player.trashFrom(this, player.turn.played);
       if (didTrash) {
@@ -348,7 +363,7 @@ class MiningVillage extends ActionCard with Intrigue {
 }
 
 @card
-class Scout extends ActionCard with Intrigue {
+class Scout extends Card with Action, Intrigue {
   Scout._();
   static Scout instance = new Scout._();
 
@@ -361,7 +376,7 @@ class Scout extends ActionCard with Intrigue {
     for (int i = 0; i < 4; i++) player.drawTo(buffer);
     player.notifyAnnounce("You reveal", "reveals" "$buffer");
     for (Card c in buffer.asList()) {
-      if (c is VictoryCard) {
+      if (c is Victory) {
         buffer.moveTo(c, player.hand);
       }
     }
@@ -377,7 +392,7 @@ class Scout extends ActionCard with Intrigue {
 }
 
 @card
-class Duke extends VictoryCard with Intrigue {
+class Duke extends Card with Victory, Intrigue {
   Duke._();
   static Duke instance = new Duke._();
 
@@ -395,7 +410,7 @@ class Duke extends VictoryCard with Intrigue {
 }
 
 @card
-class Minion extends ActionCard with Intrigue {
+class Minion extends Card with Action, Intrigue {
   Minion._();
   static Minion instance = new Minion._();
 
@@ -412,8 +427,9 @@ class Minion extends ActionCard with Intrigue {
     }
     String a = "+2 Coins";
     String b = "Discard your hand for +4 Cards and each other player with at "
-               "least 5 cards in hand discards their hand and draws 4 cards";
-    String option = await player.controller.askQuestion(this, "Choose one", [a, b]);
+        "least 5 cards in hand discards their hand and draws 4 cards";
+    String option =
+        await player.controller.askQuestion(this, "Choose one", [a, b]);
     if (option == a) {
       player.turn.coins += 2;
     } else if (option == b) {
@@ -434,7 +450,7 @@ class Minion extends ActionCard with Intrigue {
 }
 
 @card
-class Saboteur extends ActionCard with Intrigue {
+class Saboteur extends Card with Action, Intrigue {
   Saboteur._();
   static Saboteur instance = new Saboteur._();
 
@@ -453,7 +469,8 @@ class Saboteur extends ActionCard with Intrigue {
           p.trashFrom(drawn, buffer);
           CardConditions conds = new CardConditions();
           conds.cost = cardCost - 2;
-          Card gaining = await p.selectCardToGain(conditions: conds, allowNone: true);
+          Card gaining =
+              await p.selectCardToGain(conditions: conds, allowNone: true);
           if (gaining != null) {
             await p.gain(gaining);
           }
@@ -465,7 +482,7 @@ class Saboteur extends ActionCard with Intrigue {
 }
 
 @card
-class Torturer extends ActionCard with Intrigue {
+class Torturer extends Card with Action, Intrigue {
   Torturer._();
   static Torturer instance = new Torturer._();
 
@@ -479,9 +496,11 @@ class Torturer extends ActionCard with Intrigue {
       if (attackBlocked) continue;
       String a = "Discard two cards";
       String b = "Gain a curse";
-      String option = await p.controller.askQuestion(this, "Choose one", [a, b]);
+      String option =
+          await p.controller.askQuestion(this, "Choose one", [a, b]);
       if (option == a) {
-        List<Card> cards = await p.controller.selectCardsFromHand(this, new CardConditions(), 2, 2);
+        List<Card> cards = await p.controller
+            .selectCardsFromHand(this, new CardConditions(), 2, 2);
         for (Card c in cards) {
           await p.discard(c);
         }
@@ -494,7 +513,7 @@ class Torturer extends ActionCard with Intrigue {
 }
 
 @card
-class TradingPost extends ActionCard with Intrigue {
+class TradingPost extends Card with Action, Intrigue {
   TradingPost._();
   static TradingPost instance = new TradingPost._();
 
@@ -502,8 +521,8 @@ class TradingPost extends ActionCard with Intrigue {
   final String name = "Trading Post";
 
   onPlay(Player player) async {
-    List<Card> cards =
-        await player.controller.selectCardsFromHand(this, new CardConditions(), 2, 2);
+    List<Card> cards = await player.controller
+        .selectCardsFromHand(this, new CardConditions(), 2, 2);
     for (Card c in cards) {
       await player.trashFrom(c, player.hand);
     }
@@ -515,7 +534,7 @@ class TradingPost extends ActionCard with Intrigue {
 }
 
 @card
-class Tribute extends ActionCard with Intrigue {
+class Tribute extends Card with Action, Intrigue {
   Tribute._();
   static Tribute instance = new Tribute._();
 
@@ -527,23 +546,24 @@ class Tribute extends ActionCard with Intrigue {
     CardBuffer buffer = new CardBuffer();
     left.drawTo(buffer);
     left.drawTo(buffer);
-    left.notifyAnnounce("You reveal and discard", "reveals and discards" "$buffer");
+    left.notifyAnnounce(
+        "You reveal and discard", "reveals and discards" "$buffer");
     Set drawn = new Set.from(buffer.asList());
     while (buffer.length > 0) {
       await left.discardFrom(buffer);
     }
     for (Card c in drawn) {
       if (c != null) {
-        if (c is ActionCard) player.turn.actions += 2;
-        if (c is TreasureCard) player.turn.coins += 2;
-        if (c is VictoryCard) player.draw(2);
+        if (c is Action) player.turn.actions += 2;
+        if (c is Treasure) player.turn.coins += 2;
+        if (c is Victory) player.draw(2);
       }
     }
   }
 }
 
 @card
-class Upgrade extends ActionCard with Intrigue {
+class Upgrade extends Card with Action, Intrigue {
   Upgrade._();
   static Upgrade instance = new Upgrade._();
 
@@ -553,8 +573,8 @@ class Upgrade extends ActionCard with Intrigue {
   onPlay(Player player) async {
     player.draw(1);
     player.turn.actions += 1;
-    List<Card> cards =
-        await player.controller.selectCardsFromHand(this, new CardConditions(), 1, 1);
+    List<Card> cards = await player.controller
+        .selectCardsFromHand(this, new CardConditions(), 1, 1);
     if (cards.length != 1) return;
     await player.trashFrom(cards[0], player.hand);
     CardConditions conds = new CardConditions();
@@ -566,7 +586,7 @@ class Upgrade extends ActionCard with Intrigue {
 }
 
 @card
-class Harem extends VictoryCard with TreasureCard, Intrigue {
+class Harem extends Card with Victory, Treasure, Intrigue {
   Harem._();
   static Harem instance = new Harem._();
 
@@ -578,7 +598,7 @@ class Harem extends VictoryCard with TreasureCard, Intrigue {
 }
 
 @card
-class Nobles extends VictoryCard with ActionCard, Intrigue {
+class Nobles extends Card with Victory, Action, Intrigue {
   Nobles._();
   static Nobles instance = new Nobles._();
 
@@ -591,7 +611,8 @@ class Nobles extends VictoryCard with ActionCard, Intrigue {
     String threeCards = "+3 Cards";
     String twoActions = "+2 Actions";
     var question = "Nobles: Which action do you want to take?";
-    String result = await player.controller.askQuestion(this, question, [threeCards, twoActions]);
+    String result = await player.controller
+        .askQuestion(this, question, [threeCards, twoActions]);
     if (result == threeCards) {
       player.draw(3);
     } else if (result == twoActions) {

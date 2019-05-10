@@ -6,10 +6,12 @@ abstract class PlayerController {
   /// returns an ordered list of cards
   /// selected from those meeting conditions
   /// If max is < 0, there is no maximum
-  Future<List<Card>> selectCardsFromHand(Card context, CardConditions conditions, int min, int max);
+  Future<List<Card>> selectCardsFromHand(
+      Card context, CardConditions conditions, int min, int max);
 
   /// returns a card meeting conditions or null to select no card if allowNone is true
-  Future<Card> selectCardFromSupply(EventType event, CardConditions conditions, bool allowNone);
+  Future<Card> selectCardFromSupply(
+      EventType event, CardConditions conditions, bool allowNone);
 
   /// returns true to complete action, false to not
   Future<bool> confirmAction(Card context, String question);
@@ -18,13 +20,14 @@ abstract class PlayerController {
   Future askQuestion(Card context, String question, List options);
 
   /// like selectCardsFromHand but for any list of cards
-  Future<List<Card>> selectCardsFrom(List<Card> cards, String question, int min, int max);
+  Future<List<Card>> selectCardsFrom(
+      List<Card> cards, String question, int min, int max);
 
   /// returns an ActionCard or null to prematurely end action phase
-  Future<ActionCard> selectActionCard();
+  Future<Action> selectActionCard();
 
   /// returns a list of TreasureCards or an empty list to stop playing treasures
-  Future<List<TreasureCard>> selectTreasureCards();
+  Future<List<Treasure>> selectTreasureCards();
 
   /// player's name
   String name;
@@ -56,4 +59,11 @@ String cardWord(int count) => count == 1 ? 'card' : 'cards';
 
 enum Phase { Action, Buy, Cleanup }
 
-enum EventType { Attack, GainCard, BuyCard, BlockCard, GuessCard, GainForOpponent }
+enum EventType {
+  Attack,
+  GainCard,
+  BuyCard,
+  BlockCard,
+  GuessCard,
+  GainForOpponent
+}

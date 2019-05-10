@@ -4,7 +4,8 @@ selectCardsFromHand(var metadata) {
   var context = metadata['context']['name'];
   var name = metadata['currentPlayer'];
   var stubs = metadata['validCards'].map(CardStub.fromMsg);
-  return cardSelector(stubs, "$name played a $context", metadata['min'], metadata['max']);
+  return cardSelector(
+      stubs, "$name played a $context", metadata['min'], metadata['max']);
 }
 
 selectCardFromSupply(var metadata) {
@@ -24,7 +25,8 @@ selectCardFromSupply(var metadata) {
   } else if (event == "EventType.GainForOpponent") {
     question = "Select a card for an opponent to gain";
   }
-  return firstOrNull(cardSelector(stubs, question, metadata['allowNone'] ? 0 : 1, 1));
+  return firstOrNull(
+      cardSelector(stubs, question, metadata['allowNone'] ? 0 : 1, 1));
 }
 
 confirmAction(var metadata) async {
@@ -35,7 +37,8 @@ confirmAction(var metadata) async {
 
 askQuestion(var metadata) {
   var question = metadata['question'];
-  var options = metadata['options'].map((c) => c is String ? c : CardStub.fromMsg(c));
+  var options =
+      metadata['options'].map((c) => c is String ? c : CardStub.fromMsg(c));
   return firstOrNull(cardSelector(options, question, 1, 1));
 }
 
@@ -47,21 +50,23 @@ selectCardsFrom(var metadata) {
 
 selectActionCard(var metadata) {
   var stubs = metadata['cards'].map(CardStub.fromMsg);
-  return firstOrNull(cardSelector(stubs, 'Select an action card to play', 0, 1));
+  return firstOrNull(
+      cardSelector(stubs, 'Select an action card to play', 0, 1));
 }
 
 selectTreasureCards(var metadata) {
   var stubs = metadata['cards'].map(CardStub.fromMsg);
-  return cardSelector(stubs, "Select treasure cards to play for your buy phase", 0, -1, true);
+  return cardSelector(
+      stubs, "Select treasure cards to play for your buy phase", 0, -1, true);
 }
 
 firstOrNull(var futureList) async {
-  var list = (await futureList);
+  var list = await futureList;
   if (list.isEmpty) return null;
   return list.first;
 }
 
-cardSelector(Iterable<CardStub> stubsIter, String prompt, int min, int max,
+cardSelector(Iterable<dynamic> stubsIter, String prompt, int min, int max,
     [bool selectAll = false]) async {
   var stubs = stubsIter.toList();
   var overlay = querySelector('.overlay');
@@ -77,7 +82,7 @@ cardSelector(Iterable<CardStub> stubsIter, String prompt, int min, int max,
   if (min == 0 && max == -1) subprompt = "Select any amount (including none)";
   if (max == -1) max = stubs.length;
   subpromptEl.text = subprompt;
-  List<CardStub> selected = [];
+  var selected = [];
   if (selectAll) selected.addAll(stubs);
   updateButton() {
     if (selected.length >= min && selected.length <= max) {
@@ -86,8 +91,9 @@ cardSelector(Iterable<CardStub> stubsIter, String prompt, int min, int max,
       confirm.classes.remove('enabled');
     }
   }
+
   var orders = [];
-  for (CardStub stub in stubs) {
+  for (var stub in stubs) {
     var cardEl;
     if (stub is CardStub) {
       cardEl = makeCardElement(stub);
@@ -96,9 +102,11 @@ cardSelector(Iterable<CardStub> stubsIter, String prompt, int min, int max,
       cardEl.classes = ['card', 'selectable'];
       cardEl.style.backgroundColor = "#444";
       cardEl.style.color = "#fff";
-      cardEl.append(new DivElement()..text = stub.toString()..classes=['text']);
+      cardEl.append(new DivElement()
+        ..text = stub.toString()
+        ..classes = ['text']);
     }
-    var order = new DivElement()..classes=['order'];
+    var order = new DivElement()..classes = ['order'];
     cardEl.append(order);
     orders.add(order);
     cardEl.classes = ['card', 'selectable'];
@@ -114,7 +122,7 @@ cardSelector(Iterable<CardStub> stubsIter, String prompt, int min, int max,
         if (max > 1) {
           int current = int.parse(myText);
           for (var order in orders) {
-            int orderNum = int.parse(order.text, onError: (s)=>0);
+            int orderNum = int.parse(order.text, onError: (s) => 0);
             if (orderNum == current) {
               order.text = "";
             } else if (orderNum > current) {
@@ -141,7 +149,10 @@ cardSelector(Iterable<CardStub> stubsIter, String prompt, int min, int max,
   }
   updateButton();
   overlay.style.display = 'block';
-  await confirm.onClick.firstWhere((e) => selected.length >= min && selected.length <= max);
+  await confirm.onClick
+      .firstWhere((e) => selected.length >= min && selected.length <= max);
   overlay.style.display = 'none';
-  return selected.map((stub) => stub is CardStub ? stub.name : "$stub").toList();
+  return selected
+      .map((stub) => stub is CardStub ? stub.name : "$stub")
+      .toList();
 }

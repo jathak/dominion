@@ -27,43 +27,46 @@ class TestController extends PlayerController {
       this.treasureCards}) {
     if (cardsFromHand == null)
       cardsFromHand = (player, context, conditions, min, max) async {
-      List<Card> cards = [];
-      for (Card c in player.hand.asList()) {
-        if (conditions.allowsFor(c)) {
-          cards.add(c);
+        List<Card> cards = [];
+        for (Card c in player.hand.asList()) {
+          if (conditions.allowsFor(c)) {
+            cards.add(c);
+          }
+          if (cards.length >= max) break;
         }
-        if (cards.length >= max) break;
-      }
-      return cards;
-    };
+        return cards;
+      };
     if (cardFromSupply == null)
       cardFromSupply = (player, event, conditions, allowNone) async {
-      if (allowNone) return null;
-      Supply supply = player.engine.supply;
-      for (Card card in supply.cardsInSupply) {
-        if (supply.supplyOf(card).count > 0 && conditions.allowsFor(card)) return card;
-      }
-    };
+        if (allowNone) return null;
+        Supply supply = player.engine.supply;
+        for (Card card in supply.cardsInSupply) {
+          if (supply.supplyOf(card).count > 0 && conditions.allowsFor(card))
+            return card;
+        }
+      };
     if (confirm == null) confirm = (player, context, question) async => false;
-    if (ask == null) ask = (player, context, question, options) async => options[0];
+    if (ask == null)
+      ask = (player, context, question, options) async => options[0];
     if (cardsFrom == null)
-      cardsFrom = (player, cards, question, min, max) async => cards.sublist(0, min);
+      cardsFrom =
+          (player, cards, question, min, max) async => cards.sublist(0, min);
     if (actionCard == null)
       actionCard = (player) async {
-      for (Card c in player.hand.asList()) {
-        if (c is ActionCard) return c;
-      }
-      return null;
-    };
+        for (Card c in player.hand.asList()) {
+          if (c is Action) return c;
+        }
+        return null;
+      };
     if (treasureCards == null)
       treasureCards = (player) async {
-      List<TreasureCard> cards = [];
-      for (Card c in player.hand.asList()) {
-        if (c is TreasureCard) {
-          cards.add(c);
+        List<Treasure> cards = [];
+        for (Card c in player.hand.asList()) {
+          if (c is Treasure) {
+            cards.add(c);
+          }
         }
-      }
-    };
+      };
   }
 
   List<String> messages = [];
@@ -72,7 +75,24 @@ class TestController extends PlayerController {
 
   String name;
 
-  Function cardsFromHand, cardFromSupply, confirm, ask, cardsFrom, actionCard, treasureCards;
+  Future<List<Card>> Function(Player player, Card context,
+      CardConditions conditions, int min, int max) cardsFromHand;
+
+  Future<Card> Function(Player player, EventType event,
+      CardConditions conditions, bool allowNone) cardFromSupply;
+
+  Future<bool> Function(Player player, Card context, String question) confirm;
+
+  Future Function(Player player, Card context, String question, List option)
+      ask;
+
+  Future<List<Card>> Function(
+          Player player, List<Card> cards, String question, int min, int max)
+      cardsFrom;
+
+  Future<Action> Function(Player player) actionCard;
+
+  Future<List<Treasure>> Function(Player player) treasureCards;
 
   Player player;
 
@@ -81,7 +101,8 @@ class TestController extends PlayerController {
     return cardsFromHand(player, context, conditions, min, max);
   }
 
-  Future<Card> selectCardFromSupply(EventType event, CardConditions conditions, bool allowNone) {
+  Future<Card> selectCardFromSupply(
+      EventType event, CardConditions conditions, bool allowNone) {
     return cardFromSupply(player, event, conditions, allowNone);
   }
 
@@ -93,15 +114,16 @@ class TestController extends PlayerController {
     return ask(player, context, question, options);
   }
 
-  Future<List<Card>> selectCardsFrom(List<Card> cards, String question, int min, int max) {
+  Future<List<Card>> selectCardsFrom(
+      List<Card> cards, String question, int min, int max) {
     return cardsFrom(player, cards, question, min, max);
   }
 
-  Future<ActionCard> selectActionCard() {
+  Future<Action> selectActionCard() {
     return actionCard(player);
   }
 
-  Future<List<TreasureCard>> selectTreasureCards() {
+  Future<List<Treasure>> selectTreasureCards() {
     return treasureCards(player);
   }
 }

@@ -6,6 +6,7 @@ import 'package:dominion_sets/intrigue.dart';
 
 import 'dart:io';
 import 'dart:async';
+
 List<String> expansions = [];
 
 main(var args) {
@@ -113,7 +114,8 @@ class CLIController extends PlayerController {
     }
     if (max == -1) max = cards.length;
     while (true) {
-      List<Card> selections = selectMultiple(cards, min == 0, max == cards.length);
+      List<Card> selections =
+          selectMultiple(cards, min == 0, max == cards.length);
       if (selections.length >= min && selections.length <= max) {
         return selections;
       }
@@ -127,7 +129,8 @@ class CLIController extends PlayerController {
     var extra = "";
     if (event == EventType.GainCard) extra = " to gain";
     if (event == EventType.BuyCard)
-      extra = " to buy. You have ${player.turn.coins} coins and ${player.turn.buys} buys";
+      extra =
+          " to buy. You have ${player.turn.coins} coins and ${player.turn.buys} buys";
     print("Select a card$extra.");
     List<Card> cards = [];
     for (Card c in player.engine.supply.cardsInSupply) {
@@ -152,11 +155,13 @@ class CLIController extends PlayerController {
   }
 
   /// like selectCardsFromHand but for any list of cards
-  Future<List<Card>> selectCardsFrom(List<Card> cards, String question, int min, int max) async {
+  Future<List<Card>> selectCardsFrom(
+      List<Card> cards, String question, int min, int max) async {
     print(question);
     if (max == -1) max = cards.length;
     while (true) {
-      List<Card> selections = selectMultiple(cards, min == 0, max == cards.length);
+      List<Card> selections =
+          selectMultiple(cards, min == 0, max == cards.length);
       if (selections.length >= min && selections.length <= max) {
         return selections;
       }
@@ -165,12 +170,12 @@ class CLIController extends PlayerController {
   }
 
   /// returns an ActionCard or null to prematurely end action phase
-  Future<ActionCard> selectActionCard() async {
+  Future<Action> selectActionCard() async {
     print("Select an action card to play");
-    List<ActionCard> cards = [];
+    List<Action> cards = [];
     for (int i = 0; i < player.hand.length; i++) {
       Card c = player.hand[i];
-      if (c is ActionCard) {
+      if (c is Action) {
         cards.add(c);
       }
     }
@@ -178,12 +183,12 @@ class CLIController extends PlayerController {
   }
 
   /// returns a list of TreasureCards or an empty list to stop playing treasures
-  Future<List<TreasureCard>> selectTreasureCards() async {
+  Future<List<Treasure>> selectTreasureCards() async {
     print("Select treasure cards to play");
-    List<TreasureCard> cards = [];
+    List<Treasure> cards = [];
     for (int i = 0; i < player.hand.length; i++) {
       Card c = player.hand[i];
-      if (c is TreasureCard) {
+      if (c is Treasure) {
         cards.add(c);
       }
     }

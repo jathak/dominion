@@ -3,7 +3,7 @@ part of dominion_core;
 // Basic Treasure Cards
 
 @card
-class Copper extends TreasureCard {
+class Copper extends Card with Treasure {
   Copper._();
   static Copper instance = new Copper._();
 
@@ -25,7 +25,7 @@ class Copper extends TreasureCard {
 }
 
 @card
-class Silver extends TreasureCard {
+class Silver extends Card with Treasure {
   Silver._();
   static Silver instance = new Silver._();
 
@@ -38,7 +38,7 @@ class Silver extends TreasureCard {
 }
 
 @card
-class Gold extends TreasureCard {
+class Gold extends Card with Treasure {
   Gold._();
   static Gold instance = new Gold._();
 
@@ -51,7 +51,7 @@ class Gold extends TreasureCard {
 }
 
 @card
-class Platinum extends TreasureCard {
+class Platinum extends Card with Treasure {
   Platinum._();
   static Platinum instance = new Platinum._();
 
@@ -66,7 +66,7 @@ class Platinum extends TreasureCard {
 // Basic Victory Point Cards
 
 @card
-class Estate extends VictoryCard {
+class Estate extends Card with Victory {
   Estate._();
   static Estate instance = new Estate._();
 
@@ -77,7 +77,7 @@ class Estate extends VictoryCard {
 }
 
 @card
-class Duchy extends VictoryCard {
+class Duchy extends Card with Victory {
   Duchy._();
   static Duchy instance = new Duchy._();
 
@@ -88,7 +88,7 @@ class Duchy extends VictoryCard {
 }
 
 @card
-class Province extends VictoryCard {
+class Province extends Card with Victory {
   Province._();
   static Province instance = new Province._();
 
@@ -106,7 +106,7 @@ class Province extends VictoryCard {
 }
 
 @card
-class Colony extends VictoryCard {
+class Colony extends Card with Victory {
   Colony._();
   static Colony instance = new Colony._();
 
@@ -118,7 +118,7 @@ class Colony extends VictoryCard {
 
 // Curse card
 @card
-class Curse extends CurseCard {
+class Curse extends Card implements VP {
   Curse._();
   static Curse instance = new Curse._();
 
@@ -128,11 +128,13 @@ class Curse extends CurseCard {
   final int points = -1;
 
   int supplyCount(int playerCount) => 10 * (playerCount - 1);
+
+  int getVictoryPoints(Player player) => points;
 }
 
 // Potion card
 @card
-class Potion extends TreasureCard {
+class Potion extends Card with Treasure {
   Potion._();
   static Potion instance = new Potion._();
 

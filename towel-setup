@@ -5,7 +5,7 @@
 cd dominion_web
 echo "Building client-side web code..."
 pub get
-pub build
+pub global run webdev build
 
 cd ../dominion_server
 echo "Fetching server dependencies..."

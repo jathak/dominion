@@ -40,7 +40,9 @@ abstract class Card implements Comparable<Card> {
   onPlay(Player player) async => null;
 
   /// Called when player discards this card
-  onDiscard(Player player, {bool cleanup: false, List<Card> cleanedUp: null}) async => null;
+  onDiscard(Player player,
+          {bool cleanup: false, List<Card> cleanedUp: null}) async =>
+      null;
 
   /// Called when player trashes this card
   onTrash(Player player) async => null;
@@ -56,7 +58,7 @@ abstract class Card implements Comparable<Card> {
   String toString() => name;
 }
 
-abstract class TreasureCard extends Card {
+mixin Treasure on Card {
   /// Default treasure value of this card
   /// Set to null for no default value
   final int value = null;
@@ -71,7 +73,7 @@ abstract class TreasureCard extends Card {
 }
 
 /// Includes Victory and Curse cards
-abstract class VPCard extends Card {
+mixin VP on Card {
   /// Default victory point value of this card
   /// Set to null for no default value
   final int points = null;
@@ -80,42 +82,33 @@ abstract class VPCard extends Card {
   int getVictoryPoints(Player player) => points;
 }
 
-abstract class VictoryCard extends VPCard {   
+mixin Victory on Card implements VP {
+  final int points = null;
+
+  int getVictoryPoints(Player player) => points;
+
   int supplyCount(int playerCount) {
     if (playerCount == 2) return 8;
     return 12;
   }
 }
 
-abstract class ActionCard extends Card {
-  /// No special behavior in class definition,
-  /// as each action is different.
-}
+/// No special behavior in class definition,
+/// as each action is different.
+mixin Action on Card {}
 
-abstract class CurseCard extends VPCard {
-  /// Refers to the card type, not the specific card,
-  /// even though there is only one Curse card
-}
+/// Only used to check whether a card is an attack
+mixin Attack on Card {}
 
-abstract class Attack {
-  /// Only used to check whether a card is an attack
-  /// This is a subtype, so it doesn't directly extend Card
-  /// as all Attacks also extend one of the main types
-}
-
-abstract class Reaction {
-  /// This is a subtype, so it doesn't directly extend Card
-  /// as all Reactions also extend one of the main types
-
+mixin Reaction on Card {
   bool canReactTo(EventType type, Card context);
 
   Future<bool> onReact(Player player);
 }
 
-abstract class Duration {
-  /// This is a subtype, so it doesn't directly extend Card
-  /// as all Durations also extend one of the main types
-
+/// This is a subtype, so it doesn't directly extend Card
+/// as all Durations also extend one of the main types
+mixin Duration on Card {
   /// Called at start of player's next turn.
   /// Returns true if duration persists or false if it is discarded.
   Future onNextTurn(Player player);

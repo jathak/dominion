@@ -15,7 +15,7 @@ main() {
     ctrlA = new TestController("A");
     ctrlB = new TestController("B");
     var kingdom = CardRegistry.cardsWithConditions();
-    Supply supply = new Supply(kingdom, 2, false);
+    var supply = new Supply(kingdom, 2, false);
     engine = new DominionEngine(supply, [ctrlA, ctrlB]);
     playerA = engine.players[0];
     playerB = engine.players[1];
@@ -153,7 +153,8 @@ nonInteractionTests() {
   test("Adventurer", () async {
     List<Card> cards = playerA.hand.asList();
     playerA.hand.receive(Adventurer.instance);
-    playerA.deck = makeBuffer([Silver.instance, Duchy.instance, Gold.instance, Province.instance]);
+    playerA.deck = makeBuffer(
+        [Silver.instance, Duchy.instance, Gold.instance, Province.instance]);
     await playerA.playAction(Adventurer.instance);
     cards.add(Silver.instance);
     cards.add(Gold.instance);
@@ -176,7 +177,8 @@ throneRoomTests() {
     cards.add(playerA.deck[1]);
     await playerA.playAction(ThroneRoom.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [ThroneRoom.instance, Market.instance]);
+    expectBufferHasCards(
+        playerA.turn.played, [ThroneRoom.instance, Market.instance]);
     expect(playerA.turn.actions, equals(2));
     expect(playerA.turn.buys, equals(3));
     expect(playerA.turn.coins, equals(2));
@@ -191,7 +193,8 @@ throneRoomTests() {
     cards.add(playerA.deck[3]);
     await playerA.playAction(ThroneRoom.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [ThroneRoom.instance, Witch.instance]);
+    expectBufferHasCards(
+        playerA.turn.played, [ThroneRoom.instance, Witch.instance]);
     expectBufferHasCards(playerB.discarded, [Curse.instance, Curse.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
@@ -212,7 +215,7 @@ throneRoomTests() {
 interactionTests() {
   test("Cellar", () async {
     List<Card> cards = playerA.hand.asList();
-    ctrlA.cardsFromHand = (player, context, conds, min, max) async {
+    ctrlA.cardsFromHand = (Player player, context, conds, min, max) async {
       return [player.hand[0], player.hand[2]];
     };
     Card discardB = cards.removeAt(2);
@@ -274,7 +277,8 @@ interactionTests() {
   });
   test("Workshop", () async {
     List<Card> cards = playerA.hand.asList();
-    ctrlA.cardFromSupply = (player, event, conditions, allowNone) async => Silver.instance;
+    ctrlA.cardFromSupply =
+        (player, event, conditions, allowNone) async => Silver.instance;
     playerA.hand.receive(Workshop.instance);
     await playerA.playAction(Workshop.instance);
     expectBufferHasCards(playerA.hand, cards);
@@ -286,7 +290,8 @@ interactionTests() {
   });
   test("Feast", () async {
     List<Card> cards = playerA.hand.asList();
-    ctrlA.cardFromSupply = (player, event, conditions, allowNone) async => Duchy.instance;
+    ctrlA.cardFromSupply =
+        (player, event, conditions, allowNone) async => Duchy.instance;
     playerA.hand.receive(Feast.instance);
     await playerA.playAction(Feast.instance);
     expectBufferHasCards(playerA.hand, cards);
@@ -299,8 +304,10 @@ interactionTests() {
   });
   test("Remodel", () async {
     playerA.hand = makeBuffer([Adventurer.instance, Remodel.instance]);
-    ctrlA.cardsFromHand = (player, context, conds, min, max) async => [Adventurer.instance];
-    ctrlA.cardFromSupply = (player, event, conditions, allowNone) async => Province.instance;
+    ctrlA.cardsFromHand =
+        (player, context, conds, min, max) async => [Adventurer.instance];
+    ctrlA.cardFromSupply =
+        (player, event, conditions, allowNone) async => Province.instance;
     await playerA.playAction(Remodel.instance);
     expectBufferHasCards(playerA.hand, []);
     expectBufferHasCards(playerA.turn.played, [Remodel.instance]);
@@ -312,8 +319,10 @@ interactionTests() {
   });
   test("Mine", () async {
     playerA.hand = makeBuffer([Silver.instance, Mine.instance]);
-    ctrlA.cardsFromHand = (player, context, conds, min, max) async => [Silver.instance];
-    ctrlA.cardFromSupply = (player, event, conditions, allowNone) async => Gold.instance;
+    ctrlA.cardsFromHand =
+        (player, context, conds, min, max) async => [Silver.instance];
+    ctrlA.cardFromSupply =
+        (player, event, conditions, allowNone) async => Gold.instance;
     await playerA.playAction(Mine.instance);
     expectBufferHasCards(playerA.hand, [Gold.instance]);
     expectBufferHasCards(playerA.turn.played, [Mine.instance]);
@@ -325,7 +334,8 @@ interactionTests() {
   });
   test("Library - Keep Actions", () async {
     List<Card> cards = playerA.hand.asList();
-    playerA.deck = makeBuffer([Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
+    playerA.deck = makeBuffer(
+        [Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
     ctrlA.confirm = (player, _a, _b) async => false;
     playerA.hand.receive(Library.instance);
     cards.add(Village.instance);
@@ -341,7 +351,8 @@ interactionTests() {
   });
   test("Library - Discard Actions", () async {
     List<Card> cards = playerA.hand.asList();
-    playerA.deck = makeBuffer([Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
+    playerA.deck = makeBuffer(
+        [Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
     ctrlA.confirm = (player, ctx, _b) async => true;
     playerA.hand.receive(Library.instance);
     cards.add(Silver.instance);
@@ -350,7 +361,8 @@ interactionTests() {
     expectBufferHasCards(playerA.hand, cards);
     expectBufferHasCards(playerA.deck, []);
     expectBufferHasCards(playerA.turn.played, [Library.instance]);
-    expectBufferHasCards(playerA.discarded, [Village.instance, Smithy.instance]);
+    expectBufferHasCards(
+        playerA.discarded, [Village.instance, Smithy.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));

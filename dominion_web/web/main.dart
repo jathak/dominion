@@ -5,6 +5,8 @@ import 'dart:html';
 import 'dart:js';
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart' show md5;
+
 part 'requests.dart';
 
 WebSocket socket;
@@ -22,14 +24,17 @@ Future main() async {
   ident = params['id'];
   username = params['username'];
   bool spectating = params.containsKey("spectate");
-  var socketUrl = params.containsKey("url") ? params['url'] : '${Uri.base.host}:${Uri.base.port}';
+  var socketUrl = params.containsKey("url")
+      ? params['url']
+      : '${Uri.base.host}:${Uri.base.port}';
   var socketScheme = Uri.base.scheme == 'https' ? 'wss://' : 'ws://';
   socket = new WebSocket(socketScheme + socketUrl);
   socket.onClose.listen(socketClosed);
   socket.onError.listen(socketClosed);
   await socket.onOpen.first;
   if (params.containsKey('attempt-refresh')) {
-    var allBut = window.location.href.substring(0, window.location.href.length - 16);
+    var allBut =
+        window.location.href.substring(0, window.location.href.length - 16);
     window.location.href = allBut;
   }
   if (spectating) {
@@ -40,12 +45,12 @@ Future main() async {
   loadHandlers();
   querySelector(".start-game").onClick.listen((e) {
     var msg = {'type': 'start-game'};
-    socket.send(JSON.encode(msg));
+    socket.send(json.encode(msg));
   });
   if (spectating) querySelector('.start-game').style.display = 'none';
   await for (var event in socket.onMessage) {
     try {
-      var msg = JSON.decode(event.data);
+      var msg = json.decode(event.data);
       print('Message: $msg');
       if (msg.containsKey('type')) handlers[msg['type']](msg);
     } catch (e, st) {
@@ -54,6 +59,7 @@ Future main() async {
     }
   }
 }
+
 socketClosed(e) {
   log.appendText('Disconnected from server.\n');
   log.scrollTop = log.scrollHeight;
@@ -62,17 +68,17 @@ socketClosed(e) {
   } else {
     var disc = querySelector('.disconnected');
     disc.style.display = 'block';
-    disc.onClick.listen((e)=>window.location.reload());
+    disc.onClick.listen((e) => window.location.reload());
   }
 }
 
 startSpectating() {
   var msg = {'type': 'spectate-game', 'game-id': ident};
-  socket.send(JSON.encode(msg));
+  socket.send(json.encode(msg));
   var hand = querySelector('.hand');
   var handLabel = querySelector('.hand-label');
-  hand.onClick.listen((e)=>hand.style.display='none');
-  handLabel.onClick.listen((e)=>hand.style.display='block');
+  hand.onClick.listen((e) => hand.style.display = 'none');
+  handLabel.onClick.listen((e) => hand.style.display = 'block');
 }
 
 joinGame() {
@@ -88,26 +94,29 @@ joinGame() {
   }
   username = username.trim();
   var msg = {'type': 'join-game', 'game-id': ident, 'username': username};
-  socket.send(JSON.encode(msg));
+  socket.send(json.encode(msg));
 }
 
 var supply = null;
 
 void loadHandlers() {
   handlers['supply-update'] = (msg) {
+    print("supply-update $msg");
     querySelector('.start-game').style.display = "none";
     supply = msg['supply'];
-    var kingdom = supply['kingdom'].map(CardStub.fromMsg);
-    var treasures = supply['treasures'].map(CardStub.fromMsg);
-    var vps = supply['vps'].map(CardStub.fromMsg);
+    var kingdom = convertToCards(supply['kingdom']);
+    var treasures = convertToCards(supply['treasures']);
+    var vps = convertToCards(supply['vps']);
     makeSupply(kingdom, treasures, vps);
   };
   handlers['hand-update'] = (msg) {
-    var hand = msg['hand'].map(CardStub.fromMsg);
+    print("hand-update $msg");
+    var hand = convertToCards(msg['hand']);
     makeHeaders(hand, querySelector('.hand'));
     var player = msg['currentPlayer'];
-    querySelector('.current-player').text = player == username ? "Your Turn" : "$player's Turn";
-    querySelector('.deck-size').text= "${msg['deckSize']} cards left in deck";
+    querySelector('.current-player').text =
+        player == username ? "Your Turn" : "$player's Turn";
+    querySelector('.deck-size').text = "${msg['deckSize']} cards left in deck";
     var label = querySelector('.hand-label');
     if (username == null) {
       label.text = 'Their Hand';
@@ -121,7 +130,7 @@ void loadHandlers() {
       querySelector('.actions').text = turn['actions'].toString();
       querySelector('.buys').text = turn['buys'].toString();
       querySelector('.coins').text = turn['coins'].toString();
-      makeHeaders(turn['played'].map(CardStub.fromMsg), querySelector(".played"));
+      makeHeaders(convertToCards(turn['played']), querySelector(".played"));
     } else {
       querySelector('.turn-wrapper').style.display = 'none';
     }
@@ -161,8 +170,16 @@ void loadHandlers() {
       'response': result,
       'request-id': msg['request-id']
     };
-    socket.send(JSON.encode(response));
+    print("Response $response");
+    socket.send(json.encode(response));
   };
+}
+
+Iterable<CardStub> convertToCards(var cardListFromMsg) sync* {
+  if (cardListFromMsg is! List) throw Exception("$cardListFromMsg not a list");
+  for (var item in cardListFromMsg) {
+    yield CardStub.fromMsg(item);
+  }
 }
 
 void makeHeaders(Iterable<CardStub> stubs, var element) {
@@ -170,26 +187,26 @@ void makeHeaders(Iterable<CardStub> stubs, var element) {
   stubs.forEach(makeHeaderAdder(element));
 }
 
-void makeSupply(Iterable<CardStub> kingdom, Iterable<CardStub> treasures, Iterable<CardStub> vps) {
+void makeSupply(Iterable<CardStub> kingdom, Iterable<CardStub> treasures,
+    Iterable<CardStub> vps) {
   var supply = querySelector('.supply');
-  kingdom.forEach(makeCardAdder(supply.querySelector('.kingdom')..innerHtml = ""));
-  treasures.forEach(makeCardAdder(supply.querySelector('.treasures')..innerHtml = ""));
+  kingdom
+      .forEach(makeCardAdder(supply.querySelector('.kingdom')..innerHtml = ""));
+  treasures.forEach(
+      makeCardAdder(supply.querySelector('.treasures')..innerHtml = ""));
   vps.forEach(makeCardAdder(supply.querySelector('.vps')..innerHtml = ""));
 }
 
-makeCardAdder(element) => (CardStub stub) => element.append(makeCardElement(stub));
-makeHeaderAdder(element) => (CardStub stub) => element.append(makeHeaderElement(stub));
+makeCardAdder(element) =>
+    (CardStub stub) => element.append(makeCardElement(stub));
+makeHeaderAdder(element) =>
+    (CardStub stub) => element.append(makeHeaderElement(stub));
 
 Element makeCardElement(CardStub card) {
-  var expansion = card.expansion;
   var name = card.name;
-  if (expansion == null) expansion = 'common';
-  name = name.toLowerCase().replaceAll(' ', '');
-  expansion = expansion.toLowerCase().replaceAll(' ', '');
-  if (name == 'potion') expansion = 'alchemy';
-  if (name == 'platinum' || name == 'colony') expansion = 'prosperity';
+  name = name.replaceAll(' ', '_');
   var el = new DivElement();
-  el.classes = ['card', 'set-$expansion', 'type-$name'];
+  el.classes = ['card'];
   if (card.count != null && card.count > 0) {
     var status = new DivElement()
       ..text = "${card.count}"
@@ -199,22 +216,15 @@ Element makeCardElement(CardStub card) {
     el.classes.add('disabled');
   }
   if (card.selectable) el.classes.add('selectable');
-  el.style.backgroundImage = 'url("http://dominion.diehrstraits.com/scans/$expansion/$name.jpg")';
+  var hash = md5.convert("$name.jpg".codeUnits).toString();
+  var path = hash[0] + '/' + hash.substring(0, 2);
+  el.style.backgroundImage =
+      'url("http://wiki.dominionstrategy.com/images/$path/$name.jpg")';
   return el;
 }
 
 Element makeHeaderElement(CardStub card) {
-  var expansion = card.expansion;
-  var name = card.name;
-  if (expansion == null) expansion = 'common';
-  name = name.toLowerCase().replaceAll(' ', '');
-  expansion = expansion.toLowerCase().replaceAll(' ', '');
-  if (name == 'potion') expansion = 'alchemy';
-  if (name == 'platinum' || name == 'colony') expansion = 'prosperity';
-  var el = new DivElement();
-  el.classes = ['card-header', 'set-$expansion', 'type-$name'];
-  el.style.backgroundImage = 'url("http://dominion.diehrstraits.com/scans/$expansion/$name.jpg")';
-  return el;
+  return makeCardElement(card)..classes = ['card-header'];
 }
 
 class CardStub {

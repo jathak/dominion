@@ -2,10 +2,10 @@ name: 'dominion_server'
 version: 0.0.1
 
 environment:
-  sdk: '>=1.13.0 <2.0.0'
+  sdk: '>=2.3.0 <3.0.0'
 
 dependencies:
-  http_server: "^0.9.6"
+  http_server: "^0.9.8+1"
   dominion_core:
     path: "../dominion_core"
   dominion_sets:
