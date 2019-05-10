@@ -32,10 +32,10 @@ Future<void> main(var args) async {
       if (WebSocketTransformer.isUpgradeRequest(request)) {
         upgradeRequest(request);
         continue;
-      } else if (request.method == 'POST' &&
+      } else if (request.method == 'GET' &&
           request.uri.path == '/create-game') {
-        var httpBody = await HttpBodyHandler.processRequest(request);
-        var body = httpBody.body;
+        //var httpBody = await HttpBodyHandler.processRequest(request);
+        var body = request.uri.queryParameters;
         var kingdom =
             body['kingdomCards'].replaceAll('\r\n', '\n').trim().split('\n');
         kingdom = game.generateKingdom(kingdom);
