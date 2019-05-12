@@ -109,7 +109,7 @@ class Colony extends Card with Victory {
 
 // Curse card
 @card
-class Curse extends Card implements VP {
+class Curse extends Card implements VictoryOrCurse {
   Curse._();
   static Curse instance = new Curse._();
 

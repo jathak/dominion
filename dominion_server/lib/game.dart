@@ -9,9 +9,15 @@ import 'dart:io';
 import 'dart:async';
 
 dynamic encodeOption(var option) {
-  return option is Card
-      ? <String, dynamic>{'name': option.name, 'expansion': option.expansion}
-      : option.toString();
+  if (option is Card) {
+    return <String, dynamic>{
+      'name': option.name,
+      'expansion': option.expansion
+    };
+  } else if (option is bool || option is num) {
+    return option;
+  }
+  return option.toString();
 }
 
 class Game {

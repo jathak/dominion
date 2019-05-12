@@ -86,5 +86,6 @@ enum EventType {
   BuyCard,
   BlockCard,
   GuessCard,
-  GainForOpponent
+  GainForOpponent,
+  TrashCard
 }

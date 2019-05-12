@@ -83,8 +83,8 @@ class TestController extends PlayerController {
 
   Future<bool> Function(Player player, Card context, String question) confirm;
 
-  Future Function(Player player, Card context, String question, List option)
-      ask;
+  Future<dynamic> Function(
+      Player player, Card context, String question, List<dynamic> option) ask;
 
   Future<List<Card>> Function(
           Player player, List<Card> cards, String question, int min, int max)

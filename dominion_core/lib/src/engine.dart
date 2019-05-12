@@ -252,7 +252,7 @@ class Player extends Object with CardSource {
     if (turn != null) buffers.add(turn.played);
     for (CardBuffer buffer in buffers) {
       for (int i = 0; i < buffer.length; i++) {
-        if (buffer[i] is VP) {
+        if (buffer[i] is VictoryOrCurse) {
           score += buffer[i].getVictoryPoints(this);
         }
       }
@@ -263,12 +263,12 @@ class Player extends Object with CardSource {
 
   // return true if event is blocked
   Future<bool> reactTo(EventType event, Card context) async {
-    bool blocked = false;
+    var blocked = false;
     while (true) {
-      List options = [];
-      for (int i = 0; i < hand.length; i++) {
-        if (hand[i] is Reaction && hand[i].canReactTo(event, context)) {
-          options.add(hand[i]);
+      var options = [];
+      for (var card in hand.asList()) {
+        if (card is Reaction && card.canReactTo(event, context, this)) {
+          options.add(card);
         }
       }
       if (options.length == 0) return blocked;

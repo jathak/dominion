@@ -73,7 +73,7 @@ mixin Treasure on Card {
 }
 
 /// Includes Victory and Curse cards
-mixin VP on Card {
+mixin VictoryOrCurse on Card {
   /// Default victory point value of this card
   /// Set to null for no default value
   final int points = null;
@@ -82,7 +82,7 @@ mixin VP on Card {
   int getVictoryPoints(Player player) => points;
 }
 
-mixin Victory on Card implements VP {
+mixin Victory on Card implements VictoryOrCurse {
   final int points = null;
 
   int getVictoryPoints(Player player) => points;
@@ -101,7 +101,7 @@ mixin Action on Card {}
 mixin Attack on Card {}
 
 mixin Reaction on Card {
-  bool canReactTo(EventType type, Card context);
+  bool canReactTo(EventType type, Card context, Player player);
 
   Future<bool> onReact(Player player);
 }

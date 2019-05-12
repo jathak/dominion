@@ -85,7 +85,8 @@ nonInteractionTests() {
     await playerA.playAction(Bridge.instance);
     await playerA.playAction(Bridge.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Bridge.instance, Bridge.instance]);
+    expectBufferHasCards(
+        playerA.turn.played, [Bridge.instance, Bridge.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(3));
     expect(playerA.turn.coins, equals(2));
@@ -114,8 +115,8 @@ nonInteractionTests() {
     await playerA.playAction(Conspirator.instance);
     await playerA.playAction(Conspirator.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(
-        playerA.turn.played, [Conspirator.instance, Conspirator.instance, Conspirator.instance]);
+    expectBufferHasCards(playerA.turn.played,
+        [Conspirator.instance, Conspirator.instance, Conspirator.instance]);
     expect(playerA.turn.actions, equals(1));
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(6));
@@ -175,23 +176,27 @@ nonInteractionTests() {
   });
 }
 
-/*
-    CardRegistry.register(Courtyard.instance);
-    CardRegistry.register(Pawn.instance);
-    CardRegistry.register(SecretChamber.instance);
-    CardRegistry.register(Masquerade.instance);
-    CardRegistry.register(Steward.instance);
-    CardRegistry.register(Swindler.instance);
-    CardRegistry.register(WishingWell.instance);
-    CardRegistry.register(Baron.instance);
-    CardRegistry.register(Ironworks.instance);
-    CardRegistry.register(MiningVillage.instance);
-    CardRegistry.register(Scout.instance);
-    CardRegistry.register(Minion.instance);
-    CardRegistry.register(Saboteur.instance);
-    CardRegistry.register(Torturer.instance);
-    CardRegistry.register(TradingPost.instance);
-    CardRegistry.register(Tribute.instance);
-    CardRegistry.register(Upgrade.instance);
-    CardRegistry.register(Nobles.instance);
-*/
+// TODO(jathak): Test Courtyard
+// TODO(jathak): Test Lurker
+// TODO(jathak): Test Pawn
+// TODO(jathak): Test SecretChamber
+// TODO(jathak): Test Masquerade
+// TODO(jathak): Test Steward
+// TODO(jathak): Test Swindler
+// TODO(jathak): Test WishingWell
+// TODO(jathak): Test Baron
+// TODO(jathak): Test Diplomat
+// TODO(jathak): Test Ironworks
+// TODO(jathak): Test MiningVillage
+// TODO(jathak): Test SecretPassage
+// TODO(jathak): Test Scout
+// TODO(jathak): Test Courtier
+// TODO(jathak): Test Minion
+// TODO(jathak): Test Patrol
+// TODO(jathak): Test Replace
+// TODO(jathak): Test Saboteur
+// TODO(jathak): Test Torturer
+// TODO(jathak): Test TradingPost
+// TODO(jathak): Test Tribute
+// TODO(jathak): Test Upgrade
+// TODO(jathak): Test Nobles

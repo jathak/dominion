@@ -48,7 +48,7 @@ bool yesNo([prompt = ""]) {
   return result == 'yes' || result == 'y';
 }
 
-selectFromList(List options, [allowNone = true]) {
+T selectFromList<T>(List<T> options, [allowNone = true]) {
   if (allowNone) print("0: None");
   int i = 1;
   for (var option in options) {

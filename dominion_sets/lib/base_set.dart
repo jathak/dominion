@@ -58,7 +58,7 @@ class Moat extends Card with Action, BaseSet, Reaction {
     player.draw(2);
   }
 
-  bool canReactTo(EventType type, Card context) {
+  bool canReactTo(EventType type, Card context, Player player) {
     return type == EventType.Attack;
   }
 

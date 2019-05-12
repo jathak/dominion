@@ -32,6 +32,44 @@ class Courtyard extends Card with Action, Intrigue {
 }
 
 @card
+class Lurker extends Card with Action, Intrigue {
+  Lurker._();
+  static Lurker instance = new Lurker._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 2;
+  final String name = "Lurker";
+
+  onPlay(Player player) async {
+    var trash = "Trash an Action card from the Supply";
+    var gain = "Gain an Action card from the trash";
+    var choice =
+        await player.controller.askQuestion(this, "Choose one", [trash, gain]);
+    if (choice == gain) {
+      var card = await player.controller.selectCardFromSupply(
+          EventType.TrashCard,
+          CardConditions()..requiredTypes = [CardType.Action],
+          false);
+      var cardSupply = player.engine.supply.supplyOf(card);
+      var remain = "${cardSupply.count} remain";
+      player.notifyAnnounce(
+          "You trash", "trashes", "a $card from the supply. $remain");
+      cardSupply.drawTo(player.engine.trashPile);
+    } else if (choice == trash) {
+      var card = (await player.controller.selectCardsFrom(
+              player.engine.trashPile.asList().where((card) => card is Action),
+              "Select an Action card from the trash to gain",
+              1,
+              1))
+          .first;
+      player.notifyAnnounce("You gain", "gains", "a $card from the trash");
+      player.engine.trashPile.moveTo(card, player.discarded);
+    }
+  }
+}
+
+@card
 class Pawn extends Card with Action, Intrigue {
   Pawn._();
   static Pawn instance = new Pawn._();
@@ -87,7 +125,8 @@ class SecretChamber extends Card with Action, Reaction, Intrigue {
     player.turn.coins += cards.length;
   }
 
-  bool canReactTo(EventType type, Card context) => type == EventType.Attack;
+  bool canReactTo(EventType type, Card context, Player player) =>
+      type == EventType.Attack;
 
   Future<bool> onReact(Player player) async {
     player.draw(2);
@@ -331,6 +370,36 @@ class Coppersmith extends Card with Action, Intrigue {
 }
 
 @card
+class Diplomat extends Card with Action, Reaction, Intrigue {
+  Diplomat._();
+  static Diplomat instance = new Diplomat._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 4;
+  final String name = "Diplomat";
+
+  onPlay(Player player) async {
+    player.draw(2);
+    if (player.hand.length <= 5) player.turn.actions += 2;
+  }
+
+  bool canReactTo(EventType type, Card context, Player player) {
+    return type == EventType.Attack && player.hand.length >= 5;
+  }
+
+  Future<bool> onReact(Player player) async {
+    player.draw(2);
+    var discarding = await player.controller
+        .selectCardsFromHand(this, CardConditions(), 3, 3);
+    for (var card in discarding) {
+      await player.discard(card);
+    }
+    return false;
+  }
+}
+
+@card
 class Ironworks extends Card with Action, Intrigue {
   Ironworks._();
   static Ironworks instance = new Ironworks._();
@@ -344,6 +413,30 @@ class Ironworks extends Card with Action, Intrigue {
     if (gaining is Action) player.turn.actions += 1;
     if (gaining is Treasure) player.turn.coins += 1;
     if (gaining is Victory) player.draw(1);
+  }
+}
+
+@card
+class Mill extends Card with Action, Victory, Intrigue {
+  Mill._();
+  static Mill instance = new Mill._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 4;
+  final String name = "Mill";
+
+  final int points = 1;
+
+  onPlay(Player player) async {
+    player.draw();
+    player.turn.actions++;
+    if (!(await player.controller
+        .confirmAction(this, "Discard 2 cards for +2 coin?"))) return;
+    var discarding = await player.controller.selectCardsFromHand(
+        this, CardConditions(), player.hand.length == 1 ? 1 : 2, 2);
+    discarding.forEach(player.discard);
+    if (discarding.length == 2) player.turn.coins += 2;
   }
 }
 
@@ -365,6 +458,55 @@ class MiningVillage extends Card with Action, Intrigue {
       if (didTrash) {
         player.turn.coins += 2;
       }
+    }
+  }
+}
+
+@card
+class SecretPassage extends Card with Action, Intrigue {
+  SecretPassage._();
+  static SecretPassage instance = new SecretPassage._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 4;
+  final String name = "Secret Passage";
+
+  onPlay(Player player) async {
+    player.draw(2);
+    player.turn.actions += 1;
+    var card = (await player.controller
+            .selectCardsFromHand(this, CardConditions(), 1, 1))
+        .first;
+    if (player.deck.length == 0) {
+      player.notifyAnnounce("You put a $card on top of your",
+          "puts a card on top of their", "deck");
+      player.hand.moveTo(card, player.deck.top);
+      return;
+    }
+    var options = ["On Top", "1 card down"];
+    var deckLength = player.deck.length;
+    for (int i = 2; i <= deckLength; i++) {
+      options.add("$i cards down");
+    }
+    var answer = await player.controller.askQuestion(
+        this, "Where in your deck do you want to put your $card?", options);
+    if (answer == "On Top") {
+      player.notifyAnnounce("You put a $card on top of your",
+          "puts a card on top of their", "deck");
+      player.hand.moveTo(card, player.deck.top);
+      return;
+    }
+    var depth = int.parse(answer.split(" ").first);
+    for (int i = 0; i < depth; i++) {
+      player.deck.drawTo(player.deck);
+    }
+    var plural = depth == 1 ? "" : "s";
+    player.notifyAnnounce("You put a $card $depth card$plural deep in your",
+        "puts a card $depth card$plural deep in their", "deck");
+    player.hand.moveTo(card, player.deck);
+    for (int i = depth; i < deckLength; i++) {
+      player.deck.drawTo(player.deck);
     }
   }
 }
@@ -401,6 +543,50 @@ class Scout extends Card with Action, Intrigue {
 }
 
 @card
+class Courtier extends Card with Action, Intrigue {
+  Courtier._();
+  static Courtier instance = new Courtier._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 5;
+  final String name = "Courtier";
+
+  onPlay(Player player) async {
+    if (player.hand.length == 0) return;
+    var card = (await player.controller
+            .selectCardsFromHand(this, CardConditions(), 1, 1))
+        .first;
+    var types = 0;
+    if (card is Action) types++;
+    if (card is Treasure) types++;
+    if (card is Victory) types++;
+    if (card is Curse) types++;
+    if (card is Attack) types++;
+    if (card is Reaction) types++;
+    if (card is Duration) types++;
+    var effects = {
+      '+1 Action': () => player.turn.actions++,
+      '+1 Buy': () => player.turn.buys++,
+      '+3 coin': () => player.turn.coins += 3,
+      'Gain a gold': () => player.gain(Gold.instance)
+    };
+    if (types >= 4) {
+      for (var effect in effects.values) {
+        await effect();
+      }
+      return;
+    }
+    while (types > 0) {
+      var choice = await player.controller.askQuestion(
+          this, "Select an effect ($types remaining)", effects.keys.toList());
+      await effects.remove(choice)();
+      types--;
+    }
+  }
+}
+
+@card
 class Duke extends Card with Victory, Intrigue {
   Duke._();
   static Duke instance = new Duke._();
@@ -419,7 +605,7 @@ class Duke extends Card with Victory, Intrigue {
 }
 
 @card
-class Minion extends Card with Action, Intrigue {
+class Minion extends Card with Action, Attack, Intrigue {
   Minion._();
   static Minion instance = new Minion._();
 
@@ -459,41 +645,74 @@ class Minion extends Card with Action, Intrigue {
 }
 
 @card
-class Saboteur extends Card with Action, Intrigue {
-  Saboteur._();
-  static Saboteur instance = new Saboteur._();
+class Patrol extends Card with Action, Intrigue {
+  Patrol._();
+  static Patrol instance = new Patrol._();
 
-  final bool inSecondEdition = false;
+  final bool inFirstEdition = false;
 
   final int cost = 5;
-  final String name = "Saboteur";
+  final String name = "Patrol";
 
   onPlay(Player player) async {
-    for (Player p in player.engine.playersAfter(player)) {
-      bool attackBlocked = await p.reactTo(EventType.Attack, this);
-      if (attackBlocked) continue;
-      CardBuffer buffer = new CardBuffer();
-      while (true) {
-        Card drawn = p.drawTo(buffer);
-        int cardCost = drawn.calculateCost(player.turn);
-        if (cardCost >= 3) {
-          p.trashFrom(drawn, buffer);
-          CardConditions conds = new CardConditions();
-          conds.cost = cardCost - 2;
-          Card gaining =
-              await p.selectCardToGain(conditions: conds, allowNone: true);
-          if (gaining != null) {
-            await p.gain(gaining);
-          }
-          break;
-        }
+    player.draw(3);
+    var buffer = CardBuffer();
+    player.drawTo(buffer);
+    player.notifyAnnounce("You reveal $buffer", "reveals $buffer");
+    for (var card in buffer.asList()) {
+      if (card is VictoryOrCurse) {
+        buffer.moveTo(card, player.hand);
+      }
+    }
+    if (buffer.length <= 1) {
+      buffer.dumpTo(player.deck.top);
+      return;
+    }
+    var order = await player.controller.selectCardsFrom(
+        buffer.asList(),
+        "Patrol: Select the order to place these cards back on your deck",
+        buffer.length,
+        buffer.length);
+    for (var card in order) {
+      buffer.moveTo(card, player.deck.top);
+    }
+  }
+}
+
+@card
+class Replace extends Card with Action, Attack, Intrigue {
+  Replace._();
+  static Replace instance = new Replace._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 5;
+  final String name = "Replace";
+
+  onPlay(Player player) async {
+    var trash = (await player.controller
+            .selectCardsFromHand(this, CardConditions(), 1, 1))
+        .first;
+    await player.trashFrom(trash, player.hand);
+    var gain = await player.controller.selectCardFromSupply(
+        EventType.GainCard,
+        CardConditions()..maxCost = trash.calculateCost(player.turn) + 2,
+        false);
+    await player.gain(gain);
+    if (gain is Action || gain is Treasure) {
+      player.engine.trashPile.moveTo(gain, player.deck.top);
+    }
+    for (var opponent in player.engine.playersAfter(player)) {
+      bool blocked = await opponent.reactTo(EventType.Attack, this);
+      if (gain is Victory && !blocked) {
+        await opponent.gain(Curse.instance);
       }
     }
   }
 }
 
 @card
-class Torturer extends Card with Action, Intrigue {
+class Torturer extends Card with Action, Attack, Intrigue {
   Torturer._();
   static Torturer instance = new Torturer._();
 
@@ -633,12 +852,3 @@ class Nobles extends Card with Victory, Action, Intrigue {
     }
   }
 }
-
-// Second edition cards (TODO)
-// Lurker
-// Diplomat
-// Mill
-// Secret Passage
-// Courtier
-// Patrol
-// Replace
