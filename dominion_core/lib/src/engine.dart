@@ -93,6 +93,7 @@ class DominionEngine {
   List<Player> _players;
 
   Player toLeftOf(Player p) => playersAfter(p).first;
+  Player toRightOf(Player p) => playersAfter(p).last;
 
   Iterable<Player> playersFrom(Player startFrom) sync* {
     int start = _players.indexOf(startFrom);
@@ -250,6 +251,7 @@ class Player extends Object with CardSource {
     turn.phase = Phase.Cleanup;
     // cleanup
     await inPlay.cleanup(this);
+    lastTurn = turn;
     turn = null;
     draw(5);
     notifyAnnounce("Your turn ends", "ends turn");
@@ -360,6 +362,7 @@ class Player extends Object with CardSource {
   Future<bool> gain(Card card) async {
     bool result = await engine.supply.gain(card, this);
     if (result) {
+      turn.gained.add(card);
       var remain = "${engine.supply.supplyOf(card).count} remain";
       notifyAnnounce("You gain", "gains", "a $card. $remain");
     } else {
@@ -372,6 +375,8 @@ class Player extends Object with CardSource {
     bool result = await engine.supply.buy(card, this);
     if (!result) return false;
     if (result) {
+      turn.bought.add(card);
+      turn.gained.add(card);
       var remain = "${engine.supply.supplyOf(card).count} remain";
       notifyAnnounce("You buy", "buys", "a $card. $remain");
     } else {
@@ -385,7 +390,8 @@ class Player extends Object with CardSource {
   CardBuffer discarded;
   InPlayBuffer inPlay;
 
-  Turn turn = null;
+  Turn turn;
+  Turn lastTurn;
 }
 
 class Supply {

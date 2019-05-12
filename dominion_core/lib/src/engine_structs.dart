@@ -57,6 +57,12 @@ class Turn {
   /// The phase this turn is currently in.
   Phase phase = Phase.Action;
 
+  /// List of cards gained on this turn (includes bought cards)
+  List<Card> gained = [];
+
+  /// List of cards bought on this turn
+  List<Card> bought = [];
+
   /// The number of times any given type of card has been played this turn.
   Map<Card, int> playCounts = {};
   int playCount(Card card) => playCounts[card] ?? 0;
