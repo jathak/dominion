@@ -454,7 +454,7 @@ class MiningVillage extends Card with Action, Intrigue {
     bool trash = await player.controller
         .confirmAction(this, "Trash Mining Village for +2 coins?");
     if (trash) {
-      bool didTrash = await player.trashFrom(this, player.turn.played);
+      bool didTrash = await player.trashFrom(this, player.inPlay);
       if (didTrash) {
         player.turn.coins += 2;
       }

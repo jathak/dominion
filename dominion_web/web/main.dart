@@ -130,7 +130,8 @@ void loadHandlers() {
       querySelector('.actions').text = turn['actions'].toString();
       querySelector('.buys').text = turn['buys'].toString();
       querySelector('.coins').text = turn['coins'].toString();
-      makeHeaders(convertToCards(turn['played']), querySelector(".played"));
+      // TODO(jathak): Better display for durations
+      makeHeaders(convertToCards(msg['inPlay']), querySelector(".played"));
     } else {
       querySelector('.turn-wrapper').style.display = 'none';
     }

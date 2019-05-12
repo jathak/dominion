@@ -171,6 +171,7 @@ class Game {
     var msg = {'type': 'hand-update', 'hand': cards};
     msg['currentPlayer'] = engine.currentPlayer.name;
     msg['deckSize'] = player.deck.length;
+    msg['inPlay'] = player.inPlay.asList().map(encodeOption).toList();
     var toSendTo = []..addAll(sockets[player.name]);
     if (player.turn != null) {
       msg['turn'] = {
@@ -178,7 +179,6 @@ class Game {
         'buys': player.turn.buys,
         'coins': player.turn.coins,
         'phase': player.turn.phase.toString(),
-        'played': player.turn.played.asList().map(encodeOption).toList()
       };
       toSendTo.addAll(spectators);
     }

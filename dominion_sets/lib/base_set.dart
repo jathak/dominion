@@ -151,9 +151,8 @@ class Vassal extends Card with Action, BaseSet {
     await player.discardFrom(player.deck);
     if (card is Action &&
         await player.controller.confirmAction(card, "Play this card?")) {
-      player.discarded.moveTo(card, player.turn.played);
-      player.notifyAnnounce("You play", "plays", "a $card");
-      await player.play(card);
+      player.turn.actions++; // since playAction will use one
+      await player.playAction(card, from: player.discarded);
     }
   }
 }
@@ -250,7 +249,7 @@ class Feast extends Card with Action, BaseSet {
   final String name = "Feast";
 
   onPlay(Player player) async {
-    await player.trashFrom(this, player.turn.played);
+    await player.trashFrom(this, player.inPlay);
     CardConditions conds = CardConditions();
     conds.maxCost = 5;
     Card card = await player.selectCardToGain(conditions: conds);
@@ -491,14 +490,30 @@ class ThroneRoom extends Card with Action, BaseSet {
   final int cost = 4;
   final String name = "Throne Room";
 
-  onPlay(Player player) async {
-    Action card = await player.controller.selectActionCard();
+  Future<ForNextTurn> onPlayCanPersist(Player player) async {
+    var card = await player.controller.selectActionCard();
+    ForNextTurn forNextTurn;
     if (card != null) {
       player.turn.actions++; // since playAction will decrement this
-      await player.playAction(card);
+      var index = await player.playAction(card);
       player.notifyAnnounce("You play", "plays", "the $card again");
-      await player.play(card);
+      var secondFNT = await player.play(card);
+      if (card is Duration) {
+        forNextTurn = ForNextTurn(true, () async => false);
+        var firstFNT = player.inPlay.nextTurn[index];
+        if (firstFNT == null) {
+          player.inPlay.nextTurn[index] = secondFNT;
+        } else {
+          player.inPlay.nextTurn[index] =
+              ForNextTurn(firstFNT.persists || secondFNT.persists, () async {
+            var first = await firstFNT.action();
+            var second = await secondFNT.action();
+            return first || second;
+          });
+        }
+      }
     }
+    return forNextTurn;
   }
 }
 

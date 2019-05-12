@@ -107,6 +107,7 @@ class TopTarget extends Object with CardTarget {
 class SupplySource extends Object with CardSource {
   int count;
   Card card;
+  int embargoTokens = 0;
 
   SupplySource(this.card, this.count);
 

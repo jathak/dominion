@@ -36,7 +36,7 @@ nonInteractionTests() {
     cards.add(playerA.deck[1]);
     await playerA.playAction(Moat.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Moat.instance]);
+    expectBufferHasCards(playerA.inPlay, [Moat.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
@@ -49,7 +49,7 @@ nonInteractionTests() {
     cards.add(playerA.deck[0]);
     await playerA.playAction(Merchant.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Merchant.instance]);
+    expectBufferHasCards(playerA.inPlay, [Merchant.instance]);
     expect(playerA.turn.actions, equals(1));
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
@@ -70,7 +70,7 @@ nonInteractionTests() {
     };
     await playerA.playAction(Vassal.instance);
     expectBufferHasCards(playerA.hand, hand);
-    expectBufferHasCards(playerA.turn.played, [Vassal.instance]);
+    expectBufferHasCards(playerA.inPlay, [Vassal.instance]);
     expectBufferHasCards(playerA.discarded, [Gold.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
@@ -82,7 +82,7 @@ nonInteractionTests() {
     cards.add(playerA.deck[0]);
     await playerA.playAction(Village.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Village.instance]);
+    expectBufferHasCards(playerA.inPlay, [Village.instance]);
     expect(playerA.turn.actions, equals(2));
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
@@ -92,7 +92,7 @@ nonInteractionTests() {
     playerA.hand.receive(Woodcutter.instance);
     await playerA.playAction(Woodcutter.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Woodcutter.instance]);
+    expectBufferHasCards(playerA.inPlay, [Woodcutter.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(2));
     expect(playerA.turn.coins, equals(2));
@@ -103,7 +103,7 @@ nonInteractionTests() {
     await playerA.playAction(Moneylender.instance);
     cards.remove(Copper.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Moneylender.instance]);
+    expectBufferHasCards(playerA.inPlay, [Moneylender.instance]);
     expectBufferHasCards(engine.trashPile, [Copper.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
@@ -115,7 +115,7 @@ nonInteractionTests() {
     hand.add(playerA.deck[0]);
     await playerA.playAction(Poacher.instance);
     expectBufferHasCards(playerA.hand, hand);
-    expectBufferHasCards(playerA.turn.played, [Poacher.instance]);
+    expectBufferHasCards(playerA.inPlay, [Poacher.instance]);
     expectBufferHasCards(playerA.discarded, []);
     expect(playerA.turn.actions, equals(1));
     expect(playerA.turn.buys, equals(1));
@@ -129,7 +129,7 @@ nonInteractionTests() {
     cards.add(playerA.deck[2]);
     await playerA.playAction(Smithy.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Smithy.instance]);
+    expectBufferHasCards(playerA.inPlay, [Smithy.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
@@ -147,7 +147,7 @@ nonInteractionTests() {
     await playerA.playAction(CouncilRoom.instance);
     expectBufferHasCards(playerA.hand, cards);
     expectBufferHasCards(playerB.hand, cardsB);
-    expectBufferHasCards(playerA.turn.played, [CouncilRoom.instance]);
+    expectBufferHasCards(playerA.inPlay, [CouncilRoom.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(2));
     expect(playerA.turn.coins, equals(0));
@@ -157,7 +157,7 @@ nonInteractionTests() {
     playerA.hand.receive(Festival.instance);
     await playerA.playAction(Festival.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Festival.instance]);
+    expectBufferHasCards(playerA.inPlay, [Festival.instance]);
     expect(playerA.turn.actions, equals(2));
     expect(playerA.turn.buys, equals(2));
     expect(playerA.turn.coins, equals(2));
@@ -169,7 +169,7 @@ nonInteractionTests() {
     cards.add(playerA.deck[1]);
     await playerA.playAction(Laboratory.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Laboratory.instance]);
+    expectBufferHasCards(playerA.inPlay, [Laboratory.instance]);
     expect(playerA.turn.actions, equals(1));
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
@@ -180,7 +180,7 @@ nonInteractionTests() {
     cards.add(playerA.deck[0]);
     await playerA.playAction(Market.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Market.instance]);
+    expectBufferHasCards(playerA.inPlay, [Market.instance]);
     expect(playerA.turn.actions, equals(1));
     expect(playerA.turn.buys, equals(2));
     expect(playerA.turn.coins, equals(1));
@@ -192,7 +192,7 @@ nonInteractionTests() {
     cards.add(playerA.deck[1]);
     await playerA.playAction(Witch.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Witch.instance]);
+    expectBufferHasCards(playerA.inPlay, [Witch.instance]);
     expectBufferHasCards(playerB.discarded, [Curse.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
@@ -207,7 +207,7 @@ nonInteractionTests() {
     cards.add(Silver.instance);
     cards.add(Gold.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Adventurer.instance]);
+    expectBufferHasCards(playerA.inPlay, [Adventurer.instance]);
     expectBufferHasCards(playerA.deck, [Province.instance]);
     expectBufferHasCards(playerA.discarded, [Duchy.instance]);
     expect(playerA.turn.actions, equals(0));
@@ -226,7 +226,7 @@ throneRoomTests() {
     await playerA.playAction(ThroneRoom.instance);
     expectBufferHasCards(playerA.hand, cards);
     expectBufferHasCards(
-        playerA.turn.played, [ThroneRoom.instance, Market.instance]);
+        playerA.inPlay, [ThroneRoom.instance, Market.instance]);
     expect(playerA.turn.actions, equals(2));
     expect(playerA.turn.buys, equals(3));
     expect(playerA.turn.coins, equals(2));
@@ -241,8 +241,7 @@ throneRoomTests() {
     cards.add(playerA.deck[3]);
     await playerA.playAction(ThroneRoom.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(
-        playerA.turn.played, [ThroneRoom.instance, Witch.instance]);
+    expectBufferHasCards(playerA.inPlay, [ThroneRoom.instance, Witch.instance]);
     expectBufferHasCards(playerB.discarded, [Curse.instance, Curse.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
@@ -253,7 +252,7 @@ throneRoomTests() {
     playerA.hand.receive(ThroneRoom.instance);
     await playerA.playAction(ThroneRoom.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [ThroneRoom.instance]);
+    expectBufferHasCards(playerA.inPlay, [ThroneRoom.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
@@ -273,7 +272,7 @@ interactionTests() {
     playerA.hand.receive(Cellar.instance);
     await playerA.playAction(Cellar.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Cellar.instance]);
+    expectBufferHasCards(playerA.inPlay, [Cellar.instance]);
     expectBufferHasCards(playerA.discarded, [discardA, discardB]);
     expect(playerA.turn.actions, equals(1));
     expect(playerA.turn.buys, equals(1));
@@ -289,7 +288,7 @@ interactionTests() {
     playerA.hand.receive(Chapel.instance);
     await playerA.playAction(Chapel.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Chapel.instance]);
+    expectBufferHasCards(playerA.inPlay, [Chapel.instance]);
     expectBufferHasCards(engine.trashPile, [trashA, trashB]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
@@ -302,7 +301,7 @@ interactionTests() {
     playerA.hand.receive(Chancellor.instance);
     await playerA.playAction(Chancellor.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Chancellor.instance]);
+    expectBufferHasCards(playerA.inPlay, [Chancellor.instance]);
     expectBufferHasCards(playerA.discarded, []);
     expectBufferHasCards(playerA.deck, deck);
     expect(playerA.turn.actions, equals(0));
@@ -316,7 +315,7 @@ interactionTests() {
     playerA.hand.receive(Chancellor.instance);
     await playerA.playAction(Chancellor.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Chancellor.instance]);
+    expectBufferHasCards(playerA.inPlay, [Chancellor.instance]);
     expectBufferHasCards(playerA.discarded, deck);
     expectBufferHasCards(playerA.deck, []);
     expect(playerA.turn.actions, equals(0));
@@ -339,7 +338,7 @@ interactionTests() {
     deck[0] = Gold.instance;
     await playerA.playAction(Harbinger.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Harbinger.instance]);
+    expectBufferHasCards(playerA.inPlay, [Harbinger.instance]);
     expectBufferHasCards(playerA.discarded, []);
     expectBufferHasCards(playerA.deck, deck);
     expect(playerA.turn.actions, equals(1));
@@ -358,8 +357,7 @@ interactionTests() {
     hand.add(playerA.deck[1]);
     await playerA.playAction(Vassal.instance);
     expectBufferHasCards(playerA.hand, hand);
-    expectBufferHasCards(
-        playerA.turn.played, [Vassal.instance, Village.instance]);
+    expectBufferHasCards(playerA.inPlay, [Vassal.instance, Village.instance]);
     expectBufferHasCards(playerA.discarded, []);
     expect(playerA.turn.actions, equals(2));
     expect(playerA.turn.buys, equals(1));
@@ -372,7 +370,7 @@ interactionTests() {
     playerA.hand.receive(Workshop.instance);
     await playerA.playAction(Workshop.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, [Workshop.instance]);
+    expectBufferHasCards(playerA.inPlay, [Workshop.instance]);
     expectBufferHasCards(playerA.discarded, [Silver.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
@@ -385,7 +383,7 @@ interactionTests() {
     playerA.hand.receive(Feast.instance);
     await playerA.playAction(Feast.instance);
     expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.turn.played, []);
+    expectBufferHasCards(playerA.inPlay, []);
     expectBufferHasCards(engine.trashPile, [Feast.instance]);
     expectBufferHasCards(playerA.discarded, [Duchy.instance]);
     expect(playerA.turn.actions, equals(0));
@@ -406,7 +404,7 @@ interactionTests() {
     hand.add(playerA.deck[0]);
     await playerA.playAction(Poacher.instance);
     expectBufferHasCards(playerA.hand, hand);
-    expectBufferHasCards(playerA.turn.played, [Poacher.instance]);
+    expectBufferHasCards(playerA.inPlay, [Poacher.instance]);
     expectBufferHasCards(playerA.discarded, discarded);
     expect(playerA.turn.actions, equals(1));
     expect(playerA.turn.buys, equals(1));
@@ -420,7 +418,7 @@ interactionTests() {
         (player, event, conditions, allowNone) async => Province.instance;
     await playerA.playAction(Remodel.instance);
     expectBufferHasCards(playerA.hand, []);
-    expectBufferHasCards(playerA.turn.played, [Remodel.instance]);
+    expectBufferHasCards(playerA.inPlay, [Remodel.instance]);
     expectBufferHasCards(engine.trashPile, [Adventurer.instance]);
     expectBufferHasCards(playerA.discarded, [Province.instance]);
     expect(playerA.turn.actions, equals(0));
@@ -439,7 +437,7 @@ interactionTests() {
     await playerA.playAction(Library.instance);
     expectBufferHasCards(playerA.hand, cards);
     expectBufferHasCards(playerA.deck, [Smithy.instance, Gold.instance]);
-    expectBufferHasCards(playerA.turn.played, [Library.instance]);
+    expectBufferHasCards(playerA.inPlay, [Library.instance]);
     expectBufferHasCards(playerA.discarded, []);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
@@ -456,7 +454,7 @@ interactionTests() {
     await playerA.playAction(Library.instance);
     expectBufferHasCards(playerA.hand, cards);
     expectBufferHasCards(playerA.deck, []);
-    expectBufferHasCards(playerA.turn.played, [Library.instance]);
+    expectBufferHasCards(playerA.inPlay, [Library.instance]);
     expectBufferHasCards(
         playerA.discarded, [Village.instance, Smithy.instance]);
     expect(playerA.turn.actions, equals(0));
@@ -471,7 +469,7 @@ interactionTests() {
         (player, event, conditions, allowNone) async => Gold.instance;
     await playerA.playAction(Mine.instance);
     expectBufferHasCards(playerA.hand, [Gold.instance]);
-    expectBufferHasCards(playerA.turn.played, [Mine.instance]);
+    expectBufferHasCards(playerA.inPlay, [Mine.instance]);
     expectBufferHasCards(engine.trashPile, [Silver.instance]);
     expectBufferHasCards(playerA.discarded, []);
     expect(playerA.turn.actions, equals(0));
@@ -499,7 +497,7 @@ attackTests() {
     expectBufferHasCards(playerA.deck, deck);
     expectBufferHasCards(playerB.hand, cardsB);
     expectBufferHasCards(playerB.deck, deckB);
-    expectBufferHasCards(playerA.turn.played, [Bureaucrat.instance]);
+    expectBufferHasCards(playerA.inPlay, [Bureaucrat.instance]);
     expect(playerA.turn.actions, equals(0));
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));

@@ -39,6 +39,14 @@ abstract class Card implements Comparable<Card> {
   /// Called when player plays this card
   onPlay(Player player) async => null;
 
+  /// Called when player plays this turn.
+  ///
+  /// Most non-durations should override onPlay instead.
+  Future<ForNextTurn> onPlayCanPersist(Player player) async {
+    await onPlay(player);
+    return null;
+  }
+
   /// Called when player discards this card
   onDiscard(Player player,
           {bool cleanup: false, List<Card> cleanedUp: null}) async =>
@@ -108,11 +116,13 @@ mixin Reaction on Card {
 
 /// This is a subtype, so it doesn't directly extend Card
 /// as all Durations also extend one of the main types
-mixin Duration on Card {
-  /// Called at start of player's next turn.
-  /// Returns true if duration persists or false if it is discarded.
-  Future onNextTurn(Player player);
+mixin Duration on Card {}
 
-  /// Outpost, Swamp Hag, and Champion will require special behavior
-  /// Though only Outpost will be implemented initially
+class ForNextTurn {
+  bool persists;
+  NextTurnAction action;
+
+  ForNextTurn(this.persists, this.action);
 }
+
+typedef Future<bool> NextTurnAction();

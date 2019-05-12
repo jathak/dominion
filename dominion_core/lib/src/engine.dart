@@ -130,6 +130,7 @@ class Player extends Object with CardSource {
     deck.shuffle();
     hand = CardBuffer();
     discarded = CardBuffer();
+    inPlay = InPlayBuffer();
   }
 
   Future<Card> selectCardToGain(
@@ -182,29 +183,39 @@ class Player extends Object with CardSource {
     announce("$othersOnly $both");
   }
 
-  Future playAction(Action card) async {
-    hand.moveTo(card, turn.played);
+  Future<int> playAction(Action card, {CardSource from}) async {
+    if (from == null) from = hand;
+    from.remove(card);
     turn.actions -= 1;
-    notifyAnnounce("You play", "plays", "a $card");
-    await play(card);
+    var index = inPlay.receive(card);
+    var forNextTurn = await play(card);
+    if (forNextTurn != null) inPlay.nextTurn[index] = forNextTurn;
+    return index;
   }
 
-  Future playTreasure(Treasure card) async {
-    hand.moveTo(card, turn.played);
-    await play(card);
+  Future<int> playTreasure(Treasure card, {CardSource from}) async {
+    if (from == null) from = hand;
+    from.remove(card);
+    var index = inPlay.receive(card);
+    var forNextTurn = await play(card);
+    if (forNextTurn != null) inPlay.nextTurn[index] = forNextTurn;
+    return index;
   }
 
-  Future play(Card card) async {
+  Future<ForNextTurn> play(Card card) async {
     turn.playCounts[card] = turn.playCount(card) + 1;
     for (var listener in turn.playListeners) {
       await listener(card);
     }
-    await card.onPlay(this);
+    return await card.onPlayCanPersist(this);
   }
 
   Future takeTurn() async {
     turn = Turn();
     notifyAnnounce("It's your turn!", "starts turn");
+    // Run next turn actions for durations
+    await inPlay.runNextTurnActions();
+
     // play actions
     while (turn.actions > 0 && hasActions()) {
       Action actionCard = await controller.selectActionCard();
@@ -231,16 +242,7 @@ class Player extends Object with CardSource {
     }
     turn.phase = Phase.Cleanup;
     // cleanup
-    List<Card> cleanedUp = [];
-    while (turn.played.length > 0) {
-      cleanedUp.add(turn.played.drawTo(discarded));
-    }
-    while (hand.length > 0) {
-      cleanedUp.add(hand.drawTo(discarded));
-    }
-    for (Card card in cleanedUp) {
-      await card.onDiscard(this, cleanup: true, cleanedUp: cleanedUp);
-    }
+    await inPlay.cleanup(this);
     turn = null;
     draw(5);
     notifyAnnounce("Your turn ends", "ends turn");
@@ -248,8 +250,7 @@ class Player extends Object with CardSource {
 
   int calculateScore() {
     int score = 0;
-    List<CardBuffer> buffers = [deck, hand, discarded];
-    if (turn != null) buffers.add(turn.played);
+    List<CardBuffer> buffers = [deck, hand, discarded, inPlay];
     for (CardBuffer buffer in buffers) {
       for (int i = 0; i < buffer.length; i++) {
         if (buffer[i] is VictoryOrCurse) {
@@ -329,9 +330,7 @@ class Player extends Object with CardSource {
     cards.addAll(deck.asList());
     cards.addAll(hand.asList());
     cards.addAll(discarded.asList());
-    if (turn != null) {
-      cards.addAll(turn.played.asList());
-    }
+    cards.addAll(inPlay.asList());
     return cards;
   }
 
@@ -375,6 +374,7 @@ class Player extends Object with CardSource {
   CardBuffer deck;
   CardBuffer hand;
   CardBuffer discarded;
+  InPlayBuffer inPlay;
 
   Turn turn = null;
 }
@@ -440,6 +440,9 @@ class Supply {
     }
     Card result = supplyOf(card).drawTo(player.discarded);
     if (result == null) return false;
+    for (int i = 0; i < supplyOf(card).embargoTokens; i++) {
+      await player.gain(Curse.instance);
+    }
     player.turn.buys -= 1;
     player.turn.coins -= cost;
     if (card.requiresPotion) {

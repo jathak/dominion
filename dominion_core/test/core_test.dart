@@ -70,11 +70,13 @@ void cardBufferTests() {
     result = source.moveTo(Copper.instance, target);
     expect(result, equals(true));
     expectBufferHasCards(source, []);
-    expectBufferHasCards(target, [Silver.instance, Province.instance, Copper.instance]);
+    expectBufferHasCards(
+        target, [Silver.instance, Province.instance, Copper.instance]);
     result = source.moveTo(Copper.instance, target);
     expect(result, equals(false));
     expectBufferHasCards(source, []);
-    expectBufferHasCards(target, [Silver.instance, Province.instance, Copper.instance]);
+    expectBufferHasCards(
+        target, [Silver.instance, Province.instance, Copper.instance]);
   });
 }
 
@@ -102,7 +104,7 @@ void basicCardsTests() {
     expect(player.turn.potions, equals(1));
     expect(player.turn.actions, 1);
     expect(player.turn.buys, 1);
-    expectBufferHasCards(player.turn.played, []);
+    expectBufferHasCards(player.inPlay, []);
     for (int i = 1; i <= 4; i++) {
       expect(Copper.instance.supplyCount(i), 60 - 7 * i);
       expect(Silver.instance.supplyCount(i), 40);

@@ -52,7 +52,7 @@ class Turn {
   int potions = 0;
 
   /// The buffer containing the cards played this turn.
-  CardBuffer played = new CardBuffer();
+  //CardBuffer played = new CardBuffer();
 
   /// The phase this turn is currently in.
   Phase phase = Phase.Action;
@@ -76,6 +76,69 @@ typedef Future PlayListener(Card card);
 
 typedef int CostProcessor(Card card, int oldCost);
 
+class InPlayBuffer extends CardBuffer {
+  List<ForNextTurn> nextTurn = [];
+
+  @override
+  bool remove(Card card) {
+    throw Exception("Use cleanup to remove cards from play!");
+  }
+
+  @override
+  Card removeTop() {
+    throw Exception("Use cleanup to remove cards from play!");
+  }
+
+  @override
+  bool moveTo(Card card, CardTarget target) {
+    int count =
+        _cards.map((item) => item == card ? 1 : 0).fold(0, (a, b) => a + b);
+    if (count == 1) {
+      int index = _cards.indexOf(card);
+      _cards.removeAt(index);
+      nextTurn.removeAt(index);
+      target.receive(card);
+      return true;
+    } else if (count > 1) {
+      throw Exception("Ambiguous which $card to move");
+    }
+    return false;
+  }
+
+  @override
+  int receive(Card card, {ForNextTurn forNextTurn}) {
+    super.receive(card);
+    nextTurn.add(forNextTurn);
+    return nextTurn.length - 1;
+  }
+
+  /// Cleans up all cards in play that are not being discarded.
+  Future cleanup(Player player) async {
+    int i = 0;
+    var discarding = <Card>[];
+    while (i < _cards.length) {
+      if (nextTurn[i]?.persists ?? false) {
+        i++;
+      } else {
+        discarding.add(_cards.removeAt(i));
+        nextTurn.removeAt(i);
+      }
+    }
+    for (var card in discarding) {
+      await card.onDiscard(player, cleanup: true, cleanedUp: discarding);
+    }
+  }
+
+  /// Runs all of the next turn actions for persistant cards.
+  Future runNextTurnActions() async {
+    for (var forNextTurn in nextTurn) {
+      if (forNextTurn != null) {
+        forNextTurn.persists = await forNextTurn.action();
+      }
+    }
+  }
+}
+
 String cardWord(int count) => count == 1 ? 'card' : 'cards';
 
 enum Phase { Action, Buy, Cleanup }
@@ -87,5 +150,6 @@ enum EventType {
   BlockCard,
   GuessCard,
   GainForOpponent,
-  TrashCard
+  TrashCard,
+  Embargo
 }
