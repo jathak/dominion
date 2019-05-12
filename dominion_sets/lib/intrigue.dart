@@ -6,6 +6,8 @@ import 'dart:async';
 
 abstract class Intrigue {
   final String expansion = "Intrigue";
+  final bool inFirstEdition = true;
+  final bool inSecondEdition = true;
 }
 
 @card
@@ -70,6 +72,8 @@ class SecretChamber extends Card with Action, Reaction, Intrigue {
   SecretChamber._();
   static SecretChamber instance = new SecretChamber._();
 
+  final bool inSecondEdition = false;
+
   final int cost = 2;
   final String name = "Secret Chamber";
 
@@ -104,6 +108,8 @@ class SecretChamber extends Card with Action, Reaction, Intrigue {
 class GreatHall extends Card with Action, Victory, Intrigue {
   GreatHall._();
   static GreatHall instance = new GreatHall._();
+
+  final bool inSecondEdition = false;
 
   final int cost = 3;
   final String name = "Great Hall";
@@ -300,7 +306,7 @@ class Conspirator extends Card with Action, Intrigue {
 
   onPlay(Player player) async {
     player.turn.coins += 2;
-    if (player.turn.actionsPlayed >= 3) {
+    if (player.turn.totalPlayCount((card) => card is Action) >= 3) {
       player.draw(1);
       player.turn.actions += 1;
     }
@@ -312,14 +318,15 @@ class Coppersmith extends Card with Action, Intrigue {
   Coppersmith._();
   static Coppersmith instance = new Coppersmith._();
 
+  final bool inSecondEdition = false;
+
   final int cost = 4;
   final String name = "Coppersmith";
 
   onPlay(Player player) async {
-    if (!player.turn.misc.containsKey('coppersmithsPlayed')) {
-      player.turn.misc['coppersmithsPlayed'] = 0;
-    }
-    player.turn.misc['coppersmithsPlayed'] += 1;
+    player.turn.playListeners.add((card) {
+      if (card is Copper) player.turn.coins++;
+    });
   }
 }
 
@@ -366,6 +373,8 @@ class MiningVillage extends Card with Action, Intrigue {
 class Scout extends Card with Action, Intrigue {
   Scout._();
   static Scout instance = new Scout._();
+
+  final bool inSecondEdition = false;
 
   final int cost = 4;
   final String name = "Scout";
@@ -454,6 +463,8 @@ class Saboteur extends Card with Action, Intrigue {
   Saboteur._();
   static Saboteur instance = new Saboteur._();
 
+  final bool inSecondEdition = false;
+
   final int cost = 5;
   final String name = "Saboteur";
 
@@ -538,6 +549,8 @@ class Tribute extends Card with Action, Intrigue {
   Tribute._();
   static Tribute instance = new Tribute._();
 
+  final bool inSecondEdition = false;
+
   final int cost = 5;
   final String name = "Tribute";
 
@@ -620,3 +633,12 @@ class Nobles extends Card with Victory, Action, Intrigue {
     }
   }
 }
+
+// Second edition cards (TODO)
+// Lurker
+// Diplomat
+// Mill
+// Secret Passage
+// Courtier
+// Patrol
+// Replace

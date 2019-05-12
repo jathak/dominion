@@ -1,7 +1,7 @@
 part of dominion_core;
 
 class DominionEngine {
-  CardBuffer trashPile = new CardBuffer();
+  CardBuffer trashPile = CardBuffer();
   Supply supply;
 
   /// used by various cards to attach data to the entire game
@@ -10,7 +10,7 @@ class DominionEngine {
   DominionEngine(this.supply, List<PlayerController> controllers) {
     _players = [];
     for (var pc in controllers) {
-      _players.add(new Player(this, pc));
+      _players.add(Player(this, pc));
     }
     for (var player in _players) {
       player.controller.player = player;
@@ -24,14 +24,14 @@ class DominionEngine {
   reset() {
     var newPlayers = [];
     for (var player in _players) {
-      newPlayers.add(new Player(this, player.controller));
+      newPlayers.add(Player(this, player.controller));
     }
     _players = newPlayers;
     for (var player in _players) {
       player.controller.player = player;
       player.controller.reset();
     }
-    trashPile = new CardBuffer();
+    trashPile = CardBuffer();
     supply.reset();
     misc = {};
     currentPlayer = _players[0];
@@ -124,24 +124,24 @@ class Player extends Object with CardSource {
   String get name => controller.name;
 
   Player(this.engine, this.controller) {
-    deck = new CardBuffer();
+    deck = CardBuffer();
     for (int i = 0; i < 3; i++) deck.receive(Estate.instance);
     for (int i = 0; i < 7; i++) deck.receive(Copper.instance);
     deck.shuffle();
-    hand = new CardBuffer();
-    discarded = new CardBuffer();
+    hand = CardBuffer();
+    discarded = CardBuffer();
   }
 
   Future<Card> selectCardToGain(
       {CardConditions conditions, bool allowNone: false}) {
-    if (conditions == null) conditions = new CardConditions();
+    if (conditions == null) conditions = CardConditions();
     return controller.selectCardFromSupply(
         EventType.GainCard, conditions, allowNone);
   }
 
   Future<Card> selectCardToBuy(
       {CardConditions conditions, bool allowNone: true}) {
-    if (conditions == null) conditions = new CardConditions();
+    if (conditions == null) conditions = CardConditions();
     return controller.selectCardFromSupply(
         EventType.BuyCard, conditions, allowNone);
   }
@@ -185,18 +185,25 @@ class Player extends Object with CardSource {
   Future playAction(Action card) async {
     hand.moveTo(card, turn.played);
     turn.actions -= 1;
-    turn.actionsPlayed += 1;
     notifyAnnounce("You play", "plays", "a $card");
-    await card.onPlay(this);
+    await play(card);
   }
 
   Future playTreasure(Treasure card) async {
     hand.moveTo(card, turn.played);
+    await play(card);
+  }
+
+  Future play(Card card) async {
+    turn.playCounts[card] = turn.playCount(card) + 1;
+    for (var listener in turn.playListeners) {
+      await listener(card);
+    }
     await card.onPlay(this);
   }
 
   Future takeTurn() async {
-    turn = new Turn();
+    turn = Turn();
     notifyAnnounce("It's your turn!", "starts turn");
     // play actions
     while (turn.actions > 0 && hasActions()) {
@@ -217,7 +224,7 @@ class Player extends Object with CardSource {
     }
     // buy cards
     while (turn.buys > 0) {
-      CardConditions conds = new CardConditions()..maxCost = turn.coins;
+      CardConditions conds = CardConditions()..maxCost = turn.coins;
       Card toBuy = await selectCardToBuy(conditions: conds);
       if (toBuy == null) break;
       await buy(toBuy);
@@ -375,15 +382,15 @@ class Player extends Object with CardSource {
 class Supply {
   Map<Card, SupplySource> _supplies;
 
-  Iterable<Card> _kc;
-  int _pc;
-  bool _eb;
+  Iterable<Card> _kingdomCards;
+  int _playerCount;
+  bool _expensiveBasics;
 
   Supply(Iterable<Card> kingdomCards, int playerCount, bool expensiveBasics) {
-    _kc = kingdomCards;
-    _pc = playerCount;
-    _eb = expensiveBasics;
-    _setup(_kc, _pc, _eb);
+    _kingdomCards = kingdomCards;
+    _playerCount = playerCount;
+    _expensiveBasics = expensiveBasics;
+    _setup(_kingdomCards, _playerCount, _expensiveBasics);
   }
 
   _setup(Iterable<Card> kingdomCards, int playerCount, bool expensiveBasics) {
@@ -408,7 +415,7 @@ class Supply {
     }
     if (addPotions) cards.add(Potion.instance);
     for (Card c in cards) {
-      _supplies[c] = new SupplySource(c, c.supplyCount(playerCount));
+      _supplies[c] = SupplySource(c, c.supplyCount(playerCount));
     }
   }
 
@@ -416,7 +423,7 @@ class Supply {
 
   Iterable<Card> get cardsInSupply => _supplies.keys;
 
-  reset() => _setup(_kc, _pc, _eb);
+  reset() => _setup(_kingdomCards, _playerCount, _expensiveBasics);
 
   Future<bool> gain(Card card, Player player) async {
     Card result = supplyOf(card).drawTo(player.discarded);
@@ -442,20 +449,20 @@ class Supply {
     return true;
   }
 
+  int get emptyPiles =>
+      cardsInSupply.where((card) => supplyOf(card).count == 0).length;
+
   bool isGameOver([engine = null]) {
     if (supplyOf(Province.instance).count == 0) {
       engine?.log("All Provinces are gone!");
       return true;
     }
-    if (_eb && supplyOf(Colony.instance).count == 0) {
+    if (_expensiveBasics && supplyOf(Colony.instance).count == 0) {
       engine?.log("All Colonies are gone!");
       return true;
     }
-    int empty = 0;
-    for (Card c in cardsInSupply) {
-      if (supplyOf(c).count == 0) empty++;
-    }
-    if (_pc < 5 && empty >= 3) {
+    int empty = emptyPiles;
+    if (_playerCount < 5 && empty >= 3) {
       engine?.log("Three supplies are empty!");
       return true;
     }

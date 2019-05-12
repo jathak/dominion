@@ -4,14 +4,16 @@ import 'package:dominion_core/dominion_core.dart';
 
 import 'dart:async';
 
-abstract class BaseSet {
+mixin BaseSet {
   final String expansion = "Base";
+  final bool inFirstEdition = true;
+  final bool inSecondEdition = true;
 }
 
 @card
 class Cellar extends Card with Action, BaseSet {
   Cellar._();
-  static Cellar instance = new Cellar._();
+  static Cellar instance = Cellar._();
 
   final int cost = 2;
   final String name = "Cellar";
@@ -19,7 +21,7 @@ class Cellar extends Card with Action, BaseSet {
   onPlay(Player player) async {
     player.turn.actions += 1;
     List<Card> cards = await player.controller
-        .selectCardsFromHand(this, new CardConditions(), 0, -1);
+        .selectCardsFromHand(this, CardConditions(), 0, -1);
     for (Card c in cards) {
       await player.discard(c);
     }
@@ -30,14 +32,14 @@ class Cellar extends Card with Action, BaseSet {
 @card
 class Chapel extends Card with Action, BaseSet {
   Chapel._();
-  static Chapel instance = new Chapel._();
+  static Chapel instance = Chapel._();
 
   final int cost = 2;
   final String name = "Chapel";
 
   onPlay(Player player) async {
     List<Card> cards = await player.controller
-        .selectCardsFromHand(this, new CardConditions(), 0, 4);
+        .selectCardsFromHand(this, CardConditions(), 0, 4);
     for (Card c in cards) {
       await player.trashFrom(c, player.hand);
     }
@@ -47,7 +49,7 @@ class Chapel extends Card with Action, BaseSet {
 @card
 class Moat extends Card with Action, BaseSet, Reaction {
   Moat._();
-  static Moat instance = new Moat._();
+  static Moat instance = Moat._();
 
   final int cost = 2;
   final String name = "Moat";
@@ -68,7 +70,9 @@ class Moat extends Card with Action, BaseSet, Reaction {
 @card
 class Chancellor extends Card with Action, BaseSet {
   Chancellor._();
-  static Chancellor instance = new Chancellor._();
+  static Chancellor instance = Chancellor._();
+
+  final bool inSecondEdition = false;
 
   final int cost = 3;
   final String name = "Chancellor";
@@ -85,9 +89,79 @@ class Chancellor extends Card with Action, BaseSet {
 }
 
 @card
+class Harbinger extends Card with Action, BaseSet {
+  Harbinger._();
+  static Harbinger instance = Harbinger._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 3;
+  final String name = "Harbinger";
+
+  onPlay(Player player) async {
+    player.draw();
+    player.turn.actions++;
+    var discards = player.discarded.asList().toSet().toList();
+    var cards = await player.controller.selectCardsFrom(
+        discards,
+        "Harbinger: Select a card from your discard "
+        "pile to place on top of your deck?",
+        0,
+        1);
+    if (cards.length == 1) {
+      player.discarded.moveTo(cards.first, player.deck.top);
+    }
+  }
+}
+
+@card
+class Merchant extends Card with Action, BaseSet {
+  Merchant._();
+  static Merchant instance = Merchant._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 3;
+  final String name = "Merchant";
+
+  onPlay(Player player) async {
+    player.draw();
+    player.turn.actions++;
+    player.turn.playListeners.add((card) {
+      if (card is Silver && player.turn.playCounts[card] == 1) {
+        player.turn.coins++;
+      }
+    });
+  }
+}
+
+@card
+class Vassal extends Card with Action, BaseSet {
+  Vassal._();
+  static Vassal instance = Vassal._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 3;
+  final String name = "Vassal";
+
+  onPlay(Player player) async {
+    player.turn.coins += 2;
+    var card = player.deck[0];
+    await player.discardFrom(player.deck);
+    if (card is Action &&
+        await player.controller.confirmAction(card, "Play this card?")) {
+      player.discarded.moveTo(card, player.turn.played);
+      player.notifyAnnounce("You play", "plays", "a $card");
+      await player.play(card);
+    }
+  }
+}
+
+@card
 class Village extends Card with Action, BaseSet {
   Village._();
-  static Village instance = new Village._();
+  static Village instance = Village._();
 
   final int cost = 3;
   final String name = "Village";
@@ -101,7 +175,9 @@ class Village extends Card with Action, BaseSet {
 @card
 class Woodcutter extends Card with Action, BaseSet {
   Woodcutter._();
-  static Woodcutter instance = new Woodcutter._();
+  static Woodcutter instance = Woodcutter._();
+
+  final bool inSecondEdition = false;
 
   final int cost = 3;
   final String name = "Woodcutter";
@@ -115,13 +191,13 @@ class Woodcutter extends Card with Action, BaseSet {
 @card
 class Workshop extends Card with Action, BaseSet {
   Workshop._();
-  static Workshop instance = new Workshop._();
+  static Workshop instance = Workshop._();
 
   final int cost = 3;
   final String name = "Workshop";
 
   onPlay(Player player) async {
-    CardConditions conds = new CardConditions();
+    CardConditions conds = CardConditions();
     conds.maxCost = 4;
     Card card = await player.selectCardToGain(conditions: conds);
     await player.gain(card);
@@ -131,7 +207,7 @@ class Workshop extends Card with Action, BaseSet {
 @card
 class Bureaucrat extends Card with Action, BaseSet, Attack {
   Bureaucrat._();
-  static Bureaucrat instance = new Bureaucrat._();
+  static Bureaucrat instance = Bureaucrat._();
 
   final int cost = 4;
   final String name = "Bureaucrat";
@@ -149,7 +225,7 @@ class Bureaucrat extends Card with Action, BaseSet, Attack {
       if (victories.length == 1) {
         p.hand.moveTo(victories[0], p.deck.top);
       } else if (victories.length > 1) {
-        CardConditions conds = new CardConditions()
+        CardConditions conds = CardConditions()
           ..requiredTypes = [CardType.Victory];
         List<Card> cards =
             await p.controller.selectCardsFromHand(this, conds, 1, 1);
@@ -166,14 +242,16 @@ class Bureaucrat extends Card with Action, BaseSet, Attack {
 @card
 class Feast extends Card with Action, BaseSet {
   Feast._();
-  static Feast instance = new Feast._();
+  static Feast instance = Feast._();
+
+  final bool inSecondEdition = false;
 
   final int cost = 4;
   final String name = "Feast";
 
   onPlay(Player player) async {
     await player.trashFrom(this, player.turn.played);
-    CardConditions conds = new CardConditions();
+    CardConditions conds = CardConditions();
     conds.maxCost = 5;
     Card card = await player.selectCardToGain(conditions: conds);
     await player.gain(card);
@@ -183,7 +261,7 @@ class Feast extends Card with Action, BaseSet {
 @card
 class Gardens extends Card with Victory, BaseSet {
   Gardens._();
-  static Gardens instance = new Gardens._();
+  static Gardens instance = Gardens._();
 
   final int cost = 4;
   final String name = "Gardens";
@@ -197,7 +275,7 @@ class Gardens extends Card with Victory, BaseSet {
 @card
 class Militia extends Card with Action, BaseSet, Attack {
   Militia._();
-  static Militia instance = new Militia._();
+  static Militia instance = Militia._();
 
   final int cost = 4;
   final String name = "Militia";
@@ -209,7 +287,7 @@ class Militia extends Card with Action, BaseSet, Attack {
       if (!attackBlocked) {
         int x = p.hand.length - 3;
         List<Card> cards = await p.controller
-            .selectCardsFromHand(this, new CardConditions(), x, x);
+            .selectCardsFromHand(this, CardConditions(), x, x);
         for (Card c in cards) {
           await p.discard(c);
         }
@@ -221,7 +299,7 @@ class Militia extends Card with Action, BaseSet, Attack {
 @card
 class Moneylender extends Card with Action, BaseSet {
   Moneylender._();
-  static Moneylender instance = new Moneylender._();
+  static Moneylender instance = Moneylender._();
 
   final int cost = 4;
   final String name = "Moneylender";
@@ -234,19 +312,48 @@ class Moneylender extends Card with Action, BaseSet {
 }
 
 @card
+class Poacher extends Card with Action, BaseSet {
+  Poacher._();
+  static Poacher instance = Poacher._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 4;
+  final String name = "Poacher";
+
+  onPlay(Player player) async {
+    player.draw();
+    player.turn.actions++;
+    player.turn.coins++;
+    var empty = player.engine.supply.emptyPiles;
+    if (empty == 0) return;
+    if (empty >= player.hand.length) {
+      for (var i = 0; i < player.hand.length; i++) {
+        await player.discardFrom(player.hand);
+      }
+    }
+    var discarding =
+        await player.controller.selectCardsFromHand(this, null, empty, empty);
+    for (var card in discarding) {
+      await player.discard(card);
+    }
+  }
+}
+
+@card
 class Remodel extends Card with Action, BaseSet {
   Remodel._();
-  static Remodel instance = new Remodel._();
+  static Remodel instance = Remodel._();
 
   final int cost = 4;
   final String name = "Remodel";
 
   onPlay(Player player) async {
     List<Card> cards = await player.controller
-        .selectCardsFromHand(this, new CardConditions(), 1, 1);
+        .selectCardsFromHand(this, CardConditions(), 1, 1);
     if (cards.length != 1) return;
     await player.trashFrom(cards[0], player.hand);
-    CardConditions conds = new CardConditions();
+    CardConditions conds = CardConditions();
     conds.maxCost = cards[0].calculateCost(player.turn) + 2;
     Card card = await player.selectCardToGain(conditions: conds);
     await player.gain(card);
@@ -256,7 +363,7 @@ class Remodel extends Card with Action, BaseSet {
 @card
 class Smithy extends Card with Action, BaseSet {
   Smithy._();
-  static Smithy instance = new Smithy._();
+  static Smithy instance = Smithy._();
 
   final int cost = 4;
   final String name = "Smithy";
@@ -269,7 +376,9 @@ class Smithy extends Card with Action, BaseSet {
 @card
 class Spy extends Card with Action, BaseSet, Attack {
   Spy._();
-  static Spy instance = new Spy._();
+  static Spy instance = Spy._();
+
+  final bool inSecondEdition = false;
 
   final int cost = 4;
   final String name = "Spy";
@@ -282,7 +391,7 @@ class Spy extends Card with Action, BaseSet, Attack {
         bool attackBlocked = await p.reactTo(EventType.Attack, this);
         if (attackBlocked) continue;
       }
-      CardBuffer buffer = new CardBuffer();
+      CardBuffer buffer = CardBuffer();
       p.drawTo(buffer);
       if (buffer.length == 0) continue;
       bool discard;
@@ -308,7 +417,9 @@ class Spy extends Card with Action, BaseSet, Attack {
 @card
 class Thief extends Card with Action, BaseSet, Attack {
   Thief._();
-  static Thief instance = new Thief._();
+  static Thief instance = Thief._();
+
+  final bool inSecondEdition = false;
 
   final int cost = 4;
   final String name = "Thief";
@@ -318,12 +429,12 @@ class Thief extends Card with Action, BaseSet, Attack {
     for (Player p in player.engine.playersAfter(player)) {
       bool attackBlocked = await p.reactTo(EventType.Attack, this);
       if (attackBlocked) continue;
-      CardBuffer buffer = new CardBuffer();
+      CardBuffer buffer = CardBuffer();
       p.drawTo(buffer);
       p.drawTo(buffer);
       p.notifyAnnounce("You reveal", "reveals", "$buffer");
-      CardBuffer options = new CardBuffer();
-      CardBuffer discarding = new CardBuffer();
+      CardBuffer options = CardBuffer();
+      CardBuffer discarding = CardBuffer();
       int length = buffer.length;
       for (int i = 0; i < length; i++) {
         if (buffer[0] is Treasure) {
@@ -375,7 +486,7 @@ class Thief extends Card with Action, BaseSet, Attack {
 @card
 class ThroneRoom extends Card with Action, BaseSet {
   ThroneRoom._();
-  static ThroneRoom instance = new ThroneRoom._();
+  static ThroneRoom instance = ThroneRoom._();
 
   final int cost = 4;
   final String name = "Throne Room";
@@ -383,13 +494,45 @@ class ThroneRoom extends Card with Action, BaseSet {
   onPlay(Player player) async {
     Action card = await player.controller.selectActionCard();
     if (card != null) {
-      player.hand.moveTo(card, player.turn.played);
-      player.turn.actionsPlayed += 1;
-      player.notifyAnnounce("You play", "plays", "a $card");
-      await card.onPlay(player);
-      player.turn.actionsPlayed += 1;
+      player.turn.actions++; // since playAction will decrement this
+      await player.playAction(card);
       player.notifyAnnounce("You play", "plays", "the $card again");
-      await card.onPlay(player);
+      await player.play(card);
+    }
+  }
+}
+
+@card
+class Bandit extends Card with Action, Attack, BaseSet {
+  Bandit._();
+  static Bandit instance = Bandit._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 5;
+  final String name = "Bandit";
+
+  onPlay(Player player) async {
+    await player.gain(Gold.instance);
+    for (var p in player.engine.playersAfter(player)) {
+      var reveal = CardBuffer();
+      p.drawTo(reveal);
+      p.drawTo(reveal);
+      p.notifyAnnounce("You reveal", "reveals", "$reveal");
+      var trashable = reveal
+          .asList()
+          .where((card) => card is Treasure && card is! Copper)
+          .toList();
+      if (trashable.length == 1) {
+        await p.trashFrom(trashable.first, reveal);
+      } else if (trashable.length > 1) {
+        var trash = await p.controller.selectCardsFrom(
+            trashable, "Bandit: Which of these do you trash?", 1, 1);
+        await p.trashFrom(trash.first, reveal);
+      }
+      while (reveal.length > 0) {
+        await p.discardFrom(reveal);
+      }
     }
   }
 }
@@ -397,7 +540,7 @@ class ThroneRoom extends Card with Action, BaseSet {
 @card
 class CouncilRoom extends Card with Action, BaseSet {
   CouncilRoom._();
-  static CouncilRoom instance = new CouncilRoom._();
+  static CouncilRoom instance = CouncilRoom._();
 
   final int cost = 5;
   final String name = "Council Room";
@@ -414,7 +557,7 @@ class CouncilRoom extends Card with Action, BaseSet {
 @card
 class Festival extends Card with Action, BaseSet {
   Festival._();
-  static Festival instance = new Festival._();
+  static Festival instance = Festival._();
 
   final int cost = 5;
   final String name = "Festival";
@@ -429,7 +572,7 @@ class Festival extends Card with Action, BaseSet {
 @card
 class Laboratory extends Card with Action, BaseSet {
   Laboratory._();
-  static Laboratory instance = new Laboratory._();
+  static Laboratory instance = Laboratory._();
 
   final int cost = 5;
   final String name = "Laboratory";
@@ -443,13 +586,13 @@ class Laboratory extends Card with Action, BaseSet {
 @card
 class Library extends Card with Action, BaseSet {
   Library._();
-  static Library instance = new Library._();
+  static Library instance = Library._();
 
   final int cost = 5;
   final String name = "Library";
 
   onPlay(Player player) async {
-    CardBuffer buffer = new CardBuffer();
+    CardBuffer buffer = CardBuffer();
     while (player.hand.length < 7) {
       Card card = player.draw();
       if (card == null) break;
@@ -470,7 +613,7 @@ class Library extends Card with Action, BaseSet {
 @card
 class Market extends Card with Action, BaseSet {
   Market._();
-  static Market instance = new Market._();
+  static Market instance = Market._();
 
   final int cost = 5;
   final String name = "Market";
@@ -486,20 +629,20 @@ class Market extends Card with Action, BaseSet {
 @card
 class Mine extends Card with Action, BaseSet {
   Mine._();
-  static Mine instance = new Mine._();
+  static Mine instance = Mine._();
 
   final int cost = 5;
   final String name = "Mine";
 
   onPlay(Player player) async {
-    CardConditions trashConds = new CardConditions()
+    CardConditions trashConds = CardConditions()
       ..requiredTypes = [CardType.Treasure];
     List<Card> cards =
-        await player.controller.selectCardsFromHand(this, trashConds, 1, 1);
+        await player.controller.selectCardsFromHand(this, trashConds, 0, 1);
     if (cards.length != 1) return;
     int cost = cards[0].calculateCost(player.turn);
     player.trashFrom(cards[0], player.hand);
-    CardConditions gainConds = new CardConditions();
+    CardConditions gainConds = CardConditions();
     gainConds..requiredTypes = [CardType.Treasure];
     gainConds..maxCost = cost + 3;
     Card card = await player.selectCardToGain(conditions: gainConds);
@@ -509,9 +652,47 @@ class Mine extends Card with Action, BaseSet {
 }
 
 @card
+class Sentry extends Card with Action, BaseSet {
+  Sentry._();
+  static Sentry instance = Sentry._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 5;
+  final String name = "Sentry";
+
+  onPlay(Player player) async {
+    player.draw();
+    player.turn.actions++;
+    var buffer = CardBuffer();
+    player.drawTo(buffer);
+    player.drawTo(buffer);
+    var trashing = await player.controller
+        .selectCardsFrom(buffer.asList(), "Sentry: Which to trash?", 0, 2);
+    for (var card in trashing) {
+      await player.trashFrom(card, buffer);
+    }
+    if (buffer.length == 0) return;
+    var discarding = await player.controller.selectCardsFrom(
+        buffer.asList(), "Sentry: Which to discard?", 0, buffer.length);
+    for (var card in discarding) {
+      await player.discardFrom(buffer, card);
+    }
+    if (buffer.length == 0) return;
+    if (buffer.length == 1 || buffer[0] == buffer[1]) {
+      buffer.dumpTo(player.deck.top);
+    }
+    var order = await player.controller.selectCardsFrom(
+        buffer.asList(), "Sentry: Order to put back on deck", 2, 2);
+    buffer.moveTo(order[0], player.deck.top);
+    buffer.moveTo(order[1], player.deck.top);
+  }
+}
+
+@card
 class Witch extends Card with Action, BaseSet, Attack {
   Witch._();
-  static Witch instance = new Witch._();
+  static Witch instance = Witch._();
 
   final int cost = 5;
   final String name = "Witch";
@@ -530,13 +711,15 @@ class Witch extends Card with Action, BaseSet, Attack {
 @card
 class Adventurer extends Card with Action, BaseSet {
   Adventurer._();
-  static Adventurer instance = new Adventurer._();
+  static Adventurer instance = Adventurer._();
+
+  final bool inSecondEdition = false;
 
   final int cost = 6;
   final String name = "Adventurer";
 
   onPlay(Player player) async {
-    CardBuffer buffer = new CardBuffer();
+    CardBuffer buffer = CardBuffer();
 
     int treasureCount = 0;
     while (treasureCount < 2) {
@@ -555,5 +738,27 @@ class Adventurer extends Card with Action, BaseSet {
       }
       card = buffer.removeTop();
     }
+  }
+}
+
+@card
+class Artisan extends Card with Action, BaseSet {
+  Artisan._();
+  static Artisan instance = Artisan._();
+
+  final bool inFirstEdition = false;
+
+  final int cost = 6;
+  final String name = "Artisan";
+
+  onPlay(Player player) async {
+    var gain = await player.selectCardToGain(
+        conditions: CardConditions()..maxCost = 5);
+    if (await player.gain(gain)) {
+      player.discarded.moveTo(gain, player.hand);
+    }
+    var toDeck = await player.controller
+        .selectCardsFromHand(this, CardConditions(), 1, 1);
+    player.hand.moveTo(toDeck.first, player.deck.top);
   }
 }

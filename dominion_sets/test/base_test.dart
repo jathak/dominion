@@ -41,6 +41,41 @@ nonInteractionTests() {
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
   });
+  test("Merchant", () async {
+    playerA.hand.receive(Silver.instance);
+    playerA.hand.receive(Silver.instance);
+    List<Card> cards = playerA.hand.asList();
+    playerA.hand.receive(Merchant.instance);
+    cards.add(playerA.deck[0]);
+    await playerA.playAction(Merchant.instance);
+    expectBufferHasCards(playerA.hand, cards);
+    expectBufferHasCards(playerA.turn.played, [Merchant.instance]);
+    expect(playerA.turn.actions, equals(1));
+    expect(playerA.turn.buys, equals(1));
+    expect(playerA.turn.coins, equals(0));
+    playerA.turn.phase = Phase.Buy;
+    await playerA.playTreasure(Silver.instance);
+    expect(playerA.turn.coins, equals(3));
+    await playerA.playTreasure(Silver.instance);
+    expect(playerA.turn.coins, equals(5));
+  });
+  test("Vassal - With Gold", () async {
+    var hand = playerA.hand.asList();
+    playerA.hand.receive(Vassal.instance);
+    playerA.deck.top.receive(Gold.instance);
+    ctrlA.confirm = (player, context, question) async {
+      expect(player, equals(playerA));
+      expect(context, equals(Village.instance));
+      return true;
+    };
+    await playerA.playAction(Vassal.instance);
+    expectBufferHasCards(playerA.hand, hand);
+    expectBufferHasCards(playerA.turn.played, [Vassal.instance]);
+    expectBufferHasCards(playerA.discarded, [Gold.instance]);
+    expect(playerA.turn.actions, equals(0));
+    expect(playerA.turn.buys, equals(1));
+    expect(playerA.turn.coins, equals(2));
+  });
   test("Village", () async {
     List<Card> cards = playerA.hand.asList();
     playerA.hand.receive(Village.instance);
@@ -74,6 +109,18 @@ nonInteractionTests() {
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(3));
   });
+  test("Poacher - no empty supplies", () async {
+    var hand = playerA.hand.asList();
+    playerA.hand.receive(Poacher.instance);
+    hand.add(playerA.deck[0]);
+    await playerA.playAction(Poacher.instance);
+    expectBufferHasCards(playerA.hand, hand);
+    expectBufferHasCards(playerA.turn.played, [Poacher.instance]);
+    expectBufferHasCards(playerA.discarded, []);
+    expect(playerA.turn.actions, equals(1));
+    expect(playerA.turn.buys, equals(1));
+    expect(playerA.turn.coins, equals(1));
+  });
   test("Smithy", () async {
     List<Card> cards = playerA.hand.asList();
     playerA.hand.receive(Smithy.instance);
@@ -87,6 +134,7 @@ nonInteractionTests() {
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
   });
+  // TODO(jathak): Test Bandit with no choice
   test("CouncilRoom", () async {
     List<Card> cards = playerA.hand.asList();
     playerA.hand.receive(CouncilRoom.instance);
@@ -275,6 +323,48 @@ interactionTests() {
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(2));
   });
+  test("Harbinger", () async {
+    var cards = playerA.hand.asList();
+    var deck = playerA.deck.asList();
+    ctrlA.cardsFrom = (player, cards, question, min, max) async {
+      expect(player, equals(playerA));
+      expect(cards, equals([Gold.instance]));
+      expect(min, 0);
+      expect(max, 1);
+      return [cards.first];
+    };
+    playerA.hand.receive(Harbinger.instance);
+    playerA.discarded.receive(Gold.instance);
+    cards.add(playerA.deck[0]);
+    deck[0] = Gold.instance;
+    await playerA.playAction(Harbinger.instance);
+    expectBufferHasCards(playerA.hand, cards);
+    expectBufferHasCards(playerA.turn.played, [Harbinger.instance]);
+    expectBufferHasCards(playerA.discarded, []);
+    expectBufferHasCards(playerA.deck, deck);
+    expect(playerA.turn.actions, equals(1));
+    expect(playerA.turn.buys, equals(1));
+    expect(playerA.turn.coins, equals(0));
+  });
+  test("Vassal - With Village", () async {
+    var hand = playerA.hand.asList();
+    playerA.hand.receive(Vassal.instance);
+    playerA.deck.top.receive(Village.instance);
+    ctrlA.confirm = (player, context, question) async {
+      expect(player, equals(playerA));
+      expect(context, equals(Village.instance));
+      return true;
+    };
+    hand.add(playerA.deck[1]);
+    await playerA.playAction(Vassal.instance);
+    expectBufferHasCards(playerA.hand, hand);
+    expectBufferHasCards(
+        playerA.turn.played, [Vassal.instance, Village.instance]);
+    expectBufferHasCards(playerA.discarded, []);
+    expect(playerA.turn.actions, equals(2));
+    expect(playerA.turn.buys, equals(1));
+    expect(playerA.turn.coins, equals(2));
+  });
   test("Workshop", () async {
     List<Card> cards = playerA.hand.asList();
     ctrlA.cardFromSupply =
@@ -302,6 +392,26 @@ interactionTests() {
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
   });
+  test("Poacher - two empty supplies", () async {
+    ctrlA.cardsFromHand = (player, context, conds, min, max) async {
+      return [player.hand[0], player.hand[1]];
+    };
+    for (var i = 0; i < 10; i++) {
+      engine.supply.gain(Smithy.instance, playerB);
+      engine.supply.gain(Village.instance, playerB);
+    }
+    var hand = playerA.hand.asList();
+    var discarded = [hand.removeAt(0), hand.removeAt(0)];
+    playerA.hand.receive(Poacher.instance);
+    hand.add(playerA.deck[0]);
+    await playerA.playAction(Poacher.instance);
+    expectBufferHasCards(playerA.hand, hand);
+    expectBufferHasCards(playerA.turn.played, [Poacher.instance]);
+    expectBufferHasCards(playerA.discarded, discarded);
+    expect(playerA.turn.actions, equals(1));
+    expect(playerA.turn.buys, equals(1));
+    expect(playerA.turn.coins, equals(1));
+  });
   test("Remodel", () async {
     playerA.hand = makeBuffer([Adventurer.instance, Remodel.instance]);
     ctrlA.cardsFromHand =
@@ -317,21 +427,7 @@ interactionTests() {
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
   });
-  test("Mine", () async {
-    playerA.hand = makeBuffer([Silver.instance, Mine.instance]);
-    ctrlA.cardsFromHand =
-        (player, context, conds, min, max) async => [Silver.instance];
-    ctrlA.cardFromSupply =
-        (player, event, conditions, allowNone) async => Gold.instance;
-    await playerA.playAction(Mine.instance);
-    expectBufferHasCards(playerA.hand, [Gold.instance]);
-    expectBufferHasCards(playerA.turn.played, [Mine.instance]);
-    expectBufferHasCards(engine.trashPile, [Silver.instance]);
-    expectBufferHasCards(playerA.discarded, []);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
+  // TODO(jathak): Test bandit with a choice
   test("Library - Keep Actions", () async {
     List<Card> cards = playerA.hand.asList();
     playerA.deck = makeBuffer(
@@ -367,6 +463,23 @@ interactionTests() {
     expect(playerA.turn.buys, equals(1));
     expect(playerA.turn.coins, equals(0));
   });
+  test("Mine", () async {
+    playerA.hand = makeBuffer([Silver.instance, Mine.instance]);
+    ctrlA.cardsFromHand =
+        (player, context, conds, min, max) async => [Silver.instance];
+    ctrlA.cardFromSupply =
+        (player, event, conditions, allowNone) async => Gold.instance;
+    await playerA.playAction(Mine.instance);
+    expectBufferHasCards(playerA.hand, [Gold.instance]);
+    expectBufferHasCards(playerA.turn.played, [Mine.instance]);
+    expectBufferHasCards(engine.trashPile, [Silver.instance]);
+    expectBufferHasCards(playerA.discarded, []);
+    expect(playerA.turn.actions, equals(0));
+    expect(playerA.turn.buys, equals(1));
+    expect(playerA.turn.coins, equals(0));
+  });
+  // TODO(jathak): Test Sentry
+  // TODO(jathak): Test Artisan
 }
 
 attackTests() {

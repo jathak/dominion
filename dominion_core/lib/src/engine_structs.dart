@@ -39,19 +39,40 @@ abstract class PlayerController {
 }
 
 class Turn {
+  /// The number of actions remaining for this turn.
   int actions = 1;
-  int actionsPlayed = 0;
+
+  /// The number of buys remaining for this turn.
   int buys = 1;
+
+  /// The number of coins to spend this turn.
   int coins = 0;
+
+  /// The number of potions to spend this turn.
   int potions = 0;
+
+  /// The buffer containing the cards played this turn.
   CardBuffer played = new CardBuffer();
+
+  /// The phase this turn is currently in.
   Phase phase = Phase.Action;
+
+  /// The number of times any given type of card has been played this turn.
+  Map<Card, int> playCounts = {};
+  int playCount(Card card) => playCounts[card] ?? 0;
+  int totalPlayCount(bool condition(Card card)) => playCounts.keys
+      .where(condition)
+      .fold(0, (count, card) => count + playCounts[card]);
+
+  List<PlayListener> playListeners = [];
 
   List<CostProcessor> costProcessors = [];
 
-  /// used by various cards to store data that should only persist for one turn
+  /// Used by various cards to store data that should only persist for one turn
   Map misc = {};
 }
+
+typedef Future PlayListener(Card card);
 
 typedef int CostProcessor(Card card, int oldCost);
 

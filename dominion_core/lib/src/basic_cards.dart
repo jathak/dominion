@@ -13,15 +13,6 @@ class Copper extends Card with Treasure {
   final int value = 1;
 
   int supplyCount(int playerCount) => 60 - 7 * playerCount;
-
-  @override
-  int getTreasureValue(Turn turn) {
-    int actualValue = value;
-    if (turn.misc.containsKey("coppersmithsPlayed")) {
-      actualValue += turn.misc['coppersmithsPlayed'];
-    }
-    return actualValue;
-  }
 }
 
 @card
