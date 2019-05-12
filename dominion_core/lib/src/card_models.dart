@@ -33,6 +33,10 @@ abstract class Card implements Comparable<Card> {
   /// Null is used for the basic cards (including Platinum, Colony, and Potion)
   final String expansion = null;
 
+  /// Set to true for cards like Lighthouse that protect the player from attacks
+  /// while they are in play.
+  final bool protectsFromAttacks = false;
+
   /// Called when player gains this card
   onGain(Player player, bool bought) async => null;
 

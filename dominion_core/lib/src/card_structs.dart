@@ -59,18 +59,16 @@ abstract class CardTarget {
 }
 
 class CardBuffer extends Object with CardSource, CardTarget {
-  CardBuffer() {
-    top = new TopTarget(this);
-  }
+  CardBuffer();
 
   CardBuffer.from(Iterable<Card> cards) {
-    top = new TopTarget(this);
     cards.forEach(receive);
   }
 
   List<Card> _cards = [];
 
-  TopTarget top;
+  TopTarget get top => TopTarget(this);
+  BottomSource get bottom => BottomSource(this);
 
   bool remove(Card card) => _cards.remove(card);
 
@@ -89,6 +87,8 @@ class CardBuffer extends Object with CardSource, CardTarget {
 
   addToTop(Card card) => _cards.insert(0, card);
 
+  Card removeFromBottom() => _cards.removeLast();
+
   operator [](int index) => _cards[index];
 
   String toString() => _cards.toString();
@@ -97,14 +97,29 @@ class CardBuffer extends Object with CardSource, CardTarget {
 }
 
 class TopTarget extends Object with CardTarget {
-  CardBuffer buffer;
+  final CardBuffer buffer;
 
   TopTarget(this.buffer);
 
   receive(Card card) => buffer.addToTop(card);
 }
 
-class SupplySource extends Object with CardSource {
+class BottomSource extends Object with CardSource {
+  final CardBuffer buffer;
+
+  BottomSource(this.buffer);
+
+  @override
+  bool remove(Card card) {
+    throw Exception(
+        "Do not use CardBuffer.bottom when removing specific cards!");
+  }
+
+  /// This actually removes from the bottom of the buffer.
+  Card removeTop() => buffer.removeFromBottom();
+}
+
+class SupplySource extends Object with CardSource, CardTarget {
   int count;
   Card card;
   int embargoTokens = 0;
@@ -125,5 +140,12 @@ class SupplySource extends Object with CardSource {
       return card;
     }
     return null;
+  }
+
+  receive(Card received) {
+    if (card != received) {
+      throw Exception("Cannot return $received to the $card pile!");
+    }
+    count++;
   }
 }

@@ -112,6 +112,13 @@ class DominionEngine {
       i = (i + 1) % _players.length;
     }
   }
+
+  Stream<Player> attackablePlayers(Player attacker, Card context) async* {
+    for (var player in playersAfter(attacker)) {
+      var blocked = await player.reactTo(EventType.Attack, context);
+      if (!blocked) yield player;
+    }
+  }
 }
 
 class Player extends Object with CardSource {
@@ -264,7 +271,7 @@ class Player extends Object with CardSource {
 
   // return true if event is blocked
   Future<bool> reactTo(EventType event, Card context) async {
-    var blocked = false;
+    var blocked = inPlay.asList().any((card) => card.protectsFromAttacks);
     while (true) {
       var options = [];
       for (var card in hand.asList()) {
@@ -286,8 +293,10 @@ class Player extends Object with CardSource {
     }
   }
 
+  // Discards [card] from the player's hand.
   Future discard(Card card) => discardFrom(hand, card);
 
+  // Discards a card from [source].
   Future discardFrom(CardSource source, [Card card = null]) async {
     if (card == null) {
       card = source.drawTo(discarded);

@@ -214,9 +214,7 @@ class Bureaucrat extends Card with Action, BaseSet, Attack {
   onPlay(Player player) async {
     await player.gain(Silver.instance);
     player.discarded.moveTo(Silver.instance, player.deck.top);
-    for (Player p in player.engine.playersAfter(player)) {
-      bool attackBlocked = await p.reactTo(EventType.Attack, this);
-      if (attackBlocked) continue;
+    await for (Player p in player.engine.attackablePlayers(player, this)) {
       List<Card> victories = [];
       for (Card c in p.hand.asList()) {
         if (c is Victory) victories.add(c);
@@ -281,7 +279,7 @@ class Militia extends Card with Action, BaseSet, Attack {
 
   onPlay(Player player) async {
     player.turn.coins += 2;
-    for (Player p in player.engine.playersAfter(player)) {
+    await for (var p in player.engine.attackablePlayers(player, this)) {
       bool attackBlocked = await p.reactTo(EventType.Attack, this);
       if (!attackBlocked) {
         int x = p.hand.length - 3;
@@ -425,9 +423,7 @@ class Thief extends Card with Action, BaseSet, Attack {
 
   onPlay(Player player) async {
     List<Card> trashed = [];
-    for (Player p in player.engine.playersAfter(player)) {
-      bool attackBlocked = await p.reactTo(EventType.Attack, this);
-      if (attackBlocked) continue;
+    await for (var p in player.engine.attackablePlayers(player, this)) {
       CardBuffer buffer = CardBuffer();
       p.drawTo(buffer);
       p.drawTo(buffer);
@@ -529,7 +525,7 @@ class Bandit extends Card with Action, Attack, BaseSet {
 
   onPlay(Player player) async {
     await player.gain(Gold.instance);
-    for (var p in player.engine.playersAfter(player)) {
+    await for (var p in player.engine.attackablePlayers(player, this)) {
       var reveal = CardBuffer();
       p.drawTo(reveal);
       p.drawTo(reveal);
@@ -714,7 +710,7 @@ class Witch extends Card with Action, BaseSet, Attack {
 
   onPlay(Player player) async {
     player.draw(2);
-    for (Player p in player.engine.playersAfter(player)) {
+    await for (var p in player.engine.attackablePlayers(player, this)) {
       bool attackBlocked = await p.reactTo(EventType.Attack, this);
       if (!attackBlocked) {
         await p.gain(Curse.instance);
