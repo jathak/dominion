@@ -159,3 +159,10 @@ enum EventType {
   TrashCard,
   Embargo
 }
+
+class Mat {
+  final String name;
+  final buffer = CardBuffer();
+
+  Mat(this.name);
+}

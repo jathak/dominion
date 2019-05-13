@@ -259,7 +259,13 @@ class Player extends Object with CardSource {
 
   int calculateScore() {
     int score = 0;
-    List<CardBuffer> buffers = [deck, hand, discarded, inPlay];
+    var buffers = [
+      deck,
+      hand,
+      discarded,
+      inPlay,
+      for (var mat in mats.values) mat.buffer
+    ];
     for (CardBuffer buffer in buffers) {
       for (int i = 0; i < buffer.length; i++) {
         if (buffer[i] is VictoryOrCurse) {
@@ -342,6 +348,7 @@ class Player extends Object with CardSource {
     cards.addAll(hand.asList());
     cards.addAll(discarded.asList());
     cards.addAll(inPlay.asList());
+    mats.values.map((mat) => mat.buffer.asList()).forEach(cards.addAll);
     return cards;
   }
 
@@ -392,6 +399,8 @@ class Player extends Object with CardSource {
 
   Turn turn;
   Turn lastTurn;
+
+  final mats = <Card, Mat>{};
 }
 
 class Supply {

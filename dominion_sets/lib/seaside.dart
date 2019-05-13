@@ -83,7 +83,25 @@ class NativeVillage extends Card with Action, Seaside {
 
   onPlay(Player player) async {
     player.turn.actions += 2;
-    // TODO(jathak): Implement Native Village mat
+    player.mats.putIfAbsent(this, () => Mat("Native Village"));
+    var options = [
+      "Put top card of deck on mat",
+      "Put all cards from mat in hand"
+    ];
+    var response = await player.controller
+        .askQuestion(this, "What do you want to do?", options);
+    var mat = player.mats[this].buffer;
+    if (response == options.first) {
+      player.drawTo(mat);
+      player.notifyAnnounce("You place a ${mat.asList().last} on your ",
+          "places a card on their", "Native Village mat");
+    } else {
+      player.notifyAnnounce(
+          "You take $mat from your",
+          "takes ${mat.length} ${cardWord(mat.length)} from their",
+          "Native Village mat");
+      mat.dumpTo(player.hand);
+    }
   }
 }
 
@@ -276,7 +294,19 @@ class Island extends Card with Action, Victory, Seaside {
   final int points = 2;
 
   onPlay(Player player) async {
-    // TODO(jathak) Implement Island mat
+    player.mats.putIfAbsent(this, () => Mat("Island"));
+    var card = player.hand.length == 0
+        ? null
+        : (await player.controller
+                .selectCardsFromHand(this, CardConditions(), 1, 1))
+            .first;
+    var island = player.mats[this].buffer;
+    player.discarded.moveTo(this, island);
+    if (card != null) {
+      player.discarded.moveTo(card, island);
+    }
+    var extra = card == null ? "" : " with a $card";
+    player.notifyAnnounce("You set", "sets", "aside an Island$extra");
   }
 }
 
@@ -323,14 +353,14 @@ class PirateShip extends Card with Action, Attack, Seaside {
   final String name = "Pirate Ship";
 
   onPlay(Player player) async {
+    player.mats.putIfAbsent(this, () => PirateShipMat());
     var attackable =
         await player.engine.attackablePlayers(player, this).toList();
-    var coins = 0;
-    // TODO(jathak): Implement Pirate Ship mat (tokens)
-    var response = await player.controller.askQuestion(
-        this, "Take +$coins coins or attack?", ["Take Money", "Attack"]);
+    var mat = player.mats[this] as PirateShipMat;
+    var response = await player.controller.askQuestion(this,
+        "Take +${mat.coinTokens} coins or attack?", ["Take Money", "Attack"]);
     if (response == "Take Money") {
-      player.turn.coins += coins;
+      player.turn.coins += mat.coinTokens;
       return;
     }
     bool trashedTreasure = false;
@@ -358,8 +388,14 @@ class PirateShip extends Card with Action, Attack, Seaside {
         trashedTreasure = true;
       }
     }
-    // TODO(jathak): Implement Pirate Ship mat (tokens)
+    if (trashedTreasure) mat.coinTokens++;
   }
+}
+
+class PirateShipMat extends Mat {
+  int coinTokens = 0;
+
+  PirateShipMat() : super("Pirate Ship");
 }
 
 @card
