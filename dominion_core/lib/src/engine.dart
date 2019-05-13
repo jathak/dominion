@@ -220,6 +220,7 @@ class Player extends Object with CardSource {
 
   Future takeTurn() async {
     turn = Turn();
+    bool takingOutpostTurn = takeOutpostTurn;
     notifyAnnounce("It's your turn!", "starts turn");
     // Run next turn actions for durations
     await inPlay.runNextTurnActions();
@@ -253,8 +254,15 @@ class Player extends Object with CardSource {
     await inPlay.cleanup(this);
     lastTurn = turn;
     turn = null;
-    draw(5);
-    notifyAnnounce("Your turn ends", "ends turn");
+    if (takeOutpostTurn && !takingOutpostTurn) {
+      draw(3);
+      notifyAnnounce("Your turn ends", "ends turn");
+      await takeTurn();
+    } else {
+      draw(5);
+      notifyAnnounce("Your turn ends", "ends turn");
+      takeOutpostTurn = false;
+    }
   }
 
   int calculateScore() {
@@ -399,6 +407,8 @@ class Player extends Object with CardSource {
 
   Turn turn;
   Turn lastTurn;
+
+  bool takeOutpostTurn = false;
 
   final mats = <Card, Mat>{};
 }
