@@ -129,15 +129,24 @@ class BottomOfDeck extends CardSourceAndTarget {
   receive(Card card) => deck.receive(card);
 }
 
-class SupplySource extends Object with CardSource, CardTarget {
+class SupplyPile extends CardSourceAndTarget {
+  /// The number of cards left in this supply pile.
   int count;
+
+  /// The card this supply pile contains.
   Card card;
+
+  /// The number of embargo tokens on this supply pile.
   int embargoTokens = 0;
 
-  SupplySource(this.card, this.count);
+  /// Whether someone has taken a card from this pile or not.
+  bool used = false;
+
+  SupplyPile(this.card, this.count);
 
   bool remove(Card c) {
     if (c == card && count > 0) {
+      used = true;
       count -= 1;
       return true;
     }
@@ -146,6 +155,7 @@ class SupplySource extends Object with CardSource, CardTarget {
 
   Card removeTop() {
     if (count > 0) {
+      used = true;
       count -= 1;
       return card;
     }

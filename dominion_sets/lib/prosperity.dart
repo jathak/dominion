@@ -51,7 +51,10 @@ class TradeRoute extends Card with Action, Prosperity {
 
   onPlay(Player player) async {
     player.turn.buys++;
-    // TODO(jathak): Implement Trade Route mat
+    player.turn.coins += player.engine.supply.cardsInSupply
+        .where((card) =>
+            card is Victory && player.engine.supply.supplyOf(card).used)
+        .length;
   }
 }
 

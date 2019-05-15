@@ -437,7 +437,7 @@ class Player extends Object with CardSource {
 }
 
 class Supply {
-  Map<Card, SupplySource> _supplies;
+  Map<Card, SupplyPile> _supplies;
 
   Iterable<Card> _kingdomCards;
   int _playerCount;
@@ -472,11 +472,11 @@ class Supply {
     }
     if (addPotions) cards.add(Potion.instance);
     for (Card c in cards) {
-      _supplies[c] = SupplySource(c, c.supplyCount(playerCount));
+      _supplies[c] = SupplyPile(c, c.supplyCount(playerCount));
     }
   }
 
-  SupplySource supplyOf(Card card) => _supplies[card];
+  SupplyPile supplyOf(Card card) => _supplies[card];
 
   Iterable<Card> get cardsInSupply => _supplies.keys;
 
