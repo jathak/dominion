@@ -106,7 +106,7 @@ class Pawn extends Card with Action, Intrigue {
 }
 
 @card
-class SecretChamber extends Card with Action, Reaction, Intrigue {
+class SecretChamber extends Card with Action, AttackReaction, Intrigue {
   SecretChamber._();
   static SecretChamber instance = SecretChamber._();
 
@@ -125,15 +125,11 @@ class SecretChamber extends Card with Action, Reaction, Intrigue {
     player.turn.coins += cards.length;
   }
 
-  bool canReactTo(EventType type, Card context, Player player) =>
-      type == EventType.Attack;
-
-  Future<bool> onReact(Player player) async {
+  Future<bool> onReactToAttack(Player player, Card attack) async {
     player.draw(2);
-    CardConditions conds = CardConditions();
-    List<Card> cards =
-        await player.controller.selectCardsFromHand(this, conds, 2, 2);
-    for (Card c in cards) {
+    var cards = await player.controller
+        .selectCardsFromHand(this, CardConditions(), 2, 2);
+    for (var c in cards) {
       player.hand.moveTo(c, player.deck.top);
     }
     var descrip = "${cards.length} ${cardWord(cards.length)}";
@@ -368,7 +364,7 @@ class Coppersmith extends Card with Action, Intrigue {
 }
 
 @card
-class Diplomat extends Card with Action, Reaction, Intrigue {
+class Diplomat extends Card with Action, AttackReaction, Intrigue {
   Diplomat._();
   static Diplomat instance = Diplomat._();
 
@@ -386,7 +382,7 @@ class Diplomat extends Card with Action, Reaction, Intrigue {
     return type == EventType.Attack && player.hand.length >= 5;
   }
 
-  Future<bool> onReact(Player player) async {
+  Future<bool> onReactToAttack(Player player, Card attack) async {
     player.draw(2);
     var discarding = await player.controller
         .selectCardsFromHand(this, CardConditions(), 3, 3);
@@ -692,13 +688,12 @@ class Replace extends Card with Action, Attack, Intrigue {
     await player.trashFrom(trash, player.hand);
     var gain = await player.controller.selectCardFromSupply(EventType.GainCard,
         CardConditions()..maxCost = trash.calculateCost(player) + 2, false);
-    await player.gain(gain);
-    if (gain is Action || gain is Treasure) {
-      player.engine.trashPile.moveTo(gain, player.deck.top);
-    }
+    await player.gain(gain,
+        to: gain is Action || gain is Treasure
+            ? player.deck.top
+            : player.discarded);
     await for (var opponent in player.engine.attackablePlayers(player, this)) {
-      bool blocked = await opponent.reactTo(EventType.Attack, this);
-      if (gain is Victory && !blocked) {
+      if (gain is Victory) {
         await opponent.gain(Curse.instance);
       }
     }
@@ -716,8 +711,6 @@ class Torturer extends Card with Action, Attack, Intrigue {
   onPlay(Player player) async {
     player.draw(3);
     await for (var p in player.engine.attackablePlayers(player, this)) {
-      bool attackBlocked = await p.reactTo(EventType.Attack, this);
-      if (attackBlocked) continue;
       String a = "Discard two cards";
       String b = "Gain a curse";
       String option =
@@ -729,8 +722,7 @@ class Torturer extends Card with Action, Attack, Intrigue {
           await p.discard(c);
         }
       } else if (option == b) {
-        bool result = await p.gain(Curse.instance);
-        if (result) p.discarded.moveTo(Curse.instance, p.hand);
+        await p.gain(Curse.instance, to: p.hand);
       }
     }
   }
@@ -751,8 +743,7 @@ class TradingPost extends Card with Action, Intrigue {
       await player.trashFrom(c, player.hand);
     }
     if (cards.length == 2) {
-      await player.gain(Silver.instance);
-      player.discarded.moveTo(Silver.instance, player.hand);
+      await player.gain(Silver.instance, to: player.hand);
     }
   }
 }

@@ -428,9 +428,7 @@ class SeaHag extends Card with Action, Attack, Seaside {
   onPlay(Player player) async {
     await for (var opponent in player.engine.attackablePlayers(player, this)) {
       await opponent.discardFrom(opponent.deck);
-      if (await opponent.gain(Curse.instance)) {
-        opponent.discarded.moveTo(Curse.instance, opponent.deck.top);
-      }
+      await opponent.gain(Curse.instance, to: opponent.deck.top);
     }
   }
 }
@@ -448,9 +446,7 @@ class TreasureMap extends Card with Action, Seaside {
     await player.trashFrom(this, player.discarded);
     if (await player.trashFrom(this, player.hand)) {
       for (var i = 0; i < 4; i++) {
-        if (await player.gain(Gold.instance)) {
-          player.discarded.moveTo(Gold.instance, player.deck.top);
-        }
+        await player.gain(Gold.instance, to: player.deck.top);
       }
     }
   }
@@ -488,9 +484,7 @@ class Explorer extends Card with Action, Seaside {
       player.notifyAnnounce("You reveal", "reveals", "a Province");
       gaining = Gold.instance;
     }
-    if (await player.gain(gaining)) {
-      player.moveTo(gaining, player.hand);
-    }
+    await player.gain(gaining, to: player.hand);
   }
 }
 

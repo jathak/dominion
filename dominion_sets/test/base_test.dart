@@ -201,7 +201,7 @@ nonInteractionTests() {
   test("Adventurer", () async {
     List<Card> cards = playerA.hand.asList();
     playerA.hand.receive(Adventurer.instance);
-    playerA.deck = makeBuffer(
+    playerA.deck = makeDeck(
         [Silver.instance, Duchy.instance, Gold.instance, Province.instance]);
     await playerA.playAction(Adventurer.instance);
     cards.add(Silver.instance);
@@ -395,8 +395,8 @@ interactionTests() {
       return [player.hand[0], player.hand[1]];
     };
     for (var i = 0; i < 10; i++) {
-      engine.supply.gain(Smithy.instance, playerB);
-      engine.supply.gain(Village.instance, playerB);
+      engine.supply.gain(Smithy.instance, playerB, playerB.discarded);
+      engine.supply.gain(Village.instance, playerB, playerB.discarded);
     }
     var hand = playerA.hand.asList();
     var discarded = [hand.removeAt(0), hand.removeAt(0)];
@@ -428,7 +428,7 @@ interactionTests() {
   // TODO(jathak): Test bandit with a choice
   test("Library - Keep Actions", () async {
     List<Card> cards = playerA.hand.asList();
-    playerA.deck = makeBuffer(
+    playerA.deck = makeDeck(
         [Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
     ctrlA.confirm = (player, _a, _b) async => false;
     playerA.hand.receive(Library.instance);
@@ -445,7 +445,7 @@ interactionTests() {
   });
   test("Library - Discard Actions", () async {
     List<Card> cards = playerA.hand.asList();
-    playerA.deck = makeBuffer(
+    playerA.deck = makeDeck(
         [Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
     ctrlA.confirm = (player, ctx, _b) async => true;
     playerA.hand.receive(Library.instance);
@@ -487,7 +487,8 @@ attackTests() {
     List<Card> deckB = playerB.deck.asList();
     List<Card> cardsB = playerB.hand.asList();
     // default TestController behavior will select first victory card it sees.
-    playerB.hand.top.receive(Province.instance);
+    playerB.hand =
+        makeBuffer([Province.instance]..addAll(playerB.hand.asList()));
 
     playerA.hand.receive(Bureaucrat.instance);
     deck.insert(0, Silver.instance);

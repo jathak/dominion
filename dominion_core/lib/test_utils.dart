@@ -11,9 +11,15 @@ expectBufferHasCards(CardBuffer buffer, List<Card> cards) {
 }
 
 CardBuffer makeBuffer(List<Card> cards) {
-  CardBuffer buffer = new CardBuffer();
-  for (Card c in cards) buffer.receive(c);
+  var buffer = CardBuffer();
+  for (var c in cards) buffer.receive(c);
   return buffer;
+}
+
+Deck makeDeck(List<Card> cards) {
+  var deck = Deck();
+  for (var c in cards) deck.receive(c);
+  return deck;
 }
 
 class TestController extends PlayerController {

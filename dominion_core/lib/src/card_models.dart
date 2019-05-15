@@ -119,7 +119,30 @@ mixin Attack on Card {}
 mixin Reaction on Card {
   bool canReactTo(EventType type, Card context, Player player);
 
-  Future<bool> onReact(Player player);
+  Future<bool> onReactToAttack(Player player, Card context);
+
+  Future onReactToGain(
+      Player player, Card card, CardSource location, bool bought);
+}
+
+mixin AttackReaction on Card implements Reaction {
+  bool canReactTo(EventType type, Card context, Player player) =>
+      type == EventType.Attack;
+
+  Future<bool> onReactToAttack(Player player, Card context);
+
+  Future onReactToGain(
+          Player player, Card card, CardSource location, bool bought) =>
+      null;
+}
+
+mixin GainReaction on Card implements Reaction {
+  bool canReactTo(EventType type, Card context, Player player);
+
+  Future<bool> onReactToAttack(Player player, Card context) async => false;
+
+  Future onReactToGain(
+      Player player, Card card, CardSource location, bool bought);
 }
 
 /// This is a subtype, so it doesn't directly extend Card

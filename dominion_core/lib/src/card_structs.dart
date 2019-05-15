@@ -58,7 +58,9 @@ abstract class CardTarget {
   receive(Card card);
 }
 
-class CardBuffer extends Object with CardSource, CardTarget {
+abstract class CardSourceAndTarget with CardSource, CardTarget {}
+
+class CardBuffer extends CardSourceAndTarget {
   CardBuffer();
 
   CardBuffer.from(Iterable<Card> cards) {
@@ -66,9 +68,6 @@ class CardBuffer extends Object with CardSource, CardTarget {
   }
 
   List<Card> _cards = [];
-
-  TopTarget get top => TopTarget(this);
-  BottomSource get bottom => BottomSource(this);
 
   bool remove(Card card) => _cards.remove(card);
 
@@ -85,10 +84,6 @@ class CardBuffer extends Object with CardSource, CardTarget {
 
   bool contains(Card card) => _cards.contains(card);
 
-  addToTop(Card card) => _cards.insert(0, card);
-
-  Card removeFromBottom() => _cards.removeLast();
-
   operator [](int index) => _cards[index];
 
   String toString() => _cards.toString();
@@ -96,27 +91,42 @@ class CardBuffer extends Object with CardSource, CardTarget {
   List<Card> asList() => []..addAll(_cards);
 }
 
-class TopTarget extends Object with CardTarget {
-  final CardBuffer buffer;
+class Deck extends CardBuffer {
+  TopOfDeck get top => TopOfDeck(this);
+  BottomOfDeck get bottom => BottomOfDeck(this);
 
-  TopTarget(this.buffer);
+  addToTop(Card card) => _cards.insert(0, card);
 
-  receive(Card card) => buffer.addToTop(card);
+  Card removeFromBottom() => _cards.removeLast();
 }
 
-class BottomSource extends Object with CardSource {
-  final CardBuffer buffer;
+class TopOfDeck extends CardSourceAndTarget {
+  final Deck deck;
 
-  BottomSource(this.buffer);
+  TopOfDeck(this.deck);
 
-  @override
+  receive(Card card) => deck.addToTop(card);
+
+  bool remove(Card card) => deck.remove(card);
+
+  Card removeTop() => deck.removeTop();
+}
+
+class BottomOfDeck extends CardSourceAndTarget {
+  final Deck deck;
+
+  BottomOfDeck(this.deck);
+
   bool remove(Card card) {
     throw Exception(
         "Do not use CardBuffer.bottom when removing specific cards!");
   }
 
-  /// This actually removes from the bottom of the buffer.
-  Card removeTop() => buffer.removeFromBottom();
+  /// This actually removes from the bottom of the deck.
+  Card removeTop() => deck.removeFromBottom();
+
+  @override
+  receive(Card card) => deck.receive(card);
 }
 
 class SupplySource extends Object with CardSource, CardTarget {

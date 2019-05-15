@@ -116,7 +116,7 @@ class DominionEngine {
 
   Stream<Player> attackablePlayers(Player attacker, Card context) async* {
     for (var player in playersAfter(attacker)) {
-      var blocked = await player.reactTo(EventType.Attack, context);
+      var blocked = await player.reactToAttack(context);
       if (!blocked) yield player;
     }
   }
@@ -132,7 +132,7 @@ class Player extends Object with CardSource {
   String get name => controller.name;
 
   Player(this.engine, this.controller) {
-    deck = CardBuffer();
+    deck = Deck();
     for (int i = 0; i < 3; i++) deck.receive(Estate.instance);
     for (int i = 0; i < 7; i++) deck.receive(Copper.instance);
     deck.shuffle();
@@ -281,12 +281,13 @@ class Player extends Object with CardSource {
   }
 
   // return true if event is blocked
-  Future<bool> reactTo(EventType event, Card context) async {
+  Future<bool> reactToAttack(Card context) async {
     var blocked = inPlay.asList().any((card) => card.protectsFromAttacks);
     while (true) {
       var options = [];
       for (var card in hand.asList()) {
-        if (card is Reaction && card.canReactTo(event, context, this)) {
+        if (card is Reaction &&
+            card.canReactTo(EventType.Attack, context, this)) {
           options.add(card);
         }
       }
@@ -296,10 +297,33 @@ class Player extends Object with CardSource {
           context, "Select a Reaction card to reveal.", options);
       if (response is Reaction) {
         notifyAnnounce("You reveal", "reveals", "a $response");
-        bool result = await response.onReact(this);
-        if (result) blocked = true;
+        if (await response.onReactToAttack(this, context)) {
+          blocked = true;
+        }
       } else {
         return blocked;
+      }
+    }
+  }
+
+  // return true if event is blocked
+  Future reactToGain(Card card, CardSource location, bool bought) async {
+    while (true) {
+      var options = [];
+      for (var card in hand.asList()) {
+        if (card is Reaction &&
+            card.canReactTo(
+                bought ? EventType.BuyCard : EventType.GainCard, card, this)) {
+          options.add(card);
+        }
+      }
+      if (options.length == 0) return;
+      options.add("None");
+      var response = await controller.askQuestion(
+          card, "Gained a $card. Select a Reaction card to reveal.", options);
+      if (response is Reaction) {
+        notifyAnnounce("You reveal", "reveals", "a $response");
+        await response.onReactToGain(this, card, location, bought);
       }
     }
   }
@@ -369,10 +393,11 @@ class Player extends Object with CardSource {
     return result;
   }
 
-  Future<bool> gain(Card card) async {
-    bool result = await engine.supply.gain(card, this);
+  Future<bool> gain(Card card, {CardSourceAndTarget to}) async {
+    bool result = await engine.supply.gain(card, this, to ?? discarded);
     if (result) {
       turn?.gained?.add(card);
+      reactToGain(card, to, false);
       var remain = "${engine.supply.supplyOf(card).count} remain";
       notifyAnnounce("You gain", "gains", "a $card. $remain");
     } else {
@@ -381,12 +406,13 @@ class Player extends Object with CardSource {
     return result;
   }
 
-  Future<bool> buy(Card card) async {
-    bool result = await engine.supply.buy(card, this);
+  Future<bool> buy(Card card, {CardSourceAndTarget to}) async {
+    bool result = await engine.supply.buy(card, this, to ?? discarded);
     if (!result) return false;
     if (result) {
-      turn.bought.add(card);
-      turn.gained.add(card);
+      turn?.bought?.add(card);
+      turn?.gained?.add(card);
+      reactToGain(card, to, true);
       var remain = "${engine.supply.supplyOf(card).count} remain";
       notifyAnnounce("You buy", "buys", "a $card. $remain");
     } else {
@@ -395,7 +421,7 @@ class Player extends Object with CardSource {
     return result;
   }
 
-  CardBuffer deck;
+  Deck deck;
   CardBuffer hand;
   CardBuffer discarded;
   InPlayBuffer inPlay;
@@ -456,21 +482,21 @@ class Supply {
 
   reset() => _setup(_kingdomCards, _playerCount, _expensiveBasics);
 
-  Future<bool> gain(Card card, Player player) async {
-    Card result = supplyOf(card).drawTo(player.discarded);
+  Future<bool> gain(Card card, Player player, CardTarget location) async {
+    Card result = supplyOf(card).drawTo(location);
     if (result == null) return false;
     await card.onGain(player, false);
     return true;
   }
 
-  Future<bool> buy(Card card, Player player) async {
+  Future<bool> buy(Card card, Player player, CardTarget location) async {
     int cost = card.calculateCost(player);
     bool notEnoughPotions = card.requiresPotion && player.turn.potions < 1;
     if (player.turn.buys < 1 || player.turn.coins < cost || notEnoughPotions) {
       return false;
     }
     if (!card.buyable(player)) return false;
-    Card result = supplyOf(card).drawTo(player.discarded);
+    Card result = supplyOf(card).drawTo(location);
     if (result == null) return false;
     for (int i = 0; i < supplyOf(card).embargoTokens; i++) {
       await player.gain(Curse.instance);

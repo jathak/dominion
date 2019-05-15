@@ -47,7 +47,7 @@ class Chapel extends Card with Action, BaseSet {
 }
 
 @card
-class Moat extends Card with Action, BaseSet, Reaction {
+class Moat extends Card with Action, BaseSet, AttackReaction {
   Moat._();
   static Moat instance = Moat._();
 
@@ -62,9 +62,7 @@ class Moat extends Card with Action, BaseSet, Reaction {
     return type == EventType.Attack;
   }
 
-  Future<bool> onReact(Player player) async {
-    return true;
-  }
+  Future<bool> onReactToAttack(Player player, Card attack) async => true;
 }
 
 @card
@@ -212,8 +210,7 @@ class Bureaucrat extends Card with Action, BaseSet, Attack {
   final String name = "Bureaucrat";
 
   onPlay(Player player) async {
-    await player.gain(Silver.instance);
-    player.discarded.moveTo(Silver.instance, player.deck.top);
+    await player.gain(Silver.instance, to: player.deck.top);
     await for (Player p in player.engine.attackablePlayers(player, this)) {
       List<Card> victories = [];
       for (Card c in p.hand.asList()) {
@@ -382,7 +379,7 @@ class Spy extends Card with Action, BaseSet, Attack {
     player.turn.actions += 1;
     for (Player p in player.engine.playersFrom(player)) {
       if (p != player) {
-        bool attackBlocked = await p.reactTo(EventType.Attack, this);
+        bool attackBlocked = await p.reactToAttack(this);
         if (attackBlocked) continue;
       }
       CardBuffer buffer = CardBuffer();
@@ -656,8 +653,7 @@ class Mine extends Card with Action, BaseSet {
     gainConds..requiredTypes = [CardType.Treasure];
     gainConds..maxCost = cost + 3;
     Card card = await player.selectCardToGain(conditions: gainConds);
-    await player.gain(card);
-    player.discarded.moveTo(card, player.hand);
+    await player.gain(card, to: player.hand);
   }
 }
 
@@ -710,10 +706,7 @@ class Witch extends Card with Action, BaseSet, Attack {
   onPlay(Player player) async {
     player.draw(2);
     await for (var p in player.engine.attackablePlayers(player, this)) {
-      bool attackBlocked = await p.reactTo(EventType.Attack, this);
-      if (!attackBlocked) {
-        await p.gain(Curse.instance);
-      }
+      await p.gain(Curse.instance);
     }
   }
 }
@@ -764,9 +757,7 @@ class Artisan extends Card with Action, BaseSet {
   onPlay(Player player) async {
     var gain = await player.selectCardToGain(
         conditions: CardConditions()..maxCost = 5);
-    if (await player.gain(gain)) {
-      player.discarded.moveTo(gain, player.hand);
-    }
+    await player.gain(gain, to: player.hand);
     var toDeck = await player.controller
         .selectCardsFromHand(this, CardConditions(), 1, 1);
     player.hand.moveTo(toDeck.first, player.deck.top);

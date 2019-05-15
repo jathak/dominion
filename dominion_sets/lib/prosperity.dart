@@ -56,7 +56,7 @@ class TradeRoute extends Card with Action, Prosperity {
 }
 
 @card
-class Watchtower extends Card with Action, Reaction, Prosperity {
+class Watchtower extends Card with Action, GainReaction, Prosperity {
   Watchtower._();
   static Watchtower instance = Watchtower._();
 
@@ -69,15 +69,21 @@ class Watchtower extends Card with Action, Reaction, Prosperity {
     }
   }
 
-  @override
   bool canReactTo(EventType type, Card context, Player player) {
-    return type == EventType.GainCard;
+    return type == EventType.GainCard || type == EventType.BuyCard;
   }
 
-  @override
-  Future<bool> onReact(Player player) async {
-    // TODO(jathak): Implement Watchtower
-    return false;
+  onReactToGain(
+      Player player, Card card, CardSource location, bool bought) async {
+    var response = await player.controller.askQuestion(
+        card, "Trash or put on top of deck?", ["Trash", "Put on top of deck"]);
+    if (response == "Trash") {
+      await player.trashFrom(card, location);
+    } else {
+      player.notifyAnnounce(
+          "You put $card on top of your", "puts $card on top of their", "deck");
+      location.moveTo(card, player.deck.top);
+    }
   }
 }
 
