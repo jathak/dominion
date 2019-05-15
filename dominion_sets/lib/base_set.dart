@@ -280,14 +280,11 @@ class Militia extends Card with Action, BaseSet, Attack {
   onPlay(Player player) async {
     player.turn.coins += 2;
     await for (var p in player.engine.attackablePlayers(player, this)) {
-      bool attackBlocked = await p.reactTo(EventType.Attack, this);
-      if (!attackBlocked) {
-        int x = p.hand.length - 3;
-        List<Card> cards = await p.controller
-            .selectCardsFromHand(this, CardConditions(), x, x);
-        for (Card c in cards) {
-          await p.discard(c);
-        }
+      var x = p.hand.length - 3;
+      var cards =
+          await p.controller.selectCardsFromHand(this, CardConditions(), x, x);
+      for (var c in cards) {
+        await p.discard(c);
       }
     }
   }
@@ -346,13 +343,13 @@ class Remodel extends Card with Action, BaseSet {
   final String name = "Remodel";
 
   onPlay(Player player) async {
-    List<Card> cards = await player.controller
+    var cards = await player.controller
         .selectCardsFromHand(this, CardConditions(), 1, 1);
     if (cards.length != 1) return;
     await player.trashFrom(cards[0], player.hand);
-    CardConditions conds = CardConditions();
-    conds.maxCost = cards[0].calculateCost(player.turn) + 2;
-    Card card = await player.selectCardToGain(conditions: conds);
+    var conds = CardConditions();
+    conds.maxCost = cards[0].calculateCost(player) + 2;
+    var card = await player.selectCardToGain(conditions: conds);
     await player.gain(card);
   }
 }
@@ -488,28 +485,30 @@ class ThroneRoom extends Card with Action, BaseSet {
 
   Future<ForNextTurn> onPlayCanPersist(Player player) async {
     var card = await player.controller.selectActionCard();
-    ForNextTurn forNextTurn;
-    if (card != null) {
-      player.turn.actions++; // since playAction will decrement this
-      var index = await player.playAction(card);
-      player.notifyAnnounce("You play", "plays", "the $card again");
-      var secondFNT = await player.play(card);
-      if (card is Duration) {
-        forNextTurn = ForNextTurn(true, () async => false);
-        var firstFNT = player.inPlay.nextTurn[index];
-        if (firstFNT == null) {
-          player.inPlay.nextTurn[index] = secondFNT;
-        } else {
-          player.inPlay.nextTurn[index] =
-              ForNextTurn(firstFNT.persists || secondFNT.persists, () async {
-            var first = await firstFNT.action();
-            var second = await secondFNT.action();
-            return first || second;
-          });
-        }
+    if (card == null) return null;
+    player.turn.actions++; // since playAction will decrement this
+    var index = await player.playAction(card);
+    player.notifyAnnounce("You play", "plays", "the $card again");
+    var secondFNT = await player.play(card);
+    if (card is Duration) {
+      var firstFNT = player.inPlay.nextTurn[index];
+      var fnts = [firstFNT, secondFNT];
+      fnts.removeWhere((fnt) => fnt == null);
+      if (fnts.length == 1) {
+        player.inPlay.nextTurn[index] = fnts.first;
+      } else {
+        player.inPlay.nextTurn[index] =
+            ForNextTurn(fnts.any((fnt) => fnt.persists), () async {
+          var persist = false;
+          for (var fnt in fnts) {
+            persist = await fnt.action() || persist;
+          }
+          return persist;
+        });
       }
+      return ForNextTurn(true, () async => false);
     }
-    return forNextTurn;
+    return null;
   }
 }
 
@@ -651,7 +650,7 @@ class Mine extends Card with Action, BaseSet {
     List<Card> cards =
         await player.controller.selectCardsFromHand(this, trashConds, 0, 1);
     if (cards.length != 1) return;
-    int cost = cards[0].calculateCost(player.turn);
+    int cost = cards[0].calculateCost(player);
     player.trashFrom(cards[0], player.hand);
     CardConditions gainConds = CardConditions();
     gainConds..requiredTypes = [CardType.Treasure];

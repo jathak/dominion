@@ -9,13 +9,12 @@ abstract class Card implements Comparable<Card> {
   final int cost = null;
 
   /// Calculates cost based on raw cost and cards in play
-  int calculateCost(Turn turn) {
-    if (turn == null) return cost;
+  int calculateCost(Player player) {
+    if (player?.turn == null) return cost;
     int calcCost = cost;
-    for (var fn in turn.costProcessors) {
+    for (var fn in player.turn.costProcessors) {
       calcCost = fn(this, calcCost);
     }
-    // TODO: Handle cards which decrease card cost - cards like Peddler will override
     return calcCost >= 0 ? calcCost : 0;
   }
 
@@ -37,7 +36,12 @@ abstract class Card implements Comparable<Card> {
   /// while they are in play.
   final bool protectsFromAttacks = false;
 
-  /// Called when player gains this card
+  /// Returns whether or not [player] is allowed to buy this card.
+  ///
+  /// This does not take cost into account.
+  bool buyable(Player player) => true;
+
+  /// Called when player gains this card.
   onGain(Player player, bool bought) async => null;
 
   /// Called when player plays this card
@@ -76,11 +80,11 @@ mixin Treasure on Card {
   final int value = null;
 
   /// Calculates value of treasure
-  int getTreasureValue(Turn turn) => value;
+  int getTreasureValue(Player player) => value;
 
   /// Called when treasure is played
   onPlay(Player player) async {
-    player.turn.coins += getTreasureValue(player.turn);
+    player.turn.coins += getTreasureValue(player);
   }
 }
 

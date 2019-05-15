@@ -214,7 +214,7 @@ class Smugglers extends Card with Action, Seaside {
     var options = player.engine.toRightOf(player).lastTurn.gained.where(
         (card) =>
             player.engine.supply.supplyOf(card).count > 0 &&
-            card.calculateCost(player.turn) <= 6);
+            card.calculateCost(player) <= 6);
     if (options.isEmpty) return;
     var card = options.length == 1
         ? options.first
@@ -413,7 +413,7 @@ class Salvager extends Card with Action, Seaside {
             .selectCardsFromHand(this, CardConditions(), 1, 1))
         .first;
     await player.trashFrom(card, player.hand);
-    player.turn.coins += card.calculateCost(player.turn);
+    player.turn.coins += card.calculateCost(player);
   }
 }
 

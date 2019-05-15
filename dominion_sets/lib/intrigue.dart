@@ -255,7 +255,7 @@ class Swindler extends Card with Action, Attack, Intrigue {
     await for (var p in player.engine.attackablePlayers(player, this)) {
       Card trashed = await p.trashDraw(p);
       CardConditions conds = CardConditions()
-        ..cost = trashed.calculateCost(player.turn);
+        ..cost = trashed.calculateCost(player);
       Card selected = await player.controller
           .selectCardFromSupply(EventType.GainForOpponent, conds, false);
       await p.gain(selected);
@@ -690,10 +690,8 @@ class Replace extends Card with Action, Attack, Intrigue {
             .selectCardsFromHand(this, CardConditions(), 1, 1))
         .first;
     await player.trashFrom(trash, player.hand);
-    var gain = await player.controller.selectCardFromSupply(
-        EventType.GainCard,
-        CardConditions()..maxCost = trash.calculateCost(player.turn) + 2,
-        false);
+    var gain = await player.controller.selectCardFromSupply(EventType.GainCard,
+        CardConditions()..maxCost = trash.calculateCost(player) + 2, false);
     await player.gain(gain);
     if (gain is Action || gain is Treasure) {
       player.engine.trashPile.moveTo(gain, player.deck.top);
@@ -806,7 +804,7 @@ class Upgrade extends Card with Action, Intrigue {
     if (cards.length != 1) return;
     await player.trashFrom(cards[0], player.hand);
     CardConditions conds = CardConditions();
-    conds.cost = cards[0].calculateCost(player.turn) + 1;
+    conds.cost = cards[0].calculateCost(player) + 1;
     Card card = await player.selectCardToGain(conditions: conds);
     if (card == null) return;
     await player.gain(card);

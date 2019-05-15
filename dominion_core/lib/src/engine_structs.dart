@@ -63,6 +63,8 @@ class Turn {
   /// List of cards bought on this turn
   List<Card> bought = [];
 
+  CardConditions buyConditions = CardConditions()..mustBeBuyable = true;
+
   /// The number of times any given type of card has been played this turn.
   Map<Card, int> playCounts = {};
   int playCount(Card card) => playCounts[card] ?? 0;
@@ -99,14 +101,12 @@ class InPlayBuffer extends CardBuffer {
   bool moveTo(Card card, CardTarget target) {
     int count =
         _cards.map((item) => item == card ? 1 : 0).fold(0, (a, b) => a + b);
-    if (count == 1) {
+    if (count > 0) {
       int index = _cards.indexOf(card);
       _cards.removeAt(index);
       nextTurn.removeAt(index);
       target.receive(card);
       return true;
-    } else if (count > 1) {
-      throw Exception("Ambiguous which $card to move");
     }
     return false;
   }
@@ -157,7 +157,8 @@ enum EventType {
   GuessCard,
   GainForOpponent,
   TrashCard,
-  Embargo
+  Embargo,
+  Contraband
 }
 
 class Mat {

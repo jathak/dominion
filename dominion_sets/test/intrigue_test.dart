@@ -74,7 +74,7 @@ nonInteractionTests() {
     expect(playerA.turn.buys, equals(2));
     expect(playerA.turn.coins, equals(1));
     for (Card card in CardRegistry.cardsWithConditions()) {
-      expect(card.calculateCost(playerA.turn), equals(card.cost - 1));
+      expect(card.calculateCost(playerA), equals(card.cost - 1));
     }
   });
   test("Bridge - Stacked", () async {
@@ -90,7 +90,7 @@ nonInteractionTests() {
     expect(playerA.turn.buys, equals(3));
     expect(playerA.turn.coins, equals(2));
     for (Card card in CardRegistry.cardsWithConditions()) {
-      expect(card.calculateCost(playerA.turn), equals(card.cost - 2));
+      expect(card.calculateCost(playerA), equals(card.cost - 2));
     }
   });
   test("Conspirator", () async {

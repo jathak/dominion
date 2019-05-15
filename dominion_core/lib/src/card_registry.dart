@@ -58,6 +58,8 @@ class CardConditions {
 
   int maxCost = -1;
 
+  bool mustBeBuyable = false;
+
   /// sets both minCost and maxCost
   set cost(int c) {
     minCost = c;
@@ -72,14 +74,17 @@ class CardConditions {
   /// following types
   List<CardType> invalidTypes = [];
 
+  List<Card> bannedCards = [];
+
   /// returns true if conditions allow for this card
   bool allowsFor(Card card, [Player player]) {
     if (allowedExpansions.length > 0 &&
         !allowedExpansions.contains(card.expansion)) {
       return false;
     }
+    if (mustBeBuyable && !card.buyable(player)) return false;
     int cardCost = card.cost;
-    if (player != null) cardCost = card.calculateCost(player.turn);
+    if (player != null) cardCost = card.calculateCost(player);
     if (minCost > -1 && cardCost < minCost) return false;
     if (maxCost > -1 && cardCost > maxCost) return false;
     bool meetsReq = requiredTypes.length == 0;
@@ -105,7 +110,7 @@ class CardConditions {
       if (invalidTypes.contains(CardType.Reaction)) return false;
       if (requiredTypes.contains(CardType.Reaction)) meetsReq = true;
     }
-    return meetsReq;
+    return meetsReq && !bannedCards.contains(card);
   }
 }
 

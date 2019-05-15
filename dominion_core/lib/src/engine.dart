@@ -148,12 +148,8 @@ class Player extends Object with CardSource {
         EventType.GainCard, conditions, allowNone);
   }
 
-  Future<Card> selectCardToBuy(
-      {CardConditions conditions, bool allowNone: true}) {
-    if (conditions == null) conditions = CardConditions();
-    return controller.selectCardFromSupply(
-        EventType.BuyCard, conditions, allowNone);
-  }
+  Future<Card> selectCardToBuy() => controller.selectCardFromSupply(
+      EventType.BuyCard, turn.buyConditions, true);
 
   bool hasActions() {
     for (int i = 0; i < hand.length; i++) {
@@ -244,8 +240,8 @@ class Player extends Object with CardSource {
     }
     // buy cards
     while (turn.buys > 0) {
-      CardConditions conds = CardConditions()..maxCost = turn.coins;
-      Card toBuy = await selectCardToBuy(conditions: conds);
+      turn.buyConditions.maxCost = turn.coins;
+      var toBuy = await selectCardToBuy();
       if (toBuy == null) break;
       await buy(toBuy);
     }
@@ -266,7 +262,7 @@ class Player extends Object with CardSource {
   }
 
   int calculateScore() {
-    int score = 0;
+    int score = vpTokens;
     var buffers = [
       deck,
       hand,
@@ -281,7 +277,6 @@ class Player extends Object with CardSource {
         }
       }
     }
-    // TODO Add VP tokens
     return score;
   }
 
@@ -377,7 +372,7 @@ class Player extends Object with CardSource {
   Future<bool> gain(Card card) async {
     bool result = await engine.supply.gain(card, this);
     if (result) {
-      turn.gained.add(card);
+      turn?.gained?.add(card);
       var remain = "${engine.supply.supplyOf(card).count} remain";
       notifyAnnounce("You gain", "gains", "a $card. $remain");
     } else {
@@ -404,6 +399,8 @@ class Player extends Object with CardSource {
   CardBuffer hand;
   CardBuffer discarded;
   InPlayBuffer inPlay;
+
+  int vpTokens = 0;
 
   Turn turn;
   Turn lastTurn;
@@ -467,11 +464,12 @@ class Supply {
   }
 
   Future<bool> buy(Card card, Player player) async {
-    int cost = card.calculateCost(player.turn);
+    int cost = card.calculateCost(player);
     bool notEnoughPotions = card.requiresPotion && player.turn.potions < 1;
     if (player.turn.buys < 1 || player.turn.coins < cost || notEnoughPotions) {
       return false;
     }
+    if (!card.buyable(player)) return false;
     Card result = supplyOf(card).drawTo(player.discarded);
     if (result == null) return false;
     for (int i = 0; i < supplyOf(card).embargoTokens; i++) {
