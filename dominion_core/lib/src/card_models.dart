@@ -121,7 +121,11 @@ mixin Reaction on Card {
 
   Future<bool> onReactToAttack(Player player, Card context);
 
-  Future onReactToGain(
+  /// Allows this card to react to a card being gained.
+  ///
+  /// This should return the location where [card] was moved to, or, [location]
+  /// if it was not moved.
+  Future<CardSource> onReactToGain(
       Player player, Card card, CardSource location, bool bought);
 }
 
@@ -131,9 +135,9 @@ mixin AttackReaction on Card implements Reaction {
 
   Future<bool> onReactToAttack(Player player, Card context);
 
-  Future onReactToGain(
-          Player player, Card card, CardSource location, bool bought) =>
-      null;
+  Future<CardSource> onReactToGain(
+          Player player, Card card, CardSource location, bool bought) async =>
+      location;
 }
 
 mixin GainReaction on Card implements Reaction {
@@ -141,13 +145,20 @@ mixin GainReaction on Card implements Reaction {
 
   Future<bool> onReactToAttack(Player player, Card context) async => false;
 
-  Future onReactToGain(
+  Future<CardSource> onReactToGain(
       Player player, Card card, CardSource location, bool bought);
 }
 
-/// This is a subtype, so it doesn't directly extend Card
-/// as all Durations also extend one of the main types
 mixin Duration on Card {}
+
+mixin GainListener on Card {
+  /// Called when a player gains any card while this is in play.
+  ///
+  /// This should return the location where [card] was moved to, or, [location]
+  /// if it was not moved.
+  Future<CardSource> onGainCardWhileInPlay(
+      Player player, Card card, CardSource location, bool bought);
+}
 
 class ForNextTurn {
   bool persists;

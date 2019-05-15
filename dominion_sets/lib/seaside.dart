@@ -540,7 +540,6 @@ class Outpost extends Card with Action, Duration, Seaside {
   Future<ForNextTurn> onPlayCanPersist(Player player) async {
     if (player.takeOutpostTurn) return null;
     player.takeOutpostTurn = true;
-    // TODO(jathak): Implement double-turn from Outpost
     return ForNextTurn(true, () async {
       return false;
     });

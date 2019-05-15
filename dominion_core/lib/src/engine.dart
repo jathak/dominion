@@ -317,13 +317,15 @@ class Player extends Object with CardSource {
           options.add(card);
         }
       }
-      if (options.length == 0) return;
+      if (options.length == 0) return location;
       options.add("None");
       var response = await controller.askQuestion(
           card, "Gained a $card. Select a Reaction card to reveal.", options);
       if (response is Reaction) {
         notifyAnnounce("You reveal", "reveals", "a $response");
-        await response.onReactToGain(this, card, location, bought);
+        location = await response.onReactToGain(this, card, location, bought);
+      } else {
+        return location;
       }
     }
   }
@@ -397,7 +399,12 @@ class Player extends Object with CardSource {
     bool result = await engine.supply.gain(card, this, to ?? discarded);
     if (result) {
       turn?.gained?.add(card);
-      reactToGain(card, to, false);
+      var location = await reactToGain(card, to, false);
+      for (var card in inPlay.asList()) {
+        if (card is GainListener) {
+          location = card.onGainCardWhileInPlay(this, card, location, false);
+        }
+      }
       var remain = "${engine.supply.supplyOf(card).count} remain";
       notifyAnnounce("You gain", "gains", "a $card. $remain");
     } else {
@@ -412,7 +419,12 @@ class Player extends Object with CardSource {
     if (result) {
       turn?.bought?.add(card);
       turn?.gained?.add(card);
-      reactToGain(card, to, true);
+      var location = await reactToGain(card, to, true);
+      for (var card in inPlay.asList()) {
+        if (card is GainListener) {
+          location = card.onGainCardWhileInPlay(this, card, location, true);
+        }
+      }
       var remain = "${engine.supply.supplyOf(card).count} remain";
       notifyAnnounce("You buy", "buys", "a $card. $remain");
     } else {

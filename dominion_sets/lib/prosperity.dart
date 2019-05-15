@@ -151,7 +151,7 @@ class Quarry extends Card with Treasure, Prosperity {
 }
 
 @card
-class Talisman extends Card with Treasure, Prosperity {
+class Talisman extends Card with Treasure, GainListener, Prosperity {
   Talisman._();
   static Talisman instance = Talisman._();
 
@@ -160,9 +160,12 @@ class Talisman extends Card with Treasure, Prosperity {
 
   final int value = 1;
 
-  onPlay(Player player) async {
-    await super.onPlay(player);
-    // TODO(jathak): Finish implementing Talisman
+  Future<CardSource> onGainCardWhileInPlay(
+      Player player, Card card, CardSource location, bool bought) async {
+    if (bought && card is! Victory && card.calculateCost(player) <= 4) {
+      await player.gain(card);
+    }
+    return location;
   }
 }
 
@@ -330,7 +333,7 @@ class Rabble extends Card with Action, Attack, Prosperity {
 }
 
 @card
-class RoyalSeal extends Card with Treasure, Prosperity {
+class RoyalSeal extends Card with Treasure, GainListener, Prosperity {
   RoyalSeal._();
   static RoyalSeal instance = RoyalSeal._();
 
@@ -339,9 +342,16 @@ class RoyalSeal extends Card with Treasure, Prosperity {
 
   final int value = 2;
 
-  onPlay(Player player) async {
-    await super.onPlay(player);
-    // TODO(jathak): Implement Royal Seal
+  Future<CardSource> onGainCardWhileInPlay(
+      Player player, Card card, CardSource location, bool bought) async {
+    if (await player.controller
+        .confirmAction(card, "Put on top of your deck?")) {
+      player.notifyAnnounce("You put the $card on top of your",
+          "puts the $card on top of their", "deck");
+      location.moveTo(card, player.deck.top);
+      return player.deck.top;
+    }
+    return location;
   }
 }
 
@@ -404,7 +414,7 @@ class Venture extends Card with Treasure, Prosperity {
 }
 
 @card
-class Goons extends Card with Action, Attack, Prosperity {
+class Goons extends Card with Action, Attack, GainListener, Prosperity {
   Goons._();
   static Goons instance = Goons._();
 
@@ -414,7 +424,6 @@ class Goons extends Card with Action, Attack, Prosperity {
   onPlay(Player player) async {
     player.turn.buys++;
     player.turn.coins += 2;
-    // TODO(jathak): Implement earning VP on buy of any card
     await for (var p in player.engine.attackablePlayers(player, this)) {
       var x = p.hand.length - 3;
       var cards =
@@ -423,6 +432,14 @@ class Goons extends Card with Action, Attack, Prosperity {
         await p.discard(c);
       }
     }
+  }
+
+  Future<CardSource> onGainCardWhileInPlay(
+      Player player, Card card, CardSource location, bool bought) async {
+    if (bought) {
+      await player.vpTokens++;
+    }
+    return location;
   }
 }
 
@@ -445,7 +462,7 @@ class GrandMarket extends Card with Action, Prosperity {
 }
 
 @card
-class Hoard extends Card with Treasure, Prosperity {
+class Hoard extends Card with Treasure, GainListener, Prosperity {
   Hoard._();
   static Hoard instance = Hoard._();
 
@@ -454,9 +471,12 @@ class Hoard extends Card with Treasure, Prosperity {
 
   final int value = 2;
 
-  onPlay(Player player) async {
-    await super.onPlay(player);
-    // TODO(jathak): Implement Hoard
+  Future<CardSource> onGainCardWhileInPlay(
+      Player player, Card card, CardSource location, bool bought) async {
+    if (bought && card is! Victory) {
+      await player.gain(Gold.instance);
+    }
+    return location;
   }
 }
 
