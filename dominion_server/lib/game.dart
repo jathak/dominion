@@ -5,6 +5,8 @@ import 'package:dominion_sets/base_set.dart';
 import 'package:dominion_sets/intrigue.dart';
 // ignore: unused_import
 import 'package:dominion_sets/seaside.dart';
+// ignore: unused_import
+import 'package:dominion_sets/prosperity.dart';
 
 import 'dart:convert';
 import 'dart:io';
