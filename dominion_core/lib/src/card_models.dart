@@ -50,7 +50,7 @@ abstract class Card implements Comparable<Card> {
   /// Called when player plays this turn.
   ///
   /// Most non-durations should override onPlay instead.
-  Future<ForNextTurn> onPlayCanPersist(Player player) async {
+  Future<NextTurnAction> onPlayCanPersist(Player player) async {
     await onPlay(player);
     return null;
   }
@@ -158,13 +158,6 @@ mixin GainListener on Card {
   /// if it was not moved.
   Future<CardSource> onGainCardWhileInPlay(
       Player player, Card card, CardSource location, bool bought);
-}
-
-class ForNextTurn {
-  bool persists;
-  NextTurnAction action;
-
-  ForNextTurn(this.persists, this.action);
 }
 
 typedef Future<bool> NextTurnAction();

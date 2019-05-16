@@ -85,7 +85,12 @@ typedef Future PlayListener(Card card);
 typedef int CostProcessor(Card card, int oldCost);
 
 class InPlayBuffer extends CardBuffer {
-  List<ForNextTurn> nextTurn = [];
+  /// For most cards, this should be null.
+  ///
+  /// For Durations and other cards kept in play by a Duration, this should be
+  /// a function to be run at the start of the next turn that returns true if it
+  /// persists for another turn and false otherwise.
+  List<NextTurnAction> actions = [];
 
   @override
   bool remove(Card card) {
@@ -104,7 +109,7 @@ class InPlayBuffer extends CardBuffer {
     if (count > 0) {
       int index = _cards.indexOf(card);
       _cards.removeAt(index);
-      nextTurn.removeAt(index);
+      actions.removeAt(index);
       target.receive(card);
       return true;
     }
@@ -112,10 +117,10 @@ class InPlayBuffer extends CardBuffer {
   }
 
   @override
-  int receive(Card card, {ForNextTurn forNextTurn}) {
+  int receive(Card card, {NextTurnAction onNextTurn}) {
     super.receive(card);
-    nextTurn.add(forNextTurn);
-    return nextTurn.length - 1;
+    actions.add(onNextTurn);
+    return actions.length - 1;
   }
 
   /// Cleans up all cards in play that are not being discarded.
@@ -123,24 +128,27 @@ class InPlayBuffer extends CardBuffer {
     int i = 0;
     var discarding = <Card>[];
     while (i < _cards.length) {
-      if (nextTurn[i]?.persists ?? false) {
+      if (actions[i] != null) {
         i++;
       } else {
         discarding.add(_cards.removeAt(i));
-        nextTurn.removeAt(i);
+        actions.removeAt(i);
       }
     }
+    while (player.hand.length > 0) {
+      discarding.add(player.hand.removeTop());
+    }
     for (var card in discarding) {
+      player.discarded.receive(card);
       await card.onDiscard(player, cleanup: true, cleanedUp: discarding);
     }
   }
 
   /// Runs all of the next turn actions for persistant cards.
   Future runNextTurnActions() async {
-    for (var forNextTurn in nextTurn) {
-      if (forNextTurn != null) {
-        forNextTurn.persists = await forNextTurn.action();
-      }
+    for (var i = 0; i < actions.length; i++) {
+      if (actions[i] == null) continue;
+      if (!(await actions[i]())) actions[i] = null;
     }
   }
 }

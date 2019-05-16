@@ -76,16 +76,18 @@ class Watchtower extends Card with Action, GainReaction, Prosperity {
     return type == EventType.GainCard || type == EventType.BuyCard;
   }
 
-  onReactToGain(
+  Future<CardSource> onReactToGain(
       Player player, Card card, CardSource location, bool bought) async {
     var response = await player.controller.askQuestion(
         card, "Trash or put on top of deck?", ["Trash", "Put on top of deck"]);
     if (response == "Trash") {
       await player.trashFrom(card, location);
+      return player.engine.trashPile;
     } else {
       player.notifyAnnounce(
           "You put $card on top of your", "puts $card on top of their", "deck");
       location.moveTo(card, player.deck.top);
+      return player.deck.top;
     }
   }
 }
@@ -542,32 +544,36 @@ class KingsCourt extends Card with Action, Prosperity {
   final int cost = 7;
   final String name = "King's Court";
 
-  Future<ForNextTurn> onPlayCanPersist(Player player) async {
+  Future<NextTurnAction> onPlayCanPersist(Player player) async {
     var card = await player.controller.selectActionCard();
     if (card == null) return null;
     player.turn.actions++; // since playAction will decrement this
     var index = await player.playAction(card);
     player.notifyAnnounce("You play", "plays", "the $card again");
-    var secondFNT = await player.play(card);
+    var secondNTA = await player.play(card);
     player.notifyAnnounce("You play", "plays", "the $card a third time");
-    var thirdFNT = await player.play(card);
+    var thirdNTA = await player.play(card);
     if (card is Duration) {
-      var firstFNT = player.inPlay.nextTurn[index];
-      var fnts = [firstFNT, secondFNT, thirdFNT];
-      fnts.removeWhere((fnt) => fnt == null);
-      if (fnts.length == 1) {
-        player.inPlay.nextTurn[index] = fnts.first;
+      var firstNTA = player.inPlay.actions[index];
+      var ntas = [firstNTA, secondNTA, thirdNTA];
+      ntas.removeWhere((nta) => nta == null);
+      if (ntas.length == 1) {
+        player.inPlay.actions[index] = ntas.first;
       } else {
-        player.inPlay.nextTurn[index] =
-            ForNextTurn(fnts.any((fnt) => fnt.persists), () async {
+        player.inPlay.actions[index] = () async {
           var persist = false;
-          for (var fnt in fnts) {
-            persist = await fnt.action() || persist;
+          var newNTAs = [];
+          for (var nta in ntas) {
+            if (await nta()) {
+              persist = true;
+              newNTAs.add(nta);
+            }
           }
+          ntas = newNTAs;
           return persist;
-        });
+        };
       }
-      return ForNextTurn(true, () async => false);
+      return () async => false;
     }
     return null;
   }

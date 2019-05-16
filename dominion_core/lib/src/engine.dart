@@ -192,8 +192,8 @@ class Player extends Object with CardSource {
     from.remove(card);
     turn.actions -= 1;
     var index = inPlay.receive(card);
-    var forNextTurn = await play(card);
-    if (forNextTurn != null) inPlay.nextTurn[index] = forNextTurn;
+    var nextTurnAction = await play(card);
+    if (nextTurnAction != null) inPlay.actions[index] = nextTurnAction;
     return index;
   }
 
@@ -201,12 +201,12 @@ class Player extends Object with CardSource {
     if (from == null) from = hand;
     from.remove(card);
     var index = inPlay.receive(card);
-    var forNextTurn = await play(card);
-    if (forNextTurn != null) inPlay.nextTurn[index] = forNextTurn;
+    var nextTurnAction = await play(card);
+    if (nextTurnAction != null) inPlay.actions[index] = nextTurnAction;
     return index;
   }
 
-  Future<ForNextTurn> play(Card card) async {
+  Future<NextTurnAction> play(Card card) async {
     turn.playCounts[card] = turn.playCount(card) + 1;
     for (var listener in turn.playListeners) {
       await listener(card);
@@ -384,14 +384,14 @@ class Player extends Object with CardSource {
   Future<Card> trashDraw(CardSource source) async {
     // hooks of some sort
     Card card = source.drawTo(engine.trashPile);
-    notifyAnnounce("You trash", "trashes", "a $card");
+    if (card != null) notifyAnnounce("You trash", "trashes", "a $card");
     return card;
   }
 
   Future<bool> trashFrom(Card card, CardSource source) async {
     // hooks of some sort
     bool result = source.moveTo(card, engine.trashPile);
-    notifyAnnounce("You trash", "trashes", "a $card");
+    if (result) notifyAnnounce("You trash", "trashes", "a $card");
     return result;
   }
 

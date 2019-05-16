@@ -480,30 +480,34 @@ class ThroneRoom extends Card with Action, BaseSet {
   final int cost = 4;
   final String name = "Throne Room";
 
-  Future<ForNextTurn> onPlayCanPersist(Player player) async {
+  Future<NextTurnAction> onPlayCanPersist(Player player) async {
     var card = await player.controller.selectActionCard();
     if (card == null) return null;
     player.turn.actions++; // since playAction will decrement this
     var index = await player.playAction(card);
     player.notifyAnnounce("You play", "plays", "the $card again");
-    var secondFNT = await player.play(card);
+    var secondNTA = await player.play(card);
     if (card is Duration) {
-      var firstFNT = player.inPlay.nextTurn[index];
-      var fnts = [firstFNT, secondFNT];
-      fnts.removeWhere((fnt) => fnt == null);
-      if (fnts.length == 1) {
-        player.inPlay.nextTurn[index] = fnts.first;
+      var firstNTA = player.inPlay.actions[index];
+      var ntas = [firstNTA, secondNTA];
+      ntas.removeWhere((nta) => nta == null);
+      if (ntas.length == 1) {
+        player.inPlay.actions[index] = ntas.first;
       } else {
-        player.inPlay.nextTurn[index] =
-            ForNextTurn(fnts.any((fnt) => fnt.persists), () async {
+        player.inPlay.actions[index] = () async {
           var persist = false;
-          for (var fnt in fnts) {
-            persist = await fnt.action() || persist;
+          var newNTAs = [];
+          for (var nta in ntas) {
+            if (await nta()) {
+              persist = true;
+              newNTAs.add(nta);
+            }
           }
+          ntas = newNTAs;
           return persist;
-        });
+        };
       }
-      return ForNextTurn(true, () async => false);
+      return () async => false;
     }
     return null;
   }
