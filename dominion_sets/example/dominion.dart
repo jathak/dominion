@@ -110,7 +110,7 @@ class CLIController extends PlayerController {
     List<Card> cards = [];
     for (int i = 0; i < player.hand.length; i++) {
       Card c = player.hand[i];
-      if (conditions.allowsFor(c)) {
+      if (conditions.allowsFor(c, player)) {
         cards.add(c);
       }
     }
@@ -136,7 +136,7 @@ class CLIController extends PlayerController {
     print("Select a card$extra.");
     List<Card> cards = [];
     for (Card c in player.engine.supply.cardsInSupply) {
-      if (conditions.allowsFor(c)) {
+      if (conditions.allowsFor(c, player)) {
         cards.add(c);
       }
     }

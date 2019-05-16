@@ -276,7 +276,7 @@ class NetworkController extends PlayerController {
       'max': max,
       'validCards': player.hand
           .asList()
-          .where(conditions.allowsFor)
+          .where((card) => conditions.allowsFor(card, player))
           .map(encodeOption)
           .toList()
     };
@@ -300,7 +300,7 @@ class NetworkController extends PlayerController {
       'currentPlayer': game.engine.currentPlayer.name,
       'allowNone': allowNone,
       'validCards': supplyCards
-          .where(conditions.allowsFor)
+          .where((card) => conditions.allowsFor(card, player))
           .map(game.encodeSupply)
           .toList()
     };

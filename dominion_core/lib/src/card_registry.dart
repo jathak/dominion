@@ -82,7 +82,7 @@ class CardConditions {
         !allowedExpansions.contains(card.expansion)) {
       return false;
     }
-    if (mustBeBuyable && !card.buyable(player)) return false;
+    if (player != null && mustBeBuyable && !card.buyable(player)) return false;
     int cardCost = card.cost;
     if (player != null) cardCost = card.calculateCost(player);
     if (minCost > -1 && cardCost < minCost) return false;

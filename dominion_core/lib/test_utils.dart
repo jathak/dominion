@@ -34,9 +34,9 @@ class TestController extends PlayerController {
     if (cardsFromHand == null)
       cardsFromHand = (player, context, conditions, min, max) async {
         List<Card> cards = [];
-        for (Card c in player.hand.asList()) {
-          if (conditions.allowsFor(c)) {
-            cards.add(c);
+        for (var card in player.hand.asList()) {
+          if (conditions.allowsFor(card, player)) {
+            cards.add(card);
           }
           if (cards.length >= max) break;
         }
@@ -47,8 +47,10 @@ class TestController extends PlayerController {
         if (allowNone) return null;
         Supply supply = player.engine.supply;
         for (Card card in supply.cardsInSupply) {
-          if (supply.supplyOf(card).count > 0 && conditions.allowsFor(card))
+          if (supply.supplyOf(card).count > 0 &&
+              conditions.allowsFor(card, player)) {
             return card;
+          }
         }
       };
     if (confirm == null) confirm = (player, context, question) async => false;
