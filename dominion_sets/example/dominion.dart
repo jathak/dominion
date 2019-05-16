@@ -157,7 +157,7 @@ class CLIController extends PlayerController {
   }
 
   /// like selectCardsFromHand but for any list of cards
-  Future<List<Card>> selectCardsFrom(
+  Future<List<Card>> selectCardsFromListImpl(
       List<Card> cards, String question, int min, int max) async {
     print(question);
     if (max == -1) max = cards.length;

@@ -7,7 +7,7 @@ import 'package:test/test.dart';
 import 'dart:async';
 
 expectBufferHasCards(CardBuffer buffer, List<Card> cards) {
-  expect(buffer.asList(), equals(cards));
+  expect(buffer.toList(), equals(cards));
 }
 
 CardBuffer makeBuffer(List<Card> cards) {
@@ -34,7 +34,7 @@ class TestController extends PlayerController {
     if (cardsFromHand == null)
       cardsFromHand = (player, context, conditions, min, max) async {
         List<Card> cards = [];
-        for (var card in player.hand.asList()) {
+        for (var card in player.hand.toList()) {
           if (conditions.allowsFor(card, player)) {
             cards.add(card);
           }
@@ -61,7 +61,7 @@ class TestController extends PlayerController {
           (player, cards, question, min, max) async => cards.sublist(0, min);
     if (actionCard == null)
       actionCard = (player) async {
-        for (Card c in player.hand.asList()) {
+        for (Card c in player.hand.toList()) {
           if (c is Action) return c;
         }
         return null;
@@ -69,7 +69,7 @@ class TestController extends PlayerController {
     if (treasureCards == null)
       treasureCards = (player) async {
         List<Treasure> cards = [];
-        for (Card c in player.hand.asList()) {
+        for (Card c in player.hand.toList()) {
           if (c is Treasure) {
             cards.add(c);
           }
@@ -122,7 +122,7 @@ class TestController extends PlayerController {
     return ask(player, context, question, options);
   }
 
-  Future<List<Card>> selectCardsFrom(
+  Future<List<Card>> selectCardsFromListImpl(
       List<Card> cards, String question, int min, int max) {
     return cardsFrom(player, cards, question, min, max);
   }

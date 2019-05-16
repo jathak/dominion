@@ -33,8 +33,8 @@ class CardRegistry {
       if (card.expansion != null) {
         if (conditions.allowedExpansions.length == 0 ||
             conditions.allowedExpansions.contains(card.expansion)) {
-          if (conditions.maxSetsUsed < 1 ||
-              expansSoFar.length < conditions.maxSetsUsed ||
+          if (conditions.maxExpansionsUsed < 1 ||
+              expansSoFar.length < conditions.maxExpansionsUsed ||
               expansSoFar.contains(card.expansion)) {
             expansSoFar.add(card.expansion);
             yield card;
@@ -48,69 +48,88 @@ class CardRegistry {
 }
 
 class CardConditions {
-  /// use empty list for any registered sets
-  List<String> allowedExpansions = [];
+  /// List of expansions allowed by these conditions, or null if all expansions
+  /// are allowed.
+  List<String> allowedExpansions;
 
-  /// set to less than 1 for any number of sets (within allowedSets)
-  int maxSetsUsed = -1;
+  /// Maximum number of expansions cards may come from (for kingdom selection).
+  /// If null, no maximum.
+  int maxExpansionsUsed;
 
-  int minCost = -1;
+  /// Minimum card cost (if null, no minimum)
+  int minCost;
 
-  int maxCost = -1;
+  /// Maximum card cost (if null, no maximum);
+  int maxCost;
 
+  /// Whether `card.buyable` must return true for the given player.
   bool mustBeBuyable = false;
 
-  /// sets both minCost and maxCost
+  /// Sets both minCost and maxCost
   set cost(int c) {
     minCost = c;
     maxCost = c;
   }
 
-  /// selected cards must have at least one
-  /// of the following types (unless list is empty)
-  List<CardType> requiredTypes = [];
+  /// Types that cards are required to have at least one of (or null if no
+  /// types are required).
+  List<CardType> requiredTypes;
 
-  /// selected cards must not have any of the
-  /// following types
+  /// Types that exclude a card from these conditions
   List<CardType> invalidTypes = [];
 
+  /// Cards that are explicitly disallowed by these conditions.
   List<Card> bannedCards = [];
 
-  /// returns true if conditions allow for this card
-  bool allowsFor(Card card, [Player player]) {
-    if (allowedExpansions.length > 0 &&
+  /// If set, only cards within this list are allowed.
+  List<Card> requiredCards;
+
+  /// Returns true if conditions allow for this card
+  bool allowsFor(Card card, Player player) {
+    if (requiredCards != null && !requiredCards.contains(card.expansion)) {
+      return false;
+    }
+    if (bannedCards.contains(card)) return false;
+    if (allowedExpansions != null &&
         !allowedExpansions.contains(card.expansion)) {
       return false;
+    }
+    for (var type in invalidTypes) {
+      if (_cardHasType(card, type)) return false;
+    }
+    if (requiredTypes != null) {
+      bool meetsRequirement = false;
+      for (var type in requiredTypes) {
+        if (_cardHasType(card, type)) meetsRequirement = true;
+      }
+      if (!meetsRequirement) return false;
     }
     if (player != null && mustBeBuyable && !card.buyable(player)) return false;
     int cardCost = card.cost;
     if (player != null) cardCost = card.calculateCost(player);
-    if (minCost > -1 && cardCost < minCost) return false;
-    if (maxCost > -1 && cardCost > maxCost) return false;
-    bool meetsReq = requiredTypes.length == 0;
-    if (card is Action) {
-      if (invalidTypes.contains(CardType.Action)) return false;
-      if (requiredTypes.contains(CardType.Action)) meetsReq = true;
-    } else if (card is Treasure) {
-      if (invalidTypes.contains(CardType.Treasure)) return false;
-      if (requiredTypes.contains(CardType.Treasure)) meetsReq = true;
-    } else if (card is Victory) {
-      if (invalidTypes.contains(CardType.Victory)) return false;
-      if (requiredTypes.contains(CardType.Victory)) meetsReq = true;
-    } else if (card is Curse) {
-      if (invalidTypes.contains(CardType.Curse)) return false;
-      if (requiredTypes.contains(CardType.Curse)) meetsReq = true;
-    } else if (card is Duration) {
-      if (invalidTypes.contains(CardType.Duration)) return false;
-      if (requiredTypes.contains(CardType.Duration)) meetsReq = true;
-    } else if (card is Attack) {
-      if (invalidTypes.contains(CardType.Attack)) return false;
-      if (requiredTypes.contains(CardType.Attack)) meetsReq = true;
-    } else if (card is Reaction) {
-      if (invalidTypes.contains(CardType.Reaction)) return false;
-      if (requiredTypes.contains(CardType.Reaction)) meetsReq = true;
+    if (minCost != null && cardCost < minCost) return false;
+    if (maxCost != null && cardCost > maxCost) return false;
+    return true;
+  }
+
+  static bool _cardHasType(Card card, CardType type) {
+    switch (type) {
+      case CardType.Action:
+        return card is Action;
+      case CardType.Treasure:
+        return card is Treasure;
+      case CardType.Victory:
+        return card is Victory;
+      case CardType.Curse:
+        return card is Curse;
+      case CardType.Duration:
+        return card is Duration;
+      case CardType.Attack:
+        return card is Attack;
+      case CardType.Reaction:
+        return card is Reaction;
     }
-    return meetsReq && !bannedCards.contains(card);
+    return false;
   }
 }
 

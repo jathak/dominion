@@ -28,7 +28,8 @@ class Loan extends Card with Treasure, Prosperity {
     }
     if (card != null) {
       var choice = await player.controller.askQuestion(
-          this, "Discard or trash your $card?", ["Discard it", "Trash it"]);
+          "Discard or trash your $card?", ["Discard it", "Trash it"],
+          context: this);
       if (choice == "Discard it") {
         await player.discardFrom(buffer, card);
       } else {
@@ -79,7 +80,9 @@ class Watchtower extends Card with Action, GainReaction, Prosperity {
   Future<CardSource> onReactToGain(
       Player player, Card card, CardSource location, bool bought) async {
     var response = await player.controller.askQuestion(
-        card, "Trash or put on top of deck?", ["Trash", "Put on top of deck"]);
+        "Trash this $card or put on top of deck?",
+        ["Trash", "Put on top of deck"],
+        context: this);
     if (response == "Trash") {
       await player.trashFrom(card, location);
       return player.engine.trashPile;
@@ -104,16 +107,16 @@ class Bishop extends Card with Action, Prosperity {
     player.turn.coins++;
     player.vpTokens++;
     if (player.hand.length > 0) {
-      var card = (await player.controller
-              .selectCardsFromHand(this, CardConditions(), 1, 1))
-          .first;
+      var card = await player.controller
+          .selectCardFromHand("Select card to trash", context: this);
       await player.trashFrom(card, player.hand);
       player.vpTokens += card.calculateCost(player) ~/ 2;
     }
     for (var opponent in player.engine.playersAfter(player)) {
-      var card = (await opponent.controller
-              .selectCardsFromHand(this, CardConditions(), 1, 1))
-          .first;
+      var card = await opponent.controller.selectCardFromHand(
+          "Select card to trash?",
+          context: this,
+          optional: true);
       await opponent.trashFrom(card, opponent.hand);
     }
   }
@@ -222,7 +225,10 @@ class Contraband extends Card with Treasure, Prosperity {
     var banned = await player.engine
         .toLeftOf(player)
         .controller
-        .selectCardFromSupply(EventType.Contraband, CardConditions(), false);
+        .selectCardFromSupply(
+            "Select card that ${player.name} can't buy this turn",
+            EventType.Contraband,
+            context: this);
     player.turn.buyConditions.bannedCards.add(banned);
   }
 }
@@ -237,7 +243,7 @@ class CountingHouse extends Card with Action, Prosperity {
 
   onPlay(Player player) async {
     int coppers =
-        player.discarded.asList().where((card) => card is Copper).length;
+        player.discarded.toList().where((card) => card is Copper).length;
     for (var i = 0; i < coppers; i++) {
       player.discarded.moveTo(Copper.instance, player.hand);
     }
@@ -256,16 +262,18 @@ class Mint extends Card with Action, Prosperity {
   final String name = "Mint";
 
   onPlay(Player player) async {
-    var cards = await player.controller.selectCardsFromHand(
-        this, CardConditions()..requiredTypes = [CardType.Treasure], 0, 1);
-    if (cards.isNotEmpty) {
-      await player.gain(cards.first);
-    }
+    var card = await player.controller.selectCardFrom(
+        player.hand.whereType<Treasure>(),
+        "Reveal a treasure to gain a copy of it",
+        context: this,
+        optional: true);
+    if (card == null) return;
+    await player.gain(card);
   }
 
   onGain(Player player, bool bought) async {
     if (bought) {
-      for (var card in player.inPlay.asList()) {
+      for (var card in player.inPlay.toList()) {
         if (card is Treasure) {
           await player.trashFrom(card, player.inPlay);
         }
@@ -286,7 +294,8 @@ class Mountebank extends Card with Action, Attack, Prosperity {
     player.turn.coins += 2;
     await for (var opponent in player.engine.attackablePlayers(player, this)) {
       bool discardCurse = opponent.hand.contains(Curse.instance) &&
-          await opponent.controller.confirmAction(this, "Discard a curse?");
+          await opponent.controller
+              .confirmAction("Discard a curse?", context: this);
       if (discardCurse) {
         await opponent.discard(Curse.instance);
       } else {
@@ -313,7 +322,7 @@ class Rabble extends Card with Action, Attack, Prosperity {
       opponent.drawTo(buffer);
       opponent.drawTo(buffer);
       opponent.notifyAnnounce("You reveal", "reveals", "$buffer");
-      for (var card in buffer.asList()) {
+      for (var card in buffer.toList()) {
         if (card is Action || card is Treasure) {
           await opponent.discardFrom(buffer);
         }
@@ -323,10 +332,8 @@ class Rabble extends Card with Action, Attack, Prosperity {
         return;
       }
       var order = await player.controller.selectCardsFrom(
-          buffer.asList(),
-          "Rabble: Select order to put back on deck",
-          buffer.length,
-          buffer.length);
+          buffer.toList(), "Select order to put back on deck",
+          context: this, min: buffer.length, max: buffer.length);
       for (var card in order) {
         buffer.moveTo(card, opponent.deck.top);
       }
@@ -347,7 +354,7 @@ class RoyalSeal extends Card with Treasure, GainListener, Prosperity {
   Future<CardSource> onGainCardWhileInPlay(
       Player player, Card card, CardSource location, bool bought) async {
     if (await player.controller
-        .confirmAction(card, "Put on top of your deck?")) {
+        .confirmAction("Put this $card on top of your deck?", context: card)) {
       player.notifyAnnounce("You put the $card on top of your",
           "puts the $card on top of their", "deck");
       location.moveTo(card, player.deck.top);
@@ -367,23 +374,16 @@ class Vault extends Card with Action, Prosperity {
 
   onPlay(Player player) async {
     player.draw(2);
-    var discarding = await player.controller
-        .selectCardsFromHand(this, CardConditions(), 0, player.hand.length);
-    for (var card in discarding) {
-      await player.discard(card);
-      player.turn.coins++;
-    }
+    var discarded = await player.discardFromHand(context: this);
+    player.turn.coins += discarded.length;
     for (var opponent in player.engine.playersAfter(player)) {
       if (opponent.hand.length < 2 ||
-          !(await opponent.controller
-              .confirmAction(this, "Discard two cards to draw one?"))) {
+          !(await opponent.controller.confirmAction(
+              "Discard two cards to draw one?",
+              context: this))) {
         continue;
       }
-      var discarding = await opponent.controller
-          .selectCardsFromHand(this, CardConditions(), 2, 2);
-      for (var card in discarding) {
-        await opponent.discard(card);
-      }
+      await opponent.discardFromHand(context: this, min: 2, max: 2);
       opponent.draw();
     }
   }
@@ -426,13 +426,9 @@ class Goons extends Card with Action, Attack, GainListener, Prosperity {
   onPlay(Player player) async {
     player.turn.buys++;
     player.turn.coins += 2;
-    await for (var p in player.engine.attackablePlayers(player, this)) {
-      var x = p.hand.length - 3;
-      var cards =
-          await p.controller.selectCardsFromHand(this, CardConditions(), x, x);
-      for (var c in cards) {
-        await p.discard(c);
-      }
+    await for (var opponent in player.engine.attackablePlayers(player, this)) {
+      var x = opponent.hand.length - 3;
+      await opponent.discardFromHand(context: this, min: x, max: x);
     }
   }
 
@@ -491,7 +487,7 @@ class Bank extends Card with Treasure, Prosperity {
   final String name = "Bank";
 
   int getTreasureValue(Player player) =>
-      player.inPlay.asList().where((card) => card is Treasure).length;
+      player.inPlay.toList().where((card) => card is Treasure).length;
 }
 
 @card
@@ -503,13 +499,14 @@ class Expand extends Card with Action, Prosperity {
   final String name = "Expand";
 
   onPlay(Player player) async {
-    var cards = await player.controller
-        .selectCardsFromHand(this, CardConditions(), 1, 1);
-    if (cards.length != 1) return;
-    await player.trashFrom(cards[0], player.hand);
+    var trash = await player.controller
+        .selectCardFromHand("Select card to trash", context: this);
+    if (trash == null) return;
+    await player.trashFrom(trash, player.hand);
     var card = await player.selectCardToGain(
+        context: this,
         conditions: CardConditions()
-          ..maxCost = cards.first.calculateCost(player) + 3);
+          ..maxCost = trash.calculateCost(player) + 3);
     await player.gain(card);
   }
 }
@@ -524,14 +521,14 @@ class Forge extends Card with Action, Prosperity {
 
   onPlay(Player player) async {
     var cards = await player.controller
-        .selectCardsFromHand(this, CardConditions(), 0, player.hand.length);
+        .selectCardsFromHand("Select cards to trash", context: this);
     var cost = 0;
     for (var card in cards) {
       cost += card.calculateCost(player);
       await player.trashFrom(card, player.hand);
     }
     var card = await player.selectCardToGain(
-        conditions: CardConditions()..cost = cost);
+        context: this, conditions: CardConditions()..cost = cost);
     await player.gain(card);
   }
 }
@@ -591,7 +588,7 @@ class Peddler extends Card with Action, Prosperity {
     var calcCost = super.calculateCost(player);
     if (player.turn?.phase != Phase.Buy) return calcCost;
     calcCost -=
-        2 * player.inPlay.asList().where((card) => card is Action).length;
+        2 * player.inPlay.toList().where((card) => card is Action).length;
     return calcCost < 0 ? 0 : calcCost;
   }
 

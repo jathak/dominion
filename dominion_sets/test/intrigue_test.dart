@@ -30,7 +30,7 @@ main() {
 
 nonInteractionTests() {
   test("Great Hall", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(GreatHall.instance);
     cards.add(playerA.deck[0]);
     await playerA.playAction(GreatHall.instance);
@@ -42,7 +42,7 @@ nonInteractionTests() {
     expect(GreatHall.instance.getVictoryPoints(playerA), 1);
   });
   test("Shanty Town - No Actions", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(ShantyTown.instance);
     cards.add(playerA.deck[0]);
     cards.add(playerA.deck[1]);
@@ -55,7 +55,7 @@ nonInteractionTests() {
   });
   test("Shanty Town - Has Actions", () async {
     playerA.hand.receive(Courtyard.instance);
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(ShantyTown.instance);
     await playerA.playAction(ShantyTown.instance);
     expectBufferHasCards(playerA.hand, cards);
@@ -65,7 +65,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Bridge", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Bridge.instance);
     await playerA.playAction(Bridge.instance);
     expectBufferHasCards(playerA.hand, cards);
@@ -79,7 +79,7 @@ nonInteractionTests() {
   });
   test("Bridge - Stacked", () async {
     playerA.turn.actions = 2;
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Bridge.instance);
     playerA.hand.receive(Bridge.instance);
     await playerA.playAction(Bridge.instance);
@@ -94,7 +94,7 @@ nonInteractionTests() {
     }
   });
   test("Conspirator", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Conspirator.instance);
     await playerA.playAction(Conspirator.instance);
     expectBufferHasCards(playerA.hand, cards);
@@ -105,7 +105,7 @@ nonInteractionTests() {
   });
   test("Conspirator - 3 times", () async {
     playerA.turn.actions = 3;
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Conspirator.instance);
     playerA.hand.receive(Conspirator.instance);
     playerA.hand.receive(Conspirator.instance);
@@ -163,7 +163,7 @@ nonInteractionTests() {
   });
   test("Harem", () async {
     playerA.turn.phase = Phase.Buy;
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Harem.instance);
     await playerA.playTreasure(Harem.instance);
     expectBufferHasCards(playerA.hand, cards);

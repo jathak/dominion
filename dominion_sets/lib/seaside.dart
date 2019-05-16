@@ -19,8 +19,9 @@ class Embargo extends Card with Action, Seaside {
   onPlay(Player player) async {
     player.turn.coins += 2;
     await player.trashFrom(this, player.inPlay);
-    var card = await player.controller
-        .selectCardFromSupply(EventType.Embargo, CardConditions(), false);
+    var card = await player.controller.selectCardFromSupply(
+        "Select supply pile to embargo", EventType.Embargo,
+        context: this);
     player.engine.supply.supplyOf(card).embargoTokens++;
     player.notifyAnnounce("You place", "places", "an embargo token on $card");
   }
@@ -38,9 +39,8 @@ class Haven extends Card with Action, Duration, Seaside {
     player.draw();
     player.turn.actions++;
     if (player.hand.length == 0) return null;
-    var card = (await player.controller
-            .selectCardsFromHand(this, CardConditions(), 1, 1))
-        .first;
+    var card = await player.controller
+        .selectCardFromHand("Select card to place under Haven", context: this);
     var stored = CardBuffer();
     player.hand.moveTo(card, stored);
     player.notifyAnnounce(
@@ -89,11 +89,11 @@ class NativeVillage extends Card with Action, Seaside {
       "Put all cards from mat in hand"
     ];
     var response = await player.controller
-        .askQuestion(this, "What do you want to do?", options);
+        .askQuestion("What do you want to do?", options, context: this);
     var mat = player.mats[this].buffer;
     if (response == options.first) {
       player.drawTo(mat);
-      player.notifyAnnounce("You place a ${mat.asList().last} on your ",
+      player.notifyAnnounce("You place a ${mat.toList().last} on your ",
           "places a card on their", "Native Village mat");
     } else {
       player.notifyAnnounce(
@@ -122,7 +122,8 @@ class PearlDiver extends Card with Action, Seaside {
     }
     var card = player.deck[player.deck.length - 1];
     if (await player.controller.confirmAction(
-        this, "Move a $card from the bottom of your deck to the top?")) {
+        "Move a $card from the bottom of your deck to the top?",
+        context: this)) {
       player.deck.bottom.drawTo(player.deck.top);
       player.notifyAnnounce(
           "You move a $card", "moves a card", "to top of deck");
@@ -139,12 +140,12 @@ class Ambassador extends Card with Action, Attack, Seaside {
   final String name = "Ambassador";
 
   onPlay(Player player) async {
-    var card = (await player.controller
-            .selectCardsFromHand(this, CardConditions(), 1, 1))
-        .first;
-    var returnable = player.hand.asList().where((item) => item == card);
+    var card = await player.controller
+        .selectCardFromHand("Select card to return", context: this);
+    var returnable = player.hand.toList().where((item) => item == card);
     var toReturn = await player.controller.selectCardsFrom(
-        returnable, "Ambassador: Select cards to return", 0, 2);
+        returnable, "Select cards to return",
+        context: this, max: 2);
     for (var card in toReturn) {
       player.hand.moveTo(card, player.engine.supply.supplyOf(card));
     }
@@ -189,13 +190,13 @@ class Lookout extends Card with Action, Seaside {
     player.drawTo(buffer);
     player.drawTo(buffer);
     player.drawTo(buffer);
-    var toTrash = (await player.controller.selectCardsFrom(
-            buffer.asList(), "Lookout: Select a card to trash", 1, 1))
-        .first;
+    var toTrash = await player.controller.selectCardFrom(
+        buffer.toList(), "Select a card to trash",
+        context: this);
     await player.trashFrom(toTrash, buffer);
-    var toDiscard = (await player.controller.selectCardsFrom(
-            buffer.asList(), "Lookout: Select a card to discard", 1, 1))
-        .first;
+    var toDiscard = await player.controller.selectCardFrom(
+        buffer.toList(), "Select a card to discard",
+        context: this);
     await player.discardFrom(buffer, toDiscard);
     buffer.drawTo(player.deck.top);
     player.notify("You return $card to the top of your deck");
@@ -211,16 +212,20 @@ class Smugglers extends Card with Action, Seaside {
   final String name = "Smugglers";
 
   onPlay(Player player) async {
-    var options = player.engine.toRightOf(player).lastTurn.gained.where(
-        (card) =>
+    var options = player.engine
+        .toRightOf(player)
+        .lastTurn
+        .gained
+        .where((card) =>
             player.engine.supply.supplyOf(card).count > 0 &&
-            card.calculateCost(player) <= 6);
+            card.calculateCost(player) <= 6)
+        .toList();
     if (options.isEmpty) return;
     var card = options.length == 1
         ? options.first
-        : (await player.controller.selectCardsFrom(options.toList(),
-                "Smugglers: Which card do you want to gain?", 1, 1))
-            .first;
+        : await player.controller.selectCardsFrom(
+            options, "Which card do you want to gain?",
+            context: this);
     await player.gain(card);
   }
 }
@@ -236,11 +241,7 @@ class Warehouse extends Card with Action, Seaside {
   onPlay(Player player) async {
     player.draw(3);
     player.turn.actions++;
-    var toDiscard = await player.controller
-        .selectCardsFromHand(this, CardConditions(), 3, 3);
-    for (var card in toDiscard) {
-      await player.discard(card);
-    }
+    await player.discardFromHand(context: this, min: 3, max: 3);
   }
 }
 
@@ -297,9 +298,8 @@ class Island extends Card with Action, Victory, Seaside {
     player.mats.putIfAbsent(this, () => Mat("Island"));
     var card = player.hand.length == 0
         ? null
-        : (await player.controller
-                .selectCardsFromHand(this, CardConditions(), 1, 1))
-            .first;
+        : await player.controller
+            .selectCardFromHand("Select a card to set aside", context: this);
     var island = player.mats[this].buffer;
     player.discarded.moveTo(this, island);
     if (card != null) {
@@ -326,18 +326,17 @@ class Navigator extends Card with Action, Seaside {
     }
     player.notify("You look at $buffer");
     var response = await player.controller.askQuestion(
-        this, "You draw $buffer", ["Discard them", "Put them back"]);
+        "You draw $buffer", ["Discard them", "Put them back"],
+        context: this);
     if (response == "Discard them") {
       for (var i = 0; i < 5; i++) {
         await player.discardFrom(buffer);
       }
       return;
     }
-    var order = await player.controller.selectCardsFrom(
-        buffer.asList(),
-        "Navigator: In what order should these cards be returned to your deck?",
-        buffer.length,
-        buffer.length);
+    var order = await player.controller.selectCardsFrom(buffer.toList(),
+        "In what order should these cards be returned to your deck?",
+        context: this, min: buffer.length, max: buffer.length);
     for (var card in order) {
       buffer.moveTo(card, player.deck.top);
     }
@@ -357,8 +356,9 @@ class PirateShip extends Card with Action, Attack, Seaside {
     var attackable =
         await player.engine.attackablePlayers(player, this).toList();
     var mat = player.mats[this] as PirateShipMat;
-    var response = await player.controller.askQuestion(this,
-        "Take +${mat.coinTokens} coins or attack?", ["Take Money", "Attack"]);
+    var response = await player.controller.askQuestion(
+        "Take +${mat.coinTokens} coins or attack?", ["Take Money", "Attack"],
+        context: this);
     if (response == "Take Money") {
       player.turn.coins += mat.coinTokens;
       return;
@@ -368,7 +368,7 @@ class PirateShip extends Card with Action, Attack, Seaside {
       var buffer = CardBuffer();
       opponent.drawTo(buffer);
       opponent.drawTo(buffer);
-      var treasure = buffer.asList().where((card) => card is Treasure).toList();
+      var treasure = buffer.whereType<Treasure>();
       if (treasure.length == 0) {
         await opponent.discardFrom(buffer);
         await opponent.discardFrom(buffer);
@@ -377,12 +377,9 @@ class PirateShip extends Card with Action, Attack, Seaside {
         await opponent.discardFrom(buffer);
         trashedTreasure = true;
       } else {
-        var trashing = (await player.controller.selectCardsFrom(
-                treasure,
-                "Pirate Ship: Which of ${opponent.name}'s treasures to trash?",
-                1,
-                1))
-            .first;
+        var trashing = await player.controller.selectCardFrom(
+            treasure, "Which of ${opponent.name}'s treasures to trash?",
+            context: this);
         await opponent.trashFrom(trashing, buffer);
         await opponent.discardFrom(buffer);
         trashedTreasure = true;
@@ -409,9 +406,8 @@ class Salvager extends Card with Action, Seaside {
   onPlay(Player player) async {
     player.turn.buys++;
     if (player.hand.length == 0) return;
-    var card = (await player.controller
-            .selectCardsFromHand(this, CardConditions(), 1, 1))
-        .first;
+    var card = await player.controller
+        .selectCardFromHand("Select card to trash", context: this);
     await player.trashFrom(card, player.hand);
     player.turn.coins += card.calculateCost(player);
   }
@@ -478,7 +474,7 @@ class Explorer extends Card with Action, Seaside {
   onPlay(Player player) async {
     bool revealProvince = player.hand.contains(Province.instance) &&
         await player.controller
-            .confirmAction(this, "Reveal a Province from your hand?");
+            .confirmAction("Reveal a Province from your hand?", context: this);
     Card gaining = Silver.instance;
     if (revealProvince) {
       player.notifyAnnounce("You reveal", "reveals", "a Province");
@@ -500,14 +496,18 @@ class GhostShip extends Card with Action, Attack, Seaside {
     player.draw(2);
     await for (var opponent in player.engine.attackablePlayers(player, this)) {
       if (opponent.hand.length < 4) continue;
-      var returning = opponent.hand.length - 3;
-      var order = await opponent.controller
-          .selectCardsFromHand(this, CardConditions(), returning, returning);
+      var x = opponent.hand.length - 3;
+      var order = await opponent.controller.selectCardsFromHand(
+          "Select cards to put on top of your deck",
+          context: this,
+          event: EventType.Attack,
+          min: x,
+          max: x);
       for (var card in order) {
         player.notify("You place a $card back on your deck");
         opponent.hand.moveTo(card, opponent.deck.top);
       }
-      player.announce("places $returning cards back on their deck");
+      player.announce("places $x cards back on their deck");
     }
   }
 }
@@ -586,7 +586,7 @@ class Treasury extends Card with Action, Seaside {
   onDiscard(Player player, {bool cleanup = false, List<Card> cleanedUp}) async {
     if (cleanup && !player.turn.bought.any((card) => card is Victory)) {
       if (await player.controller
-          .confirmAction(this, "Put Treasury onto your deck?")) {
+          .confirmAction("Put Treasury onto your deck?", context: this)) {
         player.discarded.moveTo(this, player.deck.top);
       }
     }

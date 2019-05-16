@@ -3,31 +3,115 @@ part of dominion_core;
 abstract class PlayerController {
   Player player;
 
-  /// returns an ordered list of cards
-  /// selected from those meeting conditions
-  /// If max is < 0, there is no maximum
-  Future<List<Card>> selectCardsFromHand(
-      Card context, CardConditions conditions, int min, int max);
-
-  /// returns a card meeting conditions or null to select no card if allowNone is true
-  Future<Card> selectCardFromSupply(
-      EventType event, CardConditions conditions, bool allowNone);
-
   /// returns true to complete action, false to not
-  Future<bool> confirmAction(Card context, String question);
+  Future<bool> confirmAction(String question,
+          {@required Card context, EventType event}) async =>
+      (await askQuestion(question, ["Yes", "No"], context: context)) == "Yes";
 
   /// returns option from options
-  Future askQuestion(Card context, String question, List options);
+  Future<String> askQuestion(String question, List<String> options,
+      {@required Card context, EventType event});
 
-  /// like selectCardsFromHand but for any list of cards
-  Future<List<Card>> selectCardsFrom(
-      List<Card> cards, String question, int min, int max);
+  /// Prompts the user to select some cards.
+  Future<List<T>> selectCardsFrom<T extends Card>(List<T> cards, String prompt,
+      {@required Card context, EventType event, int min: 0, int max});
+
+  /// Prompts the user to select some cards from [buffer].
+  Future<List<Card>> selectCardsFromBuffer(CardBuffer buffer, String prompt,
+          {@required Card context,
+          CardConditions conditions,
+          EventType event,
+          int min: 0,
+          int max}) =>
+      conditions == null
+          ? selectCardsFrom(buffer.toList(), prompt,
+              context: context, event: event, min: min, max: max)
+          : selectCardsFrom(
+              buffer
+                  .toList()
+                  .where((card) => conditions.allowsFor(card, player))
+                  .toList(),
+              prompt,
+              context: context,
+              event: event,
+              min: min,
+              max: max);
+
+  /// Prompts the user to select a card from a list.
+  Future<T> selectCardFrom<T extends Card>(List<T> cards, String prompt,
+          {@required Card context,
+          EventType event,
+          bool optional: false}) async =>
+      optional
+          ? firstOrNone(await selectCardsFrom(cards, prompt,
+              context: context, event: event, max: 1))
+          : (await selectCardsFrom(cards, prompt,
+                  context: context, event: event, min: 1, max: 1))
+              .first;
+
+  /// Prompts the user to select a card from a buffer.
+  Future<Card> selectCardFromBuffer(CardBuffer buffer, String prompt,
+          {@required Card context,
+          CardConditions conditions,
+          EventType event,
+          bool optional: false}) async =>
+      optional
+          ? firstOrNone(await selectCardsFromBuffer(buffer, prompt,
+              context: context, conditions: conditions, event: event, max: 1))
+          : (await selectCardsFromBuffer(buffer, prompt,
+                  context: context,
+                  conditions: conditions,
+                  event: event,
+                  min: 1,
+                  max: 1))
+              .first;
+
+  Future<List<Card>> selectCardsFromHand(String prompt,
+          {@required Card context,
+          CardConditions conditions,
+          EventType event,
+          int min: 0,
+          int max}) =>
+      selectCardsFromBuffer(player.hand, prompt,
+          conditions: conditions,
+          context: context,
+          event: event,
+          min: min,
+          max: max);
+
+  Future<Card> selectCardFromHand(String prompt,
+          {@required Card context,
+          CardConditions conditions,
+          EventType event,
+          bool optional: false}) =>
+      selectCardFromBuffer(player.hand, prompt,
+          context: context,
+          conditions: conditions,
+          event: event,
+          optional: optional);
+
+  /// Context may be null when buying a card during the buy phase.
+  Future<Card> selectCardFromSupply(String prompt, EventType event,
+          {@required Card context, CardConditions conditions, bool optional}) =>
+      selectCardFrom(
+          player.engine.supply.cardsInSupply
+              .where((card) => conditions.allowsFor(card, player))
+              .toList(),
+          prompt,
+          context: context,
+          event: event,
+          optional: optional);
 
   /// returns an ActionCard or null to prematurely end action phase
-  Future<Action> selectActionCard();
+  Future<Action> selectActionCard() => selectCardFrom(
+      player.hand.whereType<Action>(), "Select an Action card to play",
+      context: null, optional: true);
 
   /// returns a list of TreasureCards or an empty list to stop playing treasures
-  Future<List<Treasure>> selectTreasureCards();
+  Future<List<Treasure>> selectTreasureCards({int min: 0, int max}) =>
+      selectCardsFrom(player.hand.whereType<Treasure>(),
+          "Select Treasure cards to play in order",
+          context: null, min: min, max: max);
 
   /// player's name
   String name;
@@ -37,6 +121,8 @@ abstract class PlayerController {
   /// override this to reset state when game is reset (called after player is changed)
   reset() => null;
 }
+
+T firstOrNone<T>(List<T> list) => list.isEmpty ? null : list.first;
 
 class Turn {
   /// The number of actions remaining for this turn.
@@ -166,7 +252,8 @@ enum EventType {
   GainForOpponent,
   TrashCard,
   Embargo,
-  Contraband
+  Contraband,
+  Reaction
 }
 
 class Mat {

@@ -88,7 +88,9 @@ class CardBuffer extends CardSourceAndTarget {
 
   String toString() => _cards.toString();
 
-  List<Card> asList() => []..addAll(_cards);
+  List<Card> toList() => _cards.toList();
+
+  List<T> whereType<T extends Card>() => _cards.whereType<T>().toList();
 }
 
 class Deck extends CardBuffer {

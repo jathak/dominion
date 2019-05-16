@@ -20,11 +20,7 @@ class Cellar extends Card with Action, BaseSet {
 
   onPlay(Player player) async {
     player.turn.actions += 1;
-    List<Card> cards = await player.controller
-        .selectCardsFromHand(this, CardConditions(), 0, -1);
-    for (Card c in cards) {
-      await player.discard(c);
-    }
+    var cards = await player.discardFromHand(context: this);
     player.draw(cards.length);
   }
 }
@@ -38,9 +34,9 @@ class Chapel extends Card with Action, BaseSet {
   final String name = "Chapel";
 
   onPlay(Player player) async {
-    List<Card> cards = await player.controller
-        .selectCardsFromHand(this, CardConditions(), 0, 4);
-    for (Card c in cards) {
+    var cards = await player.controller
+        .selectCardsFromHand("Select cards to trash", context: this, max: 4);
+    for (var c in cards) {
       await player.trashFrom(c, player.hand);
     }
   }
@@ -77,9 +73,8 @@ class Chancellor extends Card with Action, BaseSet {
 
   onPlay(Player player) async {
     player.turn.coins += 2;
-    bool discardDeck = await player.controller
-        .confirmAction(this, "Chancellor: Place deck in discard pile?");
-    if (discardDeck) {
+    if (await player.controller
+        .confirmAction("Place deck in discard pile?", context: this)) {
       player.deck.dumpTo(player.discarded);
       player.notifyAnnounce("Your discard your", "discards their", "deck");
     }
@@ -99,16 +94,12 @@ class Harbinger extends Card with Action, BaseSet {
   onPlay(Player player) async {
     player.draw();
     player.turn.actions++;
-    var discards = player.discarded.asList().toSet().toList();
-    var cards = await player.controller.selectCardsFrom(
-        discards,
-        "Harbinger: Select a card from your discard "
-        "pile to place on top of your deck?",
-        0,
-        1);
-    if (cards.length == 1) {
-      player.discarded.moveTo(cards.first, player.deck.top);
-    }
+    var card = await player.controller.selectCardFromBuffer(player.discarded,
+        "Select a card from your discard pile to place on top of your deck?",
+        context: this, optional: true);
+    if (card == null) return;
+    player.notify("You place a $card on top of your deck");
+    player.discarded.moveTo(card, player.deck.top);
   }
 }
 
@@ -145,12 +136,15 @@ class Vassal extends Card with Action, BaseSet {
 
   onPlay(Player player) async {
     player.turn.coins += 2;
-    var card = player.deck[0];
-    await player.discardFrom(player.deck);
+    var buffer = CardBuffer();
+    var card = player.drawTo(buffer);
     if (card is Action &&
-        await player.controller.confirmAction(card, "Play this card?")) {
+        await player.controller
+            .confirmAction("Play this $card?", context: this)) {
       player.turn.actions++; // since playAction will use one
-      await player.playAction(card, from: player.discarded);
+      await player.playAction(card, from: buffer);
+    } else {
+      await player.discardFrom(player.deck);
     }
   }
 }
@@ -196,7 +190,7 @@ class Workshop extends Card with Action, BaseSet {
   onPlay(Player player) async {
     CardConditions conds = CardConditions();
     conds.maxCost = 4;
-    Card card = await player.selectCardToGain(conditions: conds);
+    Card card = await player.selectCardToGain(context: this, conditions: conds);
     await player.gain(card);
   }
 }
@@ -211,23 +205,20 @@ class Bureaucrat extends Card with Action, BaseSet, Attack {
 
   onPlay(Player player) async {
     await player.gain(Silver.instance, to: player.deck.top);
-    await for (Player p in player.engine.attackablePlayers(player, this)) {
-      List<Card> victories = [];
-      for (Card c in p.hand.asList()) {
-        if (c is Victory) victories.add(c);
-      }
+    await for (var opponent in player.engine.attackablePlayers(player, this)) {
+      var victories = opponent.hand.whereType<Victory>();
       if (victories.length == 1) {
-        p.hand.moveTo(victories[0], p.deck.top);
+        opponent.notify("You place a ${victories.first} on top of your deck");
+        opponent.hand.moveTo(victories.first, opponent.deck.top);
       } else if (victories.length > 1) {
-        CardConditions conds = CardConditions()
-          ..requiredTypes = [CardType.Victory];
-        List<Card> cards =
-            await p.controller.selectCardsFromHand(this, conds, 1, 1);
-        if (cards.length == 1) {
-          p.hand.moveTo(cards[0], p.deck.top);
-        }
+        var card = await opponent.controller.selectCardFrom(
+            victories, "Select a card to place on top of your deck",
+            context: this, event: EventType.Attack);
+        opponent.notify("You place a $card on top of your deck");
+        opponent.hand.moveTo(card, opponent.deck.top);
       } else {
-        p.notifyAnnounce("You reveal", "reveals", "hand of ${p.hand}");
+        opponent.notifyAnnounce(
+            "You reveal", "reveals", "hand of ${opponent.hand}");
       }
     }
   }
@@ -245,9 +236,8 @@ class Feast extends Card with Action, BaseSet {
 
   onPlay(Player player) async {
     await player.trashFrom(this, player.inPlay);
-    CardConditions conds = CardConditions();
-    conds.maxCost = 5;
-    Card card = await player.selectCardToGain(conditions: conds);
+    var card = await player.selectCardToGain(
+        context: this, conditions: CardConditions()..maxCost = 5);
     await player.gain(card);
   }
 }
@@ -276,13 +266,10 @@ class Militia extends Card with Action, BaseSet, Attack {
 
   onPlay(Player player) async {
     player.turn.coins += 2;
-    await for (var p in player.engine.attackablePlayers(player, this)) {
-      var x = p.hand.length - 3;
-      var cards =
-          await p.controller.selectCardsFromHand(this, CardConditions(), x, x);
-      for (var c in cards) {
-        await p.discard(c);
-      }
+    await for (var opponent in player.engine.attackablePlayers(player, this)) {
+      var x = opponent.hand.length - 3;
+      await opponent.discardFromHand(
+          context: this, event: EventType.Attack, min: x, max: x);
     }
   }
 }
@@ -319,15 +306,11 @@ class Poacher extends Card with Action, BaseSet {
     var empty = player.engine.supply.emptyPiles;
     if (empty == 0) return;
     if (empty >= player.hand.length) {
-      for (var i = 0; i < player.hand.length; i++) {
+      while (player.hand.length > 0) {
         await player.discardFrom(player.hand);
       }
     }
-    var discarding =
-        await player.controller.selectCardsFromHand(this, null, empty, empty);
-    for (var card in discarding) {
-      await player.discard(card);
-    }
+    await player.discardFromHand(context: this, min: empty, max: empty);
   }
 }
 
@@ -340,14 +323,14 @@ class Remodel extends Card with Action, BaseSet {
   final String name = "Remodel";
 
   onPlay(Player player) async {
-    var cards = await player.controller
-        .selectCardsFromHand(this, CardConditions(), 1, 1);
-    if (cards.length != 1) return;
-    await player.trashFrom(cards[0], player.hand);
-    var conds = CardConditions();
-    conds.maxCost = cards[0].calculateCost(player) + 2;
-    var card = await player.selectCardToGain(conditions: conds);
-    await player.gain(card);
+    var card = await player.controller
+        .selectCardFromHand("Select card to trash", context: this);
+    if (card == null) return;
+    await player.trashFrom(card, player.hand);
+    var gain = await player.selectCardToGain(
+        context: this,
+        conditions: CardConditions()..maxCost = card.calculateCost(player) + 2);
+    await player.gain(gain);
   }
 }
 
@@ -394,7 +377,7 @@ class Spy extends Card with Action, BaseSet, Attack {
       } else {
         question = "Spy: Discard ${p.name}'s $card?";
       }
-      discard = await player.controller.confirmAction(card, question);
+      discard = await player.controller.confirmAction(question, context: this);
       if (discard) {
         await p.discardFrom(buffer);
       } else {
@@ -433,9 +416,9 @@ class Thief extends Card with Action, BaseSet, Attack {
         }
       }
       if (options.length == 1) {
-        var question = "Thief: Trash ${p.name}'s ${options[0].name}?";
+        var question = "Trash ${p.name}'s ${options[0].name}?";
         bool trash =
-            await player.controller.confirmAction(options[0], question);
+            await player.controller.confirmAction(question, context: this);
         if (trash) {
           Card card = options[0];
           await p.trashDraw(options);
@@ -444,12 +427,11 @@ class Thief extends Card with Action, BaseSet, Attack {
           options.drawTo(discarding);
         }
       } else if (options.length == 2) {
-        List choices = [options[0], options[1], "Neither"];
-        var question =
-            "Thief: Which of ${p.name}'s cards do you want to trash?";
-        var selection =
-            await player.controller.askQuestion(this, question, choices);
-        if (selection is Card) {
+        var question = "Trash one of ${p.name}'s cards?";
+        var selection = await player.controller.selectCardFrom(
+            options.toList(), question,
+            context: this, optional: true);
+        if (selection != null) {
           await p.trashFrom(selection, options);
           trashed.add(selection);
         }
@@ -460,9 +442,9 @@ class Thief extends Card with Action, BaseSet, Attack {
       }
     }
     if (trashed.length > 0) {
-      var question = "Thief: Select treasure(s) to take from trash.";
-      List<Card> keeping =
-          await player.controller.selectCardsFrom(trashed, question, 0, -1);
+      var question = "Select treasure(s) to take from trash.";
+      List<Card> keeping = await player.controller
+          .selectCardsFrom(trashed, question, context: this);
       for (Card c in keeping) {
         player.engine.trashPile.moveTo(c, player.discarded);
         player.notifyAnnounce("You gain", "gains", "a $c from the trash");
@@ -525,24 +507,25 @@ class Bandit extends Card with Action, Attack, BaseSet {
 
   onPlay(Player player) async {
     await player.gain(Gold.instance);
-    await for (var p in player.engine.attackablePlayers(player, this)) {
+    await for (var opponent in player.engine.attackablePlayers(player, this)) {
       var reveal = CardBuffer();
-      p.drawTo(reveal);
-      p.drawTo(reveal);
-      p.notifyAnnounce("You reveal", "reveals", "$reveal");
+      opponent.drawTo(reveal);
+      opponent.drawTo(reveal);
+      opponent.notifyAnnounce("You reveal", "reveals", "$reveal");
       var trashable = reveal
-          .asList()
+          .toList()
           .where((card) => card is Treasure && card is! Copper)
           .toList();
       if (trashable.length == 1) {
-        await p.trashFrom(trashable.first, reveal);
+        await opponent.trashFrom(trashable.first, reveal);
       } else if (trashable.length > 1) {
-        var trash = await p.controller.selectCardsFrom(
-            trashable, "Bandit: Which of these do you trash?", 1, 1);
-        await p.trashFrom(trash.first, reveal);
+        var trash = await opponent.controller.selectCardFrom(
+            trashable, "Which of these do you trash?",
+            context: this);
+        await opponent.trashFrom(trash, reveal);
       }
       while (reveal.length > 0) {
-        await p.discardFrom(reveal);
+        await opponent.discardFrom(reveal);
       }
     }
   }
@@ -558,8 +541,8 @@ class CouncilRoom extends Card with Action, BaseSet {
 
   onPlay(Player player) async {
     player.draw(4);
-    for (Player p in player.engine.playersAfter(player)) {
-      p.draw(1);
+    for (var opponent in player.engine.playersAfter(player)) {
+      opponent.draw(1);
     }
     player.turn.buys += 1;
   }
@@ -603,14 +586,13 @@ class Library extends Card with Action, BaseSet {
   final String name = "Library";
 
   onPlay(Player player) async {
-    CardBuffer buffer = CardBuffer();
+    var buffer = CardBuffer();
     while (player.hand.length < 7) {
       Card card = player.draw();
       if (card == null) break;
       if (card is Action) {
-        bool setAside = await player.controller
-            .confirmAction(card, "Library: Set aside ${card}?");
-        if (setAside) {
+        if (await player.controller
+            .confirmAction("Discard $card?", context: this)) {
           player.hand.moveTo(card, buffer);
         }
       }
@@ -646,17 +628,16 @@ class Mine extends Card with Action, BaseSet {
   final String name = "Mine";
 
   onPlay(Player player) async {
-    CardConditions trashConds = CardConditions()
-      ..requiredTypes = [CardType.Treasure];
-    List<Card> cards =
-        await player.controller.selectCardsFromHand(this, trashConds, 0, 1);
-    if (cards.length != 1) return;
-    int cost = cards[0].calculateCost(player);
-    player.trashFrom(cards[0], player.hand);
-    CardConditions gainConds = CardConditions();
-    gainConds..requiredTypes = [CardType.Treasure];
-    gainConds..maxCost = cost + 3;
-    Card card = await player.selectCardToGain(conditions: gainConds);
+    var trash = await player.controller.selectCardFrom(
+        player.hand.whereType<Treasure>(), "Select treasure to trash?",
+        context: this, optional: true);
+    if (trash == null) return;
+    player.trashFrom(trash, player.hand);
+    Card card = await player.selectCardToGain(
+        context: this,
+        conditions: CardConditions()
+          ..requiredTypes = [CardType.Treasure]
+          ..maxCost = trash.calculateCost(player) + 3);
     await player.gain(card, to: player.hand);
   }
 }
@@ -677,14 +658,15 @@ class Sentry extends Card with Action, BaseSet {
     var buffer = CardBuffer();
     player.drawTo(buffer);
     player.drawTo(buffer);
-    var trashing = await player.controller
-        .selectCardsFrom(buffer.asList(), "Sentry: Which to trash?", 0, 2);
+    var trashing = await player.controller.selectCardsFromBuffer(
+        buffer, "Which to trash?",
+        context: this, max: 2);
     for (var card in trashing) {
       await player.trashFrom(card, buffer);
     }
     if (buffer.length == 0) return;
-    var discarding = await player.controller.selectCardsFrom(
-        buffer.asList(), "Sentry: Which to discard?", 0, buffer.length);
+    var discarding = await player.controller
+        .selectCardsFromBuffer(buffer, "Which to discard?", context: this);
     for (var card in discarding) {
       await player.discardFrom(buffer, card);
     }
@@ -692,8 +674,9 @@ class Sentry extends Card with Action, BaseSet {
     if (buffer.length == 1 || buffer[0] == buffer[1]) {
       buffer.dumpTo(player.deck.top);
     }
-    var order = await player.controller.selectCardsFrom(
-        buffer.asList(), "Sentry: Order to put back on deck", 2, 2);
+    var order = await player.controller.selectCardsFromBuffer(
+        buffer, "Sentry: Order to put back on deck",
+        context: this, min: 2, max: 2);
     buffer.moveTo(order[0], player.deck.top);
     buffer.moveTo(order[1], player.deck.top);
   }
@@ -709,8 +692,8 @@ class Witch extends Card with Action, BaseSet, Attack {
 
   onPlay(Player player) async {
     player.draw(2);
-    await for (var p in player.engine.attackablePlayers(player, this)) {
-      await p.gain(Curse.instance);
+    await for (var opponent in player.engine.attackablePlayers(player, this)) {
+      await opponent.gain(Curse.instance);
     }
   }
 }
@@ -760,10 +743,11 @@ class Artisan extends Card with Action, BaseSet {
 
   onPlay(Player player) async {
     var gain = await player.selectCardToGain(
-        conditions: CardConditions()..maxCost = 5);
+        context: this, conditions: CardConditions()..maxCost = 5);
     await player.gain(gain, to: player.hand);
-    var toDeck = await player.controller
-        .selectCardsFromHand(this, CardConditions(), 1, 1);
-    player.hand.moveTo(toDeck.first, player.deck.top);
+    var toDeck = await player.controller.selectCardFromHand(
+        "Select a card to put on top of your deck",
+        context: this);
+    player.hand.moveTo(toDeck, player.deck.top);
   }
 }

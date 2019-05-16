@@ -57,8 +57,8 @@ class Lurker extends Card with Action, Intrigue {
           "You trash", "trashes", "a $card from the supply. $remain");
       cardSupply.drawTo(player.engine.trashPile);
     } else if (choice == trash) {
-      var card = (await player.controller.selectCardsFrom(
-              player.engine.trashPile.asList().where((card) => card is Action),
+      var card = (await player.controller.selectCardsFromListImpl(
+              player.engine.trashPile.toList().where((card) => card is Action),
               "Select an Action card from the trash to gain",
               1,
               1))
@@ -299,7 +299,7 @@ class Baron extends Card with Action, Intrigue {
   onPlay(Player player) async {
     player.turn.buys += 1;
     bool hasEstate = false;
-    for (Card c in player.hand.asList()) {
+    for (Card c in player.hand.toList()) {
       if (c == Estate.instance) {
         hasEstate = true;
         break;
@@ -520,13 +520,13 @@ class Scout extends Card with Action, Intrigue {
     CardBuffer buffer = CardBuffer();
     for (int i = 0; i < 4; i++) player.drawTo(buffer);
     player.notifyAnnounce("You reveal", "reveals" "$buffer");
-    for (Card c in buffer.asList()) {
+    for (Card c in buffer.toList()) {
       if (c is Victory) {
         buffer.moveTo(c, player.hand);
       }
     }
-    List<Card> rearranged = await player.controller.selectCardsFrom(
-        buffer.asList(),
+    List<Card> rearranged = await player.controller.selectCardsFromListImpl(
+        buffer.toList(),
         "Select cards in the order you want them returned to the deck.",
         buffer.length,
         buffer.length);
@@ -651,7 +651,7 @@ class Patrol extends Card with Action, Intrigue {
     var buffer = CardBuffer();
     player.drawTo(buffer);
     player.notifyAnnounce("You reveal $buffer", "reveals $buffer");
-    for (var card in buffer.asList()) {
+    for (var card in buffer.toList()) {
       if (card is VictoryOrCurse) {
         buffer.moveTo(card, player.hand);
       }
@@ -660,8 +660,8 @@ class Patrol extends Card with Action, Intrigue {
       buffer.dumpTo(player.deck.top);
       return;
     }
-    var order = await player.controller.selectCardsFrom(
-        buffer.asList(),
+    var order = await player.controller.selectCardsFromListImpl(
+        buffer.toList(),
         "Patrol: Select the order to place these cards back on your deck",
         buffer.length,
         buffer.length);
@@ -765,7 +765,7 @@ class Tribute extends Card with Action, Intrigue {
     left.drawTo(buffer);
     left.notifyAnnounce(
         "You reveal and discard", "reveals and discards" "$buffer");
-    Set drawn = Set.from(buffer.asList());
+    Set drawn = Set.from(buffer.toList());
     while (buffer.length > 0) {
       await left.discardFrom(buffer);
     }

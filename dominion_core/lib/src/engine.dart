@@ -142,14 +142,34 @@ class Player extends Object with CardSource {
   }
 
   Future<Card> selectCardToGain(
-      {CardConditions conditions, bool allowNone: false}) {
-    if (conditions == null) conditions = CardConditions();
+      {@required Card context,
+      CardConditions conditions,
+      bool optional: false}) {
     return controller.selectCardFromSupply(
-        EventType.GainCard, conditions, allowNone);
+        "Select a card to gain", EventType.GainCard,
+        context: context, conditions: conditions, optional: optional);
   }
 
-  Future<Card> selectCardToBuy() => controller.selectCardFromSupply(
-      EventType.BuyCard, turn.buyConditions, true);
+  Future<Card> selectCardToBuy() =>
+      controller.selectCardFromSupply("Select a card to buy", EventType.BuyCard,
+          context: null, conditions: turn.buyConditions, optional: true);
+
+  /// Prompts the user to discard cards from their hand.
+  Future<List<Card>> discardFromHand(
+      {@required Card context,
+      CardConditions conditions,
+      EventType event,
+      int min: 0,
+      int max}) async {
+    var cards = await controller.selectCardsFromHand("Select cards to discard",
+        context: context,
+        conditions: conditions,
+        event: event,
+        min: min,
+        max: max);
+    await discardAll(cards);
+    return cards;
+  }
 
   bool hasActions() {
     for (int i = 0; i < hand.length; i++) {
@@ -282,35 +302,31 @@ class Player extends Object with CardSource {
 
   // return true if event is blocked
   Future<bool> reactToAttack(Card context) async {
-    var blocked = inPlay.asList().any((card) => card.protectsFromAttacks);
+    var blocked = inPlay.toList().any((card) => card.protectsFromAttacks);
     while (true) {
-      var options = [];
-      for (var card in hand.asList()) {
+      var options = <Reaction>[];
+      for (var card in hand.toList()) {
         if (card is Reaction &&
             card.canReactTo(EventType.Attack, context, this)) {
           options.add(card);
         }
       }
       if (options.length == 0) return blocked;
-      options.add("None");
-      var response = await controller.askQuestion(
-          context, "Select a Reaction card to reveal.", options);
-      if (response is Reaction) {
-        notifyAnnounce("You reveal", "reveals", "a $response");
-        if (await response.onReactToAttack(this, context)) {
-          blocked = true;
-        }
-      } else {
-        return blocked;
+      var response = await controller.selectCardFrom(
+          options, "Select a Reaction card to reveal?",
+          context: context, event: EventType.Reaction, optional: true);
+      if (response == null) return blocked;
+      notifyAnnounce("You reveal", "reveals", "a $response");
+      if (await response.onReactToAttack(this, context)) {
+        blocked = true;
       }
     }
   }
 
-  // return true if event is blocked
   Future reactToGain(Card card, CardSource location, bool bought) async {
     while (true) {
-      var options = [];
-      for (var card in hand.asList()) {
+      var options = <Reaction>[];
+      for (var card in hand.toList()) {
         if (card is Reaction &&
             card.canReactTo(
                 bought ? EventType.BuyCard : EventType.GainCard, card, this)) {
@@ -318,20 +334,24 @@ class Player extends Object with CardSource {
         }
       }
       if (options.length == 0) return location;
-      options.add("None");
-      var response = await controller.askQuestion(
-          card, "Gained a $card. Select a Reaction card to reveal.", options);
-      if (response is Reaction) {
-        notifyAnnounce("You reveal", "reveals", "a $response");
-        location = await response.onReactToGain(this, card, location, bought);
-      } else {
-        return location;
-      }
+      var response = await controller.selectCardFrom(
+          options, "Select a Reaction card to reveal?",
+          context: card, event: EventType.Reaction, optional: true);
+      if (response == null) return location;
+      notifyAnnounce("You reveal", "reveals", "a $response");
+      location = await response.onReactToGain(this, card, location, bought);
     }
   }
 
   // Discards [card] from the player's hand.
   Future discard(Card card) => discardFrom(hand, card);
+
+  // Discards [cards] from the player's hand.
+  Future discardAll(List<Card> cards) async {
+    for (var card in cards) {
+      await discard(card);
+    }
+  }
 
   // Discards a card from [source].
   Future discardFrom(CardSource source, [Card card = null]) async {
@@ -373,11 +393,11 @@ class Player extends Object with CardSource {
 
   List<Card> getAllCards() {
     List<Card> cards = [];
-    cards.addAll(deck.asList());
-    cards.addAll(hand.asList());
-    cards.addAll(discarded.asList());
-    cards.addAll(inPlay.asList());
-    mats.values.map((mat) => mat.buffer.asList()).forEach(cards.addAll);
+    cards.addAll(deck.toList());
+    cards.addAll(hand.toList());
+    cards.addAll(discarded.toList());
+    cards.addAll(inPlay.toList());
+    mats.values.map((mat) => mat.buffer.toList()).forEach(cards.addAll);
     return cards;
   }
 
@@ -400,7 +420,7 @@ class Player extends Object with CardSource {
     if (result) {
       turn?.gained?.add(card);
       var location = await reactToGain(card, to, false);
-      for (var card in inPlay.asList()) {
+      for (var card in inPlay.toList()) {
         if (card is GainListener) {
           location = card.onGainCardWhileInPlay(this, card, location, false);
         }
@@ -420,7 +440,7 @@ class Player extends Object with CardSource {
       turn?.bought?.add(card);
       turn?.gained?.add(card);
       var location = await reactToGain(card, to, true);
-      for (var card in inPlay.asList()) {
+      for (var card in inPlay.toList()) {
         if (card is GainListener) {
           location = card.onGainCardWhileInPlay(this, card, location, true);
         }

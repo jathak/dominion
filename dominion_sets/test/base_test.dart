@@ -30,7 +30,7 @@ main() {
 
 nonInteractionTests() {
   test("Moat", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Moat.instance);
     cards.add(playerA.deck[0]);
     cards.add(playerA.deck[1]);
@@ -44,7 +44,7 @@ nonInteractionTests() {
   test("Merchant", () async {
     playerA.hand.receive(Silver.instance);
     playerA.hand.receive(Silver.instance);
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Merchant.instance);
     cards.add(playerA.deck[0]);
     await playerA.playAction(Merchant.instance);
@@ -60,7 +60,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(5));
   });
   test("Vassal - With Gold", () async {
-    var hand = playerA.hand.asList();
+    var hand = playerA.hand.toList();
     playerA.hand.receive(Vassal.instance);
     playerA.deck.top.receive(Gold.instance);
     ctrlA.confirm = (player, context, question) async {
@@ -77,7 +77,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(2));
   });
   test("Village", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Village.instance);
     cards.add(playerA.deck[0]);
     await playerA.playAction(Village.instance);
@@ -88,7 +88,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Woodcutter", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Woodcutter.instance);
     await playerA.playAction(Woodcutter.instance);
     expectBufferHasCards(playerA.hand, cards);
@@ -98,7 +98,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(2));
   });
   test("Moneylender", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Moneylender.instance);
     await playerA.playAction(Moneylender.instance);
     cards.remove(Copper.instance);
@@ -110,7 +110,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(3));
   });
   test("Poacher - no empty supplies", () async {
-    var hand = playerA.hand.asList();
+    var hand = playerA.hand.toList();
     playerA.hand.receive(Poacher.instance);
     hand.add(playerA.deck[0]);
     await playerA.playAction(Poacher.instance);
@@ -122,7 +122,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(1));
   });
   test("Smithy", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Smithy.instance);
     cards.add(playerA.deck[0]);
     cards.add(playerA.deck[1]);
@@ -136,13 +136,13 @@ nonInteractionTests() {
   });
   // TODO(jathak): Test Bandit with no choice
   test("CouncilRoom", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(CouncilRoom.instance);
     cards.add(playerA.deck[0]);
     cards.add(playerA.deck[1]);
     cards.add(playerA.deck[2]);
     cards.add(playerA.deck[3]);
-    List<Card> cardsB = playerB.hand.asList();
+    List<Card> cardsB = playerB.hand.toList();
     cardsB.add(playerB.deck[0]);
     await playerA.playAction(CouncilRoom.instance);
     expectBufferHasCards(playerA.hand, cards);
@@ -153,7 +153,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Festival", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Festival.instance);
     await playerA.playAction(Festival.instance);
     expectBufferHasCards(playerA.hand, cards);
@@ -163,7 +163,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(2));
   });
   test("Laboratory", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Laboratory.instance);
     cards.add(playerA.deck[0]);
     cards.add(playerA.deck[1]);
@@ -175,7 +175,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Market", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Market.instance);
     cards.add(playerA.deck[0]);
     await playerA.playAction(Market.instance);
@@ -186,7 +186,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(1));
   });
   test("Witch", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Witch.instance);
     cards.add(playerA.deck[0]);
     cards.add(playerA.deck[1]);
@@ -199,7 +199,7 @@ nonInteractionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Adventurer", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Adventurer.instance);
     playerA.deck = makeDeck(
         [Silver.instance, Duchy.instance, Gold.instance, Province.instance]);
@@ -218,7 +218,7 @@ nonInteractionTests() {
 
 throneRoomTests() {
   test("with Market", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Market.instance);
     playerA.hand.receive(ThroneRoom.instance);
     cards.add(playerA.deck[0]);
@@ -232,7 +232,7 @@ throneRoomTests() {
     expect(playerA.turn.coins, equals(2));
   });
   test("with Witch", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(Witch.instance);
     playerA.hand.receive(ThroneRoom.instance);
     cards.add(playerA.deck[0]);
@@ -248,7 +248,7 @@ throneRoomTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("with Nothing", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.hand.receive(ThroneRoom.instance);
     await playerA.playAction(ThroneRoom.instance);
     expectBufferHasCards(playerA.hand, cards);
@@ -261,7 +261,7 @@ throneRoomTests() {
 
 interactionTests() {
   test("Cellar", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     ctrlA.cardsFromHand = (Player player, context, conds, min, max) async {
       return [player.hand[0], player.hand[2]];
     };
@@ -279,7 +279,7 @@ interactionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Chapel", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     ctrlA.cardsFromHand = (player, context, conds, min, max) async {
       return [player.hand[0], player.hand[2]];
     };
@@ -295,8 +295,8 @@ interactionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Chancellor - Don't Discard", () async {
-    List<Card> cards = playerA.hand.asList();
-    List<Card> deck = playerA.deck.asList();
+    List<Card> cards = playerA.hand.toList();
+    List<Card> deck = playerA.deck.toList();
     ctrlA.confirm = (player, context, question) async => false;
     playerA.hand.receive(Chancellor.instance);
     await playerA.playAction(Chancellor.instance);
@@ -309,8 +309,8 @@ interactionTests() {
     expect(playerA.turn.coins, equals(2));
   });
   test("Chancellor - Discard Deck", () async {
-    List<Card> cards = playerA.hand.asList();
-    List<Card> deck = playerA.deck.asList();
+    List<Card> cards = playerA.hand.toList();
+    List<Card> deck = playerA.deck.toList();
     ctrlA.confirm = (player, context, question) async => true;
     playerA.hand.receive(Chancellor.instance);
     await playerA.playAction(Chancellor.instance);
@@ -323,8 +323,8 @@ interactionTests() {
     expect(playerA.turn.coins, equals(2));
   });
   test("Harbinger", () async {
-    var cards = playerA.hand.asList();
-    var deck = playerA.deck.asList();
+    var cards = playerA.hand.toList();
+    var deck = playerA.deck.toList();
     ctrlA.cardsFrom = (player, cards, question, min, max) async {
       expect(player, equals(playerA));
       expect(cards, equals([Gold.instance]));
@@ -346,7 +346,7 @@ interactionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Vassal - With Village", () async {
-    var hand = playerA.hand.asList();
+    var hand = playerA.hand.toList();
     playerA.hand.receive(Vassal.instance);
     playerA.deck.top.receive(Village.instance);
     ctrlA.confirm = (player, context, question) async {
@@ -364,7 +364,7 @@ interactionTests() {
     expect(playerA.turn.coins, equals(2));
   });
   test("Workshop", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     ctrlA.cardFromSupply =
         (player, event, conditions, allowNone) async => Silver.instance;
     playerA.hand.receive(Workshop.instance);
@@ -377,7 +377,7 @@ interactionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Feast", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     ctrlA.cardFromSupply =
         (player, event, conditions, allowNone) async => Duchy.instance;
     playerA.hand.receive(Feast.instance);
@@ -398,7 +398,7 @@ interactionTests() {
       engine.supply.gain(Smithy.instance, playerB, playerB.discarded);
       engine.supply.gain(Village.instance, playerB, playerB.discarded);
     }
-    var hand = playerA.hand.asList();
+    var hand = playerA.hand.toList();
     var discarded = [hand.removeAt(0), hand.removeAt(0)];
     playerA.hand.receive(Poacher.instance);
     hand.add(playerA.deck[0]);
@@ -427,7 +427,7 @@ interactionTests() {
   });
   // TODO(jathak): Test bandit with a choice
   test("Library - Keep Actions", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.deck = makeDeck(
         [Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
     ctrlA.confirm = (player, _a, _b) async => false;
@@ -444,7 +444,7 @@ interactionTests() {
     expect(playerA.turn.coins, equals(0));
   });
   test("Library - Discard Actions", () async {
-    List<Card> cards = playerA.hand.asList();
+    List<Card> cards = playerA.hand.toList();
     playerA.deck = makeDeck(
         [Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
     ctrlA.confirm = (player, ctx, _b) async => true;
@@ -482,13 +482,13 @@ interactionTests() {
 
 attackTests() {
   test("Bureaucrat", () async {
-    List<Card> cards = playerA.hand.asList();
-    List<Card> deck = playerA.deck.asList();
-    List<Card> deckB = playerB.deck.asList();
-    List<Card> cardsB = playerB.hand.asList();
+    List<Card> cards = playerA.hand.toList();
+    List<Card> deck = playerA.deck.toList();
+    List<Card> deckB = playerB.deck.toList();
+    List<Card> cardsB = playerB.hand.toList();
     // default TestController behavior will select first victory card it sees.
     playerB.hand =
-        makeBuffer([Province.instance]..addAll(playerB.hand.asList()));
+        makeBuffer([Province.instance]..addAll(playerB.hand.toList()));
 
     playerA.hand.receive(Bureaucrat.instance);
     deck.insert(0, Silver.instance);

@@ -171,11 +171,11 @@ class Game {
   }
 
   updateHand(Player player) {
-    var cards = player.hand.asList().map(encodeOption).toList();
+    var cards = player.hand.toList().map(encodeOption).toList();
     var msg = {'type': 'hand-update', 'hand': cards};
     msg['currentPlayer'] = engine.currentPlayer.name;
     msg['deckSize'] = player.deck.length;
-    msg['inPlay'] = player.inPlay.asList().map(encodeOption).toList();
+    msg['inPlay'] = player.inPlay.toList().map(encodeOption).toList();
     var toSendTo = []..addAll(sockets[player.name]);
     if (player.turn != null) {
       msg['turn'] = {
@@ -239,9 +239,9 @@ class Game {
     return {
       'type': 'supply-update',
       'supply': {
-        'kingdom': (kingdom.asList()..sort()).map(encodeSupply).toList(),
-        'treasures': (treasures.asList()..sort()).map(encodeSupply).toList(),
-        'vps': (vps.asList()..sort()).map(encodeSupply).toList()
+        'kingdom': (kingdom.toList()..sort()).map(encodeSupply).toList(),
+        'treasures': (treasures.toList()..sort()).map(encodeSupply).toList(),
+        'vps': (vps.toList()..sort()).map(encodeSupply).toList()
       }
     };
   }
@@ -275,7 +275,7 @@ class NetworkController extends PlayerController {
       'min': min,
       'max': max,
       'validCards': player.hand
-          .asList()
+          .toList()
           .where((card) => conditions.allowsFor(card, player))
           .map(encodeOption)
           .toList()
@@ -334,7 +334,7 @@ class NetworkController extends PlayerController {
   }
 
   /// like selectCardsFromHand but for any list of cards
-  Future<List<Card>> selectCardsFrom(
+  Future<List<Card>> selectCardsFromListImpl(
       List<Card> cards, String question, int min, int max) async {
     var metadata = {
       'currentPlayer': game.engine.currentPlayer.name,
@@ -355,7 +355,7 @@ class NetworkController extends PlayerController {
   Future<Action> selectActionCard() async {
     var metadata = {
       'cards': player.hand
-          .asList()
+          .toList()
           .where((c) => c is Action)
           .map(encodeOption)
           .toList()
@@ -369,7 +369,7 @@ class NetworkController extends PlayerController {
   Future<List<Treasure>> selectTreasureCards() async {
     var metadata = {
       'cards': player.hand
-          .asList()
+          .toList()
           .where((c) => c is Treasure)
           .map(encodeOption)
           .toList()
