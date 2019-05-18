@@ -4,12 +4,12 @@ abstract class PlayerController {
   Player player;
 
   /// returns true to complete action, false to not
-  Future<bool> confirmAction(String question,
+  Future<bool> confirmAction(String prompt,
           {@required Card context, EventType event}) async =>
-      (await askQuestion(question, ["Yes", "No"], context: context)) == "Yes";
+      (await askQuestion(prompt, ["Yes", "No"], context: context)) == "Yes";
 
   /// returns option from options
-  Future<String> askQuestion(String question, List<String> options,
+  Future<String> askQuestion(String prompt, List<String> options,
       {@required Card context, EventType event});
 
   /// Prompts the user to select some cards.

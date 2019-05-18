@@ -31,9 +31,9 @@ class CardRegistry {
     Set<String> expansSoFar = new Set<String>();
     for (Card card in allCards) {
       if (card.expansion != null) {
-        if (conditions.allowedExpansions.length == 0 ||
+        if (conditions.allowedExpansions == null ||
             conditions.allowedExpansions.contains(card.expansion)) {
-          if (conditions.maxExpansionsUsed < 1 ||
+          if (conditions.maxExpansionsUsed == null ||
               expansSoFar.length < conditions.maxExpansionsUsed ||
               expansSoFar.contains(card.expansion)) {
             expansSoFar.add(card.expansion);

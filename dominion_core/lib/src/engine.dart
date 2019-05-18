@@ -483,29 +483,21 @@ class Supply {
   }
 
   _setup(Iterable<Card> kingdomCards, int playerCount, bool expensiveBasics) {
-    _supplies = {};
-    var cards = [
+    _supplies = Map.fromEntries([
       Copper.instance,
       Silver.instance,
       Gold.instance,
+      if (expensiveBasics) Platinum.instance,
+      if (kingdomCards.where((card) => card.requiresPotion).isNotEmpty)
+        Potion.instance,
       Estate.instance,
       Duchy.instance,
       Province.instance,
-      Curse.instance
-    ];
-    if (expensiveBasics) {
-      cards.add(Platinum.instance);
-      cards.add(Colony.instance);
-    }
-    bool addPotions = false;
-    for (Card k in kingdomCards) {
-      if (k.requiresPotion) addPotions = true;
-      cards.add(k);
-    }
-    if (addPotions) cards.add(Potion.instance);
-    for (Card c in cards) {
-      _supplies[c] = SupplyPile(c, c.supplyCount(playerCount));
-    }
+      if (expensiveBasics) Colony.instance,
+      Curse.instance,
+      ...kingdomCards
+    ].map((card) =>
+        MapEntry(card, SupplyPile(card, card.supplyCount(playerCount)))));
   }
 
   SupplyPile supplyOf(Card card) => _supplies[card];
