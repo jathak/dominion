@@ -50,7 +50,7 @@ abstract class Card implements Comparable<Card> {
   /// Called when player plays this turn.
   ///
   /// Most non-durations should override onPlay instead.
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     await onPlay(player);
     return null;
   }
@@ -71,10 +71,12 @@ abstract class Card implements Comparable<Card> {
     return this.cost - other.cost;
   }
 
-  Map<String, dynamic> serialize() =>
-      {'type': 'Card', 'name': name, 'expansion': expansion};
+  Map<String, dynamic> serialize() => {'type': 'Card', 'name': name};
 
-  static deserialize(data) => CardRegistry.find(data['name']);
+  static Card deserialize(data) => CardRegistry.find(data['name']);
+
+  static List<Card> deserializeList(data) =>
+      [for (var card in data) Card.deserialize(card)];
 
   String toString() => name;
 }
@@ -164,5 +166,3 @@ mixin GainListener on Card {
   Future<CardSource> onGainCardWhileInPlay(
       Player player, Card card, CardSource location, bool bought);
 }
-
-typedef Future<bool> NextTurnAction();

@@ -299,15 +299,15 @@ Element makeHeaderElement(CardStub card) {
 }
 
 class CardStub {
-  String name, expansion;
+  String name;
   int count;
   int cost;
   int embargoTokens;
   bool selectable = false;
-  CardStub(this.name, [this.expansion]);
+  CardStub(this.name);
 
   static CardStub fromMsg(cardMsg) {
-    var stub = new CardStub(cardMsg['name'], cardMsg['expansion']);
+    var stub = CardStub(cardMsg['name']);
     if (cardMsg.containsKey('count')) stub.count = cardMsg['count'];
     if (cardMsg.containsKey('cost')) stub.cost = cardMsg['cost'];
     if (cardMsg.containsKey('embargoTokens')) {
@@ -319,7 +319,6 @@ class CardStub {
   bool operator ==(other) =>
       other is CardStub &&
       name == other.name &&
-      expansion == other.expansion &&
       count == other.count &&
       cost == other.cost &&
       embargoTokens == other.embargoTokens &&

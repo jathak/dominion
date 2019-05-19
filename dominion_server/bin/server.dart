@@ -6,10 +6,11 @@ import 'package:http_server/http_server.dart';
 import 'package:dominion_server/game.dart' as game;
 
 Future<void> main(var args) async {
-  int port = args.length == 1 ? int.parse(args[0]) : 7777;
+  int port = args.length > 0 ? int.parse(args[0]) : 7777;
+  if (args.length > 1) savedGamesFile = File(args[1]);
   var path = Platform.script.resolve('../../dominion_web/build/').toFilePath();
   print(path);
-  var staticFiles = new VirtualDirectory(path);
+  var staticFiles = VirtualDirectory(path);
   staticFiles.allowDirectoryListing = true;
 
   var server = await HttpServer.bind('0.0.0.0', port);
@@ -26,7 +27,8 @@ Future<void> main(var args) async {
     "Laboratory",
     "Market"
   ];
-  games["test"] = new game.Game("test", testKingdom, false);
+  games["test"] = game.Game("test", testKingdom, false, saveGame("test"));
+  await restoreGames();
   await for (var request in server) {
     try {
       if (WebSocketTransformer.isUpgradeRequest(request)) {
@@ -48,7 +50,7 @@ Future<void> main(var args) async {
         while (games.containsKey(id)) {
           id = randomString(5);
         }
-        var newGame = new game.Game(id, kingdom, useProsperity);
+        var newGame = game.Game(id, kingdom, useProsperity, saveGame(id));
         games[id] = newGame;
         request.response.redirect(
             Uri.parse('/game.html?id=$id' + (spectate ? '&spectate' : '')));
@@ -60,15 +62,15 @@ Future<void> main(var args) async {
         while (games.containsKey(id)) {
           id = randomString(5);
         }
-        var newGame = new game.Game(id, kingdom, useProsperity);
+        var newGame = game.Game(id, kingdom, useProsperity, saveGame(id));
         games[id] = newGame;
         request.response.redirect(Uri.parse('/game.html?id=$id'));
         continue;
       }
       var requestPath = request.uri.path.substring(1);
       if (requestPath == '') requestPath = 'index.html';
-      var uri = new Uri.file(path).resolve(requestPath);
-      staticFiles.serveFile(new File(uri.toFilePath()), request);
+      var uri = Uri.file(path).resolve(requestPath);
+      staticFiles.serveFile(File(uri.toFilePath()), request);
     } catch (e) {
       print(e);
     }
@@ -121,12 +123,54 @@ String randomString(int length) {
   if (!games.containsKey('first')) {
     return "first";
   }
-  var r = new Random();
+  var r = Random();
   fn(i) {
     var number = r.nextInt(52);
     return number + (number < 26 ? 65 : 71);
   }
 
-  var units = new List.generate(length, fn);
-  return new String.fromCharCodes(units);
+  var units = List.generate(length, fn);
+  return String.fromCharCodes(units);
 }
+
+var savedGamesFile = File('data.json');
+
+restoreGames() async {
+  try {
+    var contents = await savedGamesFile.readAsString();
+    var restored = [
+      for (var blob in json.decode(contents).values)
+        game.Game.deserialize(blob, saveGame(blob['id']))
+    ];
+    for (var game in restored) {
+      if (games.containsKey(game.id)) continue;
+      games[game.id] = game;
+      if (!game.engine.gameOver) game.resumeGame();
+      print('Restored game ${game.id}');
+    }
+  } catch (e, st) {
+    print('Failed to restore games');
+    print(e);
+    print(st);
+  }
+}
+
+Map<String, dynamic> serializedGames = {};
+
+Future Function() saveGame(String id) => () async {
+      try {
+        if (!games.containsKey(id)) throw Exception('No game "$id" found!');
+        if (games[id].engine?.gameOver ?? true) {
+          serializedGames.remove(id);
+        } else {
+          serializedGames[id] = games[id].serialize();
+        }
+        await savedGamesFile.create();
+        await savedGamesFile.writeAsString(json.encode(serializedGames));
+        print('Saved game "$id"');
+      } catch (e, st) {
+        print('Failed to save game "$id"');
+        print(e);
+        print(st);
+      }
+    };

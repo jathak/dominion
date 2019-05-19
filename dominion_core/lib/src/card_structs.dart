@@ -98,7 +98,7 @@ class CardBuffer extends CardSourceAndTarget {
       };
 
   static CardBuffer deserialize(data) =>
-      CardBuffer.from(data['cards'].map(Card.deserialize));
+      CardBuffer.from(Card.deserializeList(data['cards']));
 }
 
 class Deck extends CardBuffer {
@@ -119,7 +119,7 @@ class Deck extends CardBuffer {
       };
 
   static Deck deserialize(data) =>
-      Deck.from(data['cards'].map(Card.deserialize));
+      Deck.from(Card.deserializeList(data['cards']));
 }
 
 class TopOfDeck extends CardSourceAndTarget {

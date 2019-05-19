@@ -23,15 +23,62 @@ class Game {
   Map<String, NetworkController> controllers = {};
   Map<String, List<WebSocket>> sockets = {};
   List<WebSocket> allSockets = [];
-  Game(this.id, List<String> kingdom, this.expensiveBasics) {
+  Future Function() saveGame;
+  int currentRequestCount = 0;
+  Map<int, PlayerRequest> activeRequests = {};
+
+  Game(this.id, List<String> kingdom, this.expensiveBasics, this.saveGame) {
     kingdomCards = kingdom.map((c) => CardRegistry.find(c.trim()));
     kingdomCards = kingdomCards.toList()..sort();
   }
 
+  Map<String, dynamic> serialize() => {
+        'type': 'Game',
+        'id': id,
+        'playerNames': controllers.keys.toList(),
+        'kingdomCards': kingdomCards.map((card) => card.name).toList(),
+        'expensiveBasics': expensiveBasics,
+        'currentRequestCount': currentRequestCount,
+        'engine': engine.serialize()
+      };
+
+  static Game deserialize(data, Future saveGame()) {
+    var game = Game(
+        data['id'],
+        data['kingdomCards'].whereType<String>().toList(),
+        data['expensiveBasics'],
+        saveGame);
+    game.controllers = {
+      for (var name in data['playerNames']) name: NetworkController(name, game)
+    };
+    game.currentRequestCount = (data['currentRequestCount'] ?? 0) + 1;
+    game.sockets = {for (var name in data['playerNames']) name: []};
+    if (data['engine'] != null) {
+      game.engine = DominionEngine.deserialize(data['engine'],
+          game.controllers.values.toList(), PirateShipMat.deserialize);
+      game.engine.saveGame = saveGame;
+    }
+    return game;
+  }
+
+  void resumeGame() {
+    engine.saveGame = saveGame;
+    engine.onLog = (msg) {
+      updateSupplyState();
+      logTo(spectators, msg);
+    };
+    updateSupplyState();
+    for (var player in engine.players) {
+      updateHand(player);
+    }
+    engine.start(skipInitialSave: true);
+  }
+
   void startGame(String initiatingUser) {
     logToAll("Starting game...");
-    var supply = new Supply(kingdomCards, controllers.length, expensiveBasics);
-    engine = new DominionEngine(supply, controllers.values.toList());
+    var supply = Supply(kingdomCards, controllers.length, expensiveBasics);
+    engine = DominionEngine(supply, controllers.values.toList());
+    engine.saveGame = saveGame;
     engine.onLog = (msg) {
       updateSupplyState();
       logTo(spectators, msg);
@@ -91,7 +138,7 @@ class Game {
     };
     allSockets.add(socket);
     if (!controllers.containsKey(username)) {
-      controllers[username] = new NetworkController(username, this);
+      controllers[username] = NetworkController(username, this);
     }
     if (sockets[username].length == 1) {
       logToAll("$username joined. ${controllers.length} players connected.");
@@ -147,7 +194,7 @@ class Game {
     } else if (socket is Iterable) {
       socket.forEach((s) => logTo(s, message, false));
     } else {
-      throw new Exception("Can't log to $socket");
+      throw Exception("Can't log to $socket");
     }
   }
 
@@ -191,35 +238,32 @@ class Game {
     }
   }
 
-  int currentRequestCount = 0;
-  Map<int, PlayerRequest> activeRequests = {};
-
   requestFromUser(String username, String request, var metadata) {
     for (var player in engine.players) {
       updateHand(player);
     }
-    var controller = new StreamController();
+    var completer = Completer();
     var msg = {
       'type': 'request',
       'request': request,
       'metadata': metadata,
       'request-id': currentRequestCount++
     };
+    onResponse(response) => completer.complete(response);
+    activeRequests[msg['request-id']] =
+        PlayerRequest(username, msg, onResponse);
     for (var socket in sockets[username]) {
-      onResponse(response) => controller.add(response);
-      activeRequests[msg['request-id']] =
-          new PlayerRequest(username, msg, onResponse);
       safeSend(socket, msg);
     }
-    return controller.stream.first;
+    return completer.future;
   }
 
   makeSupplyStateMsg() {
     var supply = engine.supply;
-    var kingdom = new CardBuffer();
-    var treasures = new CardBuffer();
-    var vps = new CardBuffer();
-    var starter = new CardBuffer.from(supply.cardsInSupply);
+    var kingdom = CardBuffer();
+    var treasures = CardBuffer();
+    var vps = CardBuffer();
+    var starter = CardBuffer.from(supply.cardsInSupply);
     starter.filterInto((card) {
       if ([
         Copper.instance,

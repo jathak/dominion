@@ -541,36 +541,20 @@ class KingsCourt extends Card with Action, Prosperity {
   final int cost = 7;
   final String name = "King's Court";
 
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     var card = await player.controller.selectActionCard();
     if (card == null) return null;
     player.turn.actions++; // since playAction will decrement this
     var index = await player.playAction(card);
     player.notifyAnnounce("You play", "plays", "the $card again");
-    var secondNTA = await player.play(card);
+    var secondNT = await player.play(card);
     player.notifyAnnounce("You play", "plays", "the $card a third time");
-    var thirdNTA = await player.play(card);
+    var thirdNT = await player.play(card);
     if (card is Duration) {
-      var firstNTA = player.inPlay.actions[index];
-      var ntas = [firstNTA, secondNTA, thirdNTA];
-      ntas.removeWhere((nta) => nta == null);
-      if (ntas.length == 1) {
-        player.inPlay.actions[index] = ntas.first;
-      } else {
-        player.inPlay.actions[index] = () async {
-          var persist = false;
-          var newNTAs = <NextTurnAction>[];
-          for (var nta in ntas) {
-            if (await nta()) {
-              persist = true;
-              newNTAs.add(nta);
-            }
-          }
-          ntas = newNTAs;
-          return persist;
-        };
-      }
-      return () async => false;
+      var firstNT = player.inPlay.actions[index];
+      var combined = NextTurn.combine([firstNT, secondNT, thirdNT]);
+      player.inPlay.actions[index] = combined;
+      return combined == null ? null : NextTurn([], blockedOn: combined);
     }
     return null;
   }

@@ -35,7 +35,7 @@ class Haven extends Card with Action, Duration, Seaside {
   final int cost = 2;
   final String name = "Haven";
 
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     player.draw();
     player.turn.actions++;
     if (player.hand.length == 0) return null;
@@ -45,11 +45,7 @@ class Haven extends Card with Action, Duration, Seaside {
     player.hand.moveTo(card, stored);
     player.notifyAnnounce(
         "You set aside a $card", "sets aside a card", "with Haven");
-    return () async {
-      stored.drawTo(player.hand);
-      player.notify("You return your $card to your hand");
-      return false;
-    };
+    return NextTurn([StorageNextTurnTask(player, stored, context: this)]);
   }
 }
 
@@ -63,13 +59,10 @@ class Lighthouse extends Card with Action, Duration, Seaside {
 
   final bool protectsFromAttacks = true;
 
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     player.turn.actions++;
     player.turn.coins++;
-    return () async {
-      player.turn.coins++;
-      return false;
-    };
+    return NextTurn([NextTurnTask.extraCoin(player)]);
   }
 }
 
@@ -172,14 +165,11 @@ class FishingVillage extends Card with Action, Duration, Seaside {
 
   final bool protectsFromAttacks = true;
 
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     player.turn.actions += 2;
     player.turn.coins++;
-    return () async {
-      player.turn.actions++;
-      player.turn.coins++;
-      return false;
-    };
+    return NextTurn(
+        [NextTurnTask.extraAction(player), NextTurnTask.extraCoin(player)]);
   }
 }
 
@@ -260,13 +250,10 @@ class Caravan extends Card with Action, Duration, Seaside {
   final int cost = 4;
   final String name = "Caravan";
 
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     player.draw();
     player.turn.actions++;
-    return () async {
-      player.draw();
-      return false;
-    };
+    return NextTurn([NextTurnTask.drawCard(player)]);
   }
 }
 
@@ -533,12 +520,9 @@ class MerchantShip extends Card with Action, Duration, Seaside {
   final int cost = 5;
   final String name = "Merchant Ship";
 
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     player.turn.coins += 2;
-    return () async {
-      player.turn.coins += 2;
-      return false;
-    };
+    return NextTurn([NextTurnTask.extraCoin(player, count: 2)]);
   }
 }
 
@@ -550,12 +534,10 @@ class Outpost extends Card with Action, Duration, Seaside {
   final int cost = 5;
   final String name = "Outpost";
 
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     if (player.takeOutpostTurn) return null;
     player.takeOutpostTurn = true;
-    return () async {
-      return false;
-    };
+    return NextTurn([]);
   }
 }
 
@@ -567,17 +549,16 @@ class Tactician extends Card with Action, Duration, Seaside {
   final int cost = 5;
   final String name = "Tactician";
 
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     if (player.hand.length == 0) return null;
     while (player.hand.length > 0) {
       await player.discardFrom(player.hand);
     }
-    return () async {
-      player.draw(5);
-      player.turn.actions++;
-      player.turn.buys++;
-      return false;
-    };
+    return NextTurn([
+      NextTurnTask.drawCard(player, count: 5),
+      NextTurnTask.extraAction(player),
+      NextTurnTask.extraBuy(player)
+    ]);
   }
 }
 
@@ -614,13 +595,12 @@ class Wharf extends Card with Action, Duration, Seaside {
   final int cost = 5;
   final String name = "Wharf";
 
-  Future<NextTurnAction> onPlayCanPersist(Player player) async {
+  Future<NextTurn> onPlayCanPersist(Player player) async {
     player.draw(2);
     player.turn.buys++;
-    return () async {
-      player.draw(2);
-      player.turn.buys++;
-      return false;
-    };
+    return NextTurn([
+      NextTurnTask.drawCard(player, count: 2),
+      NextTurnTask.extraBuy(player)
+    ]);
   }
 }

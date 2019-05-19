@@ -23,6 +23,9 @@ class CardRegistry {
     return _cards[name];
   }
 
+  static List<Card> findAll(data) =>
+      [for (var name in data) CardRegistry.find(name)];
+
   static Iterable<Card> cardsWithConditions([CardConditions conditions]) sync* {
     if (_cards == null) _init();
     if (conditions == null) conditions = new CardConditions();

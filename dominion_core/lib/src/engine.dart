@@ -4,8 +4,7 @@ class DominionEngine {
   CardBuffer trashPile = CardBuffer();
   Supply supply;
 
-  /// used by various cards to attach data to the entire game
-  Map misc = {};
+  bool gameOver = false;
 
   DominionEngine(this.supply, List<PlayerController> controllers) {
     _players = [];
@@ -21,6 +20,36 @@ class DominionEngine {
     }
   }
 
+  DominionEngine._(this.supply);
+
+  Map<String, dynamic> serialize() => {
+        'type': 'Engine',
+        'currentPlayer': _players.indexOf(currentPlayer),
+        'players': [for (var player in players) player.serialize()],
+        'supply': supply.serialize(),
+        'trashPile': trashPile.serialize(),
+        'gameOver': gameOver
+      };
+
+  static DominionEngine deserialize(data, List<PlayerController> controllers,
+      Mat pirateShipDeserializer(data)) {
+    var engine = DominionEngine._(Supply.deserialize(data['supply']));
+    if (controllers.length != data['players']?.length) {
+      throw Exception("Invalid serialized game! "
+          "Expected ${controllers.length} players, "
+          "got ${data['players']?.length}");
+    }
+    engine._players = [
+      for (var i = 0; i < controllers.length; i++)
+        Player.deserialize(
+            data['players'][i], engine, controllers[i], pirateShipDeserializer)
+    ];
+    engine.currentPlayer = engine._players[data['currentPlayer']];
+    engine.trashPile = CardBuffer.deserialize(data['trashPile']);
+    engine.gameOver = data['gameOver'];
+    return engine;
+  }
+
   reset() {
     var newPlayers = [];
     for (var player in _players) {
@@ -33,12 +62,15 @@ class DominionEngine {
     }
     trashPile = CardBuffer();
     supply.reset();
-    misc = {};
     currentPlayer = _players[0];
   }
 
-  start() async {
+  Future Function() saveGame = () async => null;
+
+  start({bool skipInitialSave = false}) async {
     while (true) {
+      if (!skipInitialSave) await saveGame();
+      skipInitialSave = false;
       await currentPlayer.takeTurn();
       if (supply.isGameOver()) break;
       currentPlayer = toLeftOf(currentPlayer);
@@ -56,6 +88,7 @@ class DominionEngine {
       }
     }
     declareWinner(maxPlayers);
+    await saveGame();
   }
 
   declareWinner(List<Player> maxPlayers) {
@@ -75,6 +108,7 @@ class DominionEngine {
         log("Tie between ${missingTurn.map((p) => p.name).toList()}");
       }
     }
+    gameOver = true;
   }
 
   Function onLog;
@@ -126,9 +160,6 @@ class Player extends Object with CardSource {
   DominionEngine engine;
   PlayerController controller;
 
-  /// used by various cards to attach data to a particular player
-  Map misc = {};
-
   String get name => controller.name;
 
   Player(this.engine, this.controller) {
@@ -140,6 +171,8 @@ class Player extends Object with CardSource {
     discarded = CardBuffer();
     inPlay = InPlayBuffer();
   }
+
+  Player._(this.engine, this.controller);
 
   Future<Card> selectCardToGain(
       {@required Card context,
@@ -228,7 +261,7 @@ class Player extends Object with CardSource {
     return index;
   }
 
-  Future<NextTurnAction> play(Card card) async {
+  Future<NextTurn> play(Card card) async {
     turn.playCounts[card] = turn.playCount(card) + 1;
     for (var listener in turn.playListeners) {
       await listener(card);
@@ -465,11 +498,11 @@ class Player extends Object with CardSource {
   int vpTokens = 0;
 
   Turn turn;
-  Turn lastTurn;
+  TurnStub lastTurn;
 
   bool takeOutpostTurn = false;
 
-  final mats = <Card, Mat>{};
+  Map<Card, Mat> mats = {};
 
   Map<String, dynamic> serializeMats() =>
       {for (var card in mats.keys) card.name: mats[card].serialize()};
@@ -483,6 +516,37 @@ class Player extends Object with CardSource {
                   ? pirateShipDeserializer(data[cardName])
                   : Mat.deserialize(data))
       };
+
+  /// Serialize this player (only valid between turns)
+  Map<String, dynamic> serialize() => {
+        'type': 'Player',
+        'name': name,
+        'deck': deck.serialize(),
+        'hand': hand.serialize(),
+        'discarded': discarded.serialize(),
+        'inPlay': inPlay.serialize(),
+        'vpTokens': vpTokens,
+        'lastTurn': lastTurn?.serialize(),
+        'takeOutpostTurn': takeOutpostTurn,
+        'mats': serializeMats()
+      };
+
+  static Player deserialize(data, DominionEngine engine,
+      PlayerController controller, Mat pirateShipDeserializer(data)) {
+    var player = Player._(engine, controller);
+    controller.player = player;
+    return player
+      ..deck = Deck.deserialize(data['deck'])
+      ..hand = CardBuffer.deserialize(data['hand'])
+      ..discarded = CardBuffer.deserialize(data['discarded'])
+      ..inPlay = InPlayBuffer.deserialize(data['inPlay'], player)
+      ..vpTokens = data['vpTokens']
+      ..lastTurn = data['lastTurn'] == null
+          ? null
+          : TurnStub.deserialize(data['lastTurn'])
+      ..takeOutpostTurn = data['takeOutpostTurn']
+      ..mats = deserializeMats(data['mats'], pirateShipDeserializer);
+  }
 }
 
 class Supply {
@@ -498,6 +562,8 @@ class Supply {
     _expensiveBasics = expensiveBasics;
     _setup(_kingdomCards, _playerCount, _expensiveBasics);
   }
+
+  Supply._();
 
   _setup(Iterable<Card> kingdomCards, int playerCount, bool expensiveBasics) {
     _supplies = Map.fromEntries([
@@ -574,4 +640,26 @@ class Supply {
     }
     return false;
   }
+
+  Map<String, dynamic> serialize() => {
+        'type': 'Supply',
+        'supplies': {
+          for (var card in _supplies.keys)
+            card.name: _supplies[card].serialize()
+        },
+        'kingdomCards': _kingdomCards.map((card) => card.name).toList(),
+        'playerCount': _playerCount,
+        'expensiveBasics': _expensiveBasics,
+      };
+
+  static Supply deserialize(data) => Supply._()
+    .._supplies = {
+      for (var name in data['supplies'].keys)
+        CardRegistry.find(name): SupplyPile.deserialize(data['supplies'][name])
+    }
+    .._kingdomCards = [
+      for (var name in data['kingdomCards']) CardRegistry.find(name)
+    ]
+    .._playerCount = data['playerCount']
+    .._expensiveBasics = data['expensiveBasics'];
 }
