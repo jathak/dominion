@@ -44,7 +44,7 @@ abstract class PlayerController {
           bool optional: false}) async =>
       optional
           ? firstOrNone(await selectCardsFrom(cards, prompt,
-              context: context, event: event, max: 1))
+              context: context, event: event, max: 1)) as T
           : (await selectCardsFrom(cards, prompt,
                   context: context, event: event, min: 1, max: 1))
               .first;
@@ -103,9 +103,12 @@ abstract class PlayerController {
           optional: optional);
 
   /// returns an ActionCard or null to prematurely end action phase
-  Future<Action> selectActionCard() => selectCardFrom(
-      player.hand.whereType<Action>(), "Select an Action card to play",
-      context: null, optional: true);
+  Future<Action> selectActionCard({Card context}) async {
+    var actions = player.hand.whereType<Action>();
+    if (actions.isEmpty) return null;
+    return selectCardFrom<Action>(actions, "Select an Action card to play",
+        context: context, optional: true);
+  }
 
   /// returns a list of TreasureCards or an empty list to stop playing treasures
   Future<List<Treasure>> selectTreasureCards({int min: 0, int max}) =>
@@ -122,7 +125,7 @@ abstract class PlayerController {
   reset() => null;
 }
 
-T firstOrNone<T>(List<T> list) => list.isEmpty ? null : list.first;
+Card firstOrNone(List<Card> list) => list.isEmpty ? null : list.first;
 
 class Turn {
   /// The number of actions remaining for this turn.

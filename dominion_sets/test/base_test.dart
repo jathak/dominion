@@ -12,21 +12,13 @@ class BaseSetTester extends GameplayTester {
   main() {
     group("Simple Cards - ", nonInteractionTests);
     group("Cards with Interaction - ", interactionTests);
+    group("Throne Room", throneRoomTests);
+    group("Attacks - ", attackTests);
+    group("Gardens - ", gardensTests);
   }
 
   nonInteractionTests() {
-    test("Moat", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Moat.instance);
-      cards.add(playerA.deck[0]);
-      cards.add(playerA.deck[1]);
-      await playerA.playAction(Moat.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerA.inPlay, [Moat.instance]);
-      expect(playerA.turn.actions, equals(0));
-      expect(playerA.turn.buys, equals(1));
-      expect(playerA.turn.coins, equals(0));
-    });
+    testPlayAction(Moat.instance, actions: 0, buys: 1, coins: 0, drewCards: 2);
     test("Merchant", () async {
       playerA.hand.receive(Silver.instance);
       playerA.hand.receive(Silver.instance);
@@ -45,27 +37,21 @@ class BaseSetTester extends GameplayTester {
       await playerA.playTreasure(Silver.instance);
       expect(playerA.turn.coins, equals(5));
     });
-    test("Village", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Village.instance);
-      cards.add(playerA.deck[0]);
-      await playerA.playAction(Village.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerA.inPlay, [Village.instance]);
-      expect(playerA.turn.actions, equals(2));
-      expect(playerA.turn.buys, equals(1));
-      expect(playerA.turn.coins, equals(0));
-    });
-    test("Woodcutter", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Woodcutter.instance);
-      await playerA.playAction(Woodcutter.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerA.inPlay, [Woodcutter.instance]);
+    test("Vassal - With Gold", () async {
+      var hand = playerA.hand.toList();
+      playerA.hand.receive(Vassal.instance);
+      playerA.deck.top.receive(Gold.instance);
+      await playerA.playAction(Vassal.instance);
+      expectBufferHasCards(playerA.hand, hand);
+      expectBufferHasCards(playerA.inPlay, [Vassal.instance]);
+      expectBufferHasCards(playerA.discarded, [Gold.instance]);
       expect(playerA.turn.actions, equals(0));
-      expect(playerA.turn.buys, equals(2));
+      expect(playerA.turn.buys, equals(1));
       expect(playerA.turn.coins, equals(2));
     });
+    testPlayAction(Village.instance,
+        actions: 2, buys: 1, coins: 0, drewCards: 1);
+    testPlayAction(Woodcutter.instance, actions: 0, buys: 2, coins: 2);
     test("Moneylender", () async {
       List<Card> cards = playerA.hand.toList();
       playerA.hand.receive(Moneylender.instance);
@@ -78,95 +64,21 @@ class BaseSetTester extends GameplayTester {
       expect(playerA.turn.buys, equals(1));
       expect(playerA.turn.coins, equals(3));
     });
-    test("Poacher - no empty supplies", () async {
-      var hand = playerA.hand.toList();
-      playerA.hand.receive(Poacher.instance);
-      hand.add(playerA.deck[0]);
-      await playerA.playAction(Poacher.instance);
-      expectBufferHasCards(playerA.hand, hand);
-      expectBufferHasCards(playerA.inPlay, [Poacher.instance]);
-      expectBufferHasCards(playerA.discarded, []);
-      expect(playerA.turn.actions, equals(1));
-      expect(playerA.turn.buys, equals(1));
-      expect(playerA.turn.coins, equals(1));
+    testPlayAction(Poacher.instance,
+        actions: 1, buys: 1, coins: 1, drewCards: 1);
+    testPlayAction(Smithy.instance,
+        actions: 0, buys: 1, coins: 0, drewCards: 3);
+    testPlayAction(CouncilRoom.instance,
+        actions: 0, buys: 2, coins: 0, drewCards: 4, after: () {
+      var deck = startingDeck;
+      var hand = startingHand + [deck.removeAt(0)];
+      playerShouldHave(player: playerB, deck: deck, hand: hand);
     });
-    test("Smithy", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Smithy.instance);
-      cards.add(playerA.deck[0]);
-      cards.add(playerA.deck[1]);
-      cards.add(playerA.deck[2]);
-      await playerA.playAction(Smithy.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerA.inPlay, [Smithy.instance]);
-      expect(playerA.turn.actions, equals(0));
-      expect(playerA.turn.buys, equals(1));
-      expect(playerA.turn.coins, equals(0));
-    });
-    // TODO(jathak): Test Bandit with no choice
-    test("CouncilRoom", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(CouncilRoom.instance);
-      cards.add(playerA.deck[0]);
-      cards.add(playerA.deck[1]);
-      cards.add(playerA.deck[2]);
-      cards.add(playerA.deck[3]);
-      List<Card> cardsB = playerB.hand.toList();
-      cardsB.add(playerB.deck[0]);
-      await playerA.playAction(CouncilRoom.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerB.hand, cardsB);
-      expectBufferHasCards(playerA.inPlay, [CouncilRoom.instance]);
-      expect(playerA.turn.actions, equals(0));
-      expect(playerA.turn.buys, equals(2));
-      expect(playerA.turn.coins, equals(0));
-    });
-    test("Festival", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Festival.instance);
-      await playerA.playAction(Festival.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerA.inPlay, [Festival.instance]);
-      expect(playerA.turn.actions, equals(2));
-      expect(playerA.turn.buys, equals(2));
-      expect(playerA.turn.coins, equals(2));
-    });
-    test("Laboratory", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Laboratory.instance);
-      cards.add(playerA.deck[0]);
-      cards.add(playerA.deck[1]);
-      await playerA.playAction(Laboratory.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerA.inPlay, [Laboratory.instance]);
-      expect(playerA.turn.actions, equals(1));
-      expect(playerA.turn.buys, equals(1));
-      expect(playerA.turn.coins, equals(0));
-    });
-    test("Market", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Market.instance);
-      cards.add(playerA.deck[0]);
-      await playerA.playAction(Market.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerA.inPlay, [Market.instance]);
-      expect(playerA.turn.actions, equals(1));
-      expect(playerA.turn.buys, equals(2));
-      expect(playerA.turn.coins, equals(1));
-    });
-    test("Witch", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Witch.instance);
-      cards.add(playerA.deck[0]);
-      cards.add(playerA.deck[1]);
-      await playerA.playAction(Witch.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerA.inPlay, [Witch.instance]);
-      expectBufferHasCards(playerB.discarded, [Curse.instance]);
-      expect(playerA.turn.actions, equals(0));
-      expect(playerA.turn.buys, equals(1));
-      expect(playerA.turn.coins, equals(0));
-    });
+    testPlayAction(Festival.instance, actions: 2, buys: 2, coins: 2);
+    testPlayAction(Laboratory.instance,
+        actions: 1, buys: 1, coins: 0, drewCards: 2);
+    testPlayAction(Market.instance,
+        actions: 1, buys: 2, coins: 1, drewCards: 1);
     test("Adventurer", () async {
       List<Card> cards = playerA.hand.toList();
       playerA.hand.receive(Adventurer.instance);
@@ -186,67 +98,165 @@ class BaseSetTester extends GameplayTester {
   }
 
   throneRoomTests() {
-    test("with Market", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Market.instance);
-      playerA.hand.receive(ThroneRoom.instance);
-      cards.add(playerA.deck[0]);
-      cards.add(playerA.deck[1]);
-      await playerA.playAction(ThroneRoom.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(
-          playerA.inPlay, [ThroneRoom.instance, Market.instance]);
-      expect(playerA.turn.actions, equals(2));
-      expect(playerA.turn.buys, equals(3));
-      expect(playerA.turn.coins, equals(2));
+    testGameplay("with Market", () {
+      var deck = startingDeck;
+      var hand = startingHand + [deck.removeAt(0), deck.removeAt(0)];
+
+      putCardInHand(Market.instance);
+      putCardInHand(ThroneRoom.instance);
+      playAction(ThroneRoom.instance);
+      shouldSelectCardsFrom(
+          withContext: ThroneRoom.instance,
+          withMin: 0,
+          withMax: 1,
+          response: (cards) => [cards.last]);
+      playerShouldHave(
+          actions: 2,
+          buys: 3,
+          coins: 2,
+          hand: hand,
+          deck: deck,
+          inPlay: [ThroneRoom.instance, Market.instance],
+          discarded: []);
     });
-    test("with Witch", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(Witch.instance);
-      playerA.hand.receive(ThroneRoom.instance);
-      cards.add(playerA.deck[0]);
-      cards.add(playerA.deck[1]);
-      cards.add(playerA.deck[2]);
-      cards.add(playerA.deck[3]);
-      await playerA.playAction(ThroneRoom.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(
-          playerA.inPlay, [ThroneRoom.instance, Witch.instance]);
-      expectBufferHasCards(playerB.discarded, [Curse.instance, Curse.instance]);
-      expect(playerA.turn.actions, equals(0));
-      expect(playerA.turn.buys, equals(1));
-      expect(playerA.turn.coins, equals(0));
+    testGameplay("with Witch", () {
+      var deck = startingDeck;
+      var hand = startingHand + deck.sublist(0, 4);
+      deck.removeRange(0, 4);
+
+      putCardInHand(Witch.instance);
+      putCardInHand(ThroneRoom.instance);
+      playAction(ThroneRoom.instance);
+      shouldSelectCardsFrom(
+          withContext: ThroneRoom.instance,
+          withMin: 0,
+          withMax: 1,
+          response: (cards) => [cards.last]);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: hand,
+          deck: deck,
+          inPlay: [ThroneRoom.instance, Witch.instance],
+          discarded: []);
+      playerShouldHave(
+          player: playerB,
+          hand: startingHand,
+          deck: startingDeck,
+          inPlay: [],
+          discarded: [Curse.instance, Curse.instance]);
     });
-    test("with Nothing", () async {
-      List<Card> cards = playerA.hand.toList();
-      playerA.hand.receive(ThroneRoom.instance);
-      await playerA.playAction(ThroneRoom.instance);
-      expectBufferHasCards(playerA.hand, cards);
-      expectBufferHasCards(playerA.inPlay, [ThroneRoom.instance]);
-      expect(playerA.turn.actions, equals(0));
-      expect(playerA.turn.buys, equals(1));
-      expect(playerA.turn.coins, equals(0));
+    test("with Nothing", () {
+      putCardInHand(ThroneRoom.instance);
+      playAction(ThroneRoom.instance);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: startingHand,
+          deck: startingDeck,
+          inPlay: [ThroneRoom.instance],
+          discarded: []);
     });
   }
 
   interactionTests() {
-    /*test("Vassal - With Gold", () async {
-      var hand = playerA.hand.toList();
-      playerA.hand.receive(Vassal.instance);
-      playerA.deck.top.receive(Gold.instance);
-      ctrlA.confirmAction_ = (question, {context, event}) async {
-        expect(context, equals(Vassal.instance));
-        return true;
-      };
-      await playerA.playAction(Vassal.instance);
-      expectBufferHasCards(playerA.hand, hand);
-      expectBufferHasCards(playerA.inPlay, [Vassal.instance]);
-      expectBufferHasCards(playerA.discarded, [Gold.instance]);
-      expect(playerA.turn.actions, equals(0));
-      expect(playerA.turn.buys, equals(1));
-      expect(playerA.turn.coins, equals(2));
-    });*/
+    testGameplay("Cellar", () {
+      var hand = startingHand;
+      var discarded = [hand.removeAt(0), hand.removeAt(2)];
+      var deck = startingDeck;
+      hand.add(deck.removeAt(0));
+      hand.add(deck.removeAt(0));
+
+      putCardInHand(Cellar.instance);
+      playAction(Cellar.instance);
+      shouldSelectCardsFrom(
+          withContext: Cellar.instance,
+          withMin: 0,
+          response: (cards) => [cards[0], cards[3]]);
+      playerShouldHave(
+          actions: 1,
+          buys: 1,
+          coins: 0,
+          hand: hand,
+          inPlay: [Cellar.instance],
+          discarded: discarded,
+          deck: deck);
+    });
+    testGameplay("Chapel", () {
+      var hand = startingHand;
+      var trashed = [hand.removeAt(0), hand.removeAt(2)];
+
+      putCardInHand(Chapel.instance);
+      playAction(Chapel.instance);
+      shouldSelectCardsFrom(
+          withContext: Chapel.instance,
+          withMin: 0,
+          withMax: 4,
+          response: (cards) => [cards[0], cards[3]]);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: hand,
+          inPlay: [Chapel.instance],
+          discarded: [],
+          deck: startingDeck);
+      trashPileShouldHave(trashed);
+    });
+    testGameplay("Chancellor - Don't Discard", () {
+      putCardInHand(Chancellor.instance);
+      playAction(Chancellor.instance);
+      shouldConfirmAction(
+          withContext: Chancellor.instance, response: () => false);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 2,
+          hand: startingHand,
+          inPlay: [Chancellor.instance],
+          discarded: [],
+          deck: startingDeck);
+    });
+    testGameplay("Chancellor - Don't Discard", () {
+      putCardInHand(Chancellor.instance);
+      playAction(Chancellor.instance);
+      shouldConfirmAction(
+          withContext: Chancellor.instance, response: () => true);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 2,
+          hand: startingHand,
+          inPlay: [Chancellor.instance],
+          discarded: startingDeck,
+          deck: []);
+    });
+    testGameplay("Harbinger", () {
+      var deck = startingDeck;
+      var hand = startingHand + [deck.removeAt(0)];
+
+      putCardInHand(Harbinger.instance);
+      receiveCard(Gold.instance, playerA.discarded);
+      playAction(Harbinger.instance);
+      shouldSelectCardsFrom(
+          withContext: Harbinger.instance,
+          withMin: 0,
+          response: (cards) => [cards.first]);
+      playerShouldHave(
+          actions: 1,
+          buys: 1,
+          coins: 0,
+          hand: hand,
+          inPlay: [Harbinger.instance],
+          deck: <Card>[Gold.instance] + deck,
+          discarded: []);
+    });
     testGameplay("Vassal - With Village", () {
+      var deck = startingDeck;
+      var hand = startingHand + [deck.removeAt(0)];
+
       putCardInHand(Vassal.instance);
       putCardOnDeck(Village.instance);
       playAction(Vassal.instance);
@@ -255,310 +265,226 @@ class BaseSetTester extends GameplayTester {
           actions: 2,
           buys: 1,
           coins: 2,
+          hand: hand,
           inPlay: [Vassal.instance, Village.instance],
+          deck: deck,
           discarded: []);
+    });
+    testGameplay("Workshop", () {
+      putCardInHand(Workshop.instance);
+      playAction(Workshop.instance);
+      shouldSelectCardsFrom(
+          withContext: Workshop.instance,
+          withEvent: EventType.GainCard,
+          withMin: 1,
+          withMax: 1,
+          response: (cards) => [Silver.instance]);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: startingHand,
+          deck: startingDeck,
+          inPlay: [Workshop.instance],
+          discarded: [Silver.instance]);
+    });
+    testGameplay("Feast", () {
+      putCardInHand(Feast.instance);
+      playAction(Feast.instance);
+      shouldSelectCardsFrom(
+          withContext: Feast.instance,
+          withEvent: EventType.GainCard,
+          withMin: 1,
+          withMax: 1,
+          response: (cards) => [Duchy.instance]);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: startingHand,
+          deck: startingDeck,
+          inPlay: [],
+          discarded: [Duchy.instance]);
+      trashPileShouldHave([Feast.instance]);
+    });
+    testGameplay("Poacher - two empty supplies", () {
+      // Empty two supplies
+      var emptied = CardBuffer();
+      engine.supply.supplyOf(Smithy.instance).dumpTo(emptied);
+      engine.supply.supplyOf(Village.instance).dumpTo(emptied);
+
+      var deck = startingDeck;
+      var hand = startingHand + [deck.removeAt(0)];
+      var discarded = [hand.removeAt(0), hand.removeAt(0)];
+
+      putCardInHand(Poacher.instance);
+      playAction(Poacher.instance);
+      shouldSelectCardsFrom(
+          withContext: Poacher.instance,
+          withMin: 2,
+          withMax: 2,
+          response: (cards) => cards.sublist(0, 2));
+      playerShouldHave(
+          actions: 1,
+          buys: 1,
+          coins: 1,
+          hand: hand,
+          deck: deck,
+          inPlay: [Poacher.instance],
+          discarded: discarded);
+    });
+    testGameplay("Remodel", () {
+      putCardInHand(Artisan.instance);
+      putCardInHand(Remodel.instance);
+      playAction(Remodel.instance);
+      shouldSelectCardsFrom(
+          withContext: Remodel.instance,
+          withEvent: EventType.TrashCard,
+          withMin: 1,
+          withMax: 1,
+          response: (cards) => [cards.last]);
+      shouldSelectCardsFrom(
+          withContext: Remodel.instance,
+          withEvent: EventType.GainCard,
+          withMin: 1,
+          withMax: 1,
+          response: (cards) => [Province.instance]);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: startingHand,
+          deck: startingDeck,
+          inPlay: [Remodel.instance],
+          discarded: [Province.instance]);
+      trashPileShouldHave([Artisan.instance]);
+    });
+    testGameplay("Library - Keep Actions", () {
+      putCardInHand(Library.instance);
+      putCardOnDeck(Gold.instance);
+      putCardOnDeck(Smithy.instance);
+      putCardOnDeck(Silver.instance);
+      putCardOnDeck(Village.instance);
+      playAction(Library.instance);
+      shouldConfirmAction(withContext: Library.instance, response: () => false);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: startingHand + [Village.instance, Silver.instance],
+          deck: [Smithy.instance, Gold.instance] + startingDeck,
+          inPlay: [Library.instance],
+          discarded: []);
+    });
+    testGameplay("Library - Discard Actions", () {
+      putCardInHand(Library.instance);
+      putCardOnDeck(Gold.instance);
+      putCardOnDeck(Smithy.instance);
+      putCardOnDeck(Silver.instance);
+      putCardOnDeck(Village.instance);
+      playAction(Library.instance);
+      shouldConfirmAction(withContext: Library.instance, response: () => true);
+      shouldConfirmAction(withContext: Library.instance, response: () => true);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: startingHand + [Silver.instance, Gold.instance],
+          deck: startingDeck,
+          inPlay: [Library.instance],
+          discarded: [Village.instance, Smithy.instance]);
+    });
+    testGameplay("Mine", () {
+      putCardInHand(Silver.instance);
+      putCardInHand(Mine.instance);
+      playAction(Mine.instance);
+      shouldSelectCardsFrom(
+          withContext: Mine.instance,
+          withEvent: EventType.TrashCard,
+          withMin: 0,
+          withMax: 1,
+          response: (cards) => [cards.last]);
+      shouldSelectCardsFrom(
+          withContext: Mine.instance,
+          withEvent: EventType.GainCard,
+          withMin: 1,
+          withMax: 1,
+          response: (cards) => [Gold.instance]);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: startingHand + [Gold.instance],
+          deck: startingDeck,
+          inPlay: [Mine.instance],
+          discarded: []);
+      trashPileShouldHave([Silver.instance]);
+    });
+    // TODO(jathak): Test Sentry
+    // TODO(jathak): Test Artisan
+  }
+
+  attackTests() {
+    testGameplay("Bureaucrat - No Victory", () {
+      putCardInHand(Bureaucrat.instance);
+      playAction(Bureaucrat.instance);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: startingHand,
+          deck: <Card>[Silver.instance] + startingDeck,
+          inPlay: [Bureaucrat.instance],
+          discarded: []);
+      playerShouldHave(player: playerB, hand: startingHand, deck: startingDeck);
+    });
+    testGameplay("Bureaucrat - One Victory", () {
+      putCardInHand(Bureaucrat.instance);
+      putCardInHand(Duchy.instance, player: playerB);
+      playAction(Bureaucrat.instance);
+      playerShouldHave(
+          actions: 0,
+          buys: 1,
+          coins: 0,
+          hand: startingHand,
+          deck: <Card>[Silver.instance] + startingDeck,
+          inPlay: [Bureaucrat.instance],
+          discarded: []);
+      playerShouldHave(
+          player: playerB,
+          hand: startingHand,
+          deck: <Card>[Duchy.instance] + startingDeck);
+    });
+    // TODO(jathak): Test Militia
+    // TODO(jathak): Test Spy
+    // TODO(jathak): Test Thief
+    // TODO(jathak): Test Bandit with no choice
+    testPlayAction(Witch.instance, actions: 0, buys: 1, coins: 0, drewCards: 2,
+        after: () {
+      playerShouldHave(player: playerB, discarded: [Curse.instance]);
+    });
+    // TODO(jathak): Test reaction with Moat
+  }
+
+  gardensTests() {
+    test(" with 10 Cards", () async {
+      int vp = Gardens.instance.getVictoryPoints(playerA);
+      expect(vp, equals(1));
+    });
+    test(" with 15 Cards", () async {
+      for (int i = 0; i < 5; i++) playerA.deck.receive(Copper.instance);
+      int vp = Gardens.instance.getVictoryPoints(playerA);
+      expect(vp, equals(1));
+    });
+    test(" with 50 Cards", () async {
+      for (int i = 0; i < 40; i++) playerA.deck.receive(Copper.instance);
+      int vp = Gardens.instance.getVictoryPoints(playerA);
+      expect(vp, equals(5));
+    });
+    test(" with 99 Cards", () async {
+      for (int i = 0; i < 89; i++) playerA.deck.receive(Copper.instance);
+      int vp = Gardens.instance.getVictoryPoints(playerA);
+      expect(vp, equals(9));
     });
   }
 }
-
-/*DominionEngine engine;
-Player playerA;
-Player playerB;
-TestController ctrlA;
-TestController ctrlB;
-
-main() {
-  setUp(() {
-    ctrlA = new TestController("A");
-    ctrlB = new TestController("B");
-    var kingdom = CardRegistry.cardsWithConditions();
-    var supply = new Supply(kingdom, 2, false);
-    engine = new DominionEngine(supply, [ctrlA, ctrlB]);
-    playerA = engine.players[0];
-    playerB = engine.players[1];
-    playerA.turn = new Turn();
-  });
-  group("Simple Cards - ", nonInteractionTests);
-  group("Cards with Interaction - ", interactionTests);
-  group("Throne Room", throneRoomTests);
-  group("Attacks", attackTests);
-  group("Gardens", gardensTests);
-}
-
-
-
-interactionTests() {
-  test("Cellar", () async {
-    var cards = playerA.hand.toList();
-    Card discardB = cards.removeAt(2);
-    Card discardA = cards.removeAt(0);
-    cards.add(playerA.deck[0]);
-    cards.add(playerA.deck[1]);
-    playerA.hand.receive(Cellar.instance);
-
-    ctrlA.expectSelectCards(
-        withContext: Cellar.instance,
-        withMin: 0,
-        response: (cards) => [cards[0], cards[2]]);
-    await playerA.playAction(Cellar.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.inPlay, [Cellar.instance]);
-    expectBufferHasCards(playerA.discarded, [discardA, discardB]);
-    expect(playerA.turn.actions, equals(1));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-  test("Chapel", () async {
-    List<Card> cards = playerA.hand.toList();
-    ctrlA.cardsFromHand = (player, context, conds, min, max) async {
-      return [player.hand[0], player.hand[2]];
-    };
-    Card trashB = cards.removeAt(2);
-    Card trashA = cards.removeAt(0);
-    playerA.hand.receive(Chapel.instance);
-    await playerA.playAction(Chapel.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.inPlay, [Chapel.instance]);
-    expectBufferHasCards(engine.trashPile, [trashA, trashB]);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-  test("Chancellor - Don't Discard", () async {
-    List<Card> cards = playerA.hand.toList();
-    List<Card> deck = playerA.deck.toList();
-    ctrlA.confirm = (player, context, question) async => false;
-    playerA.hand.receive(Chancellor.instance);
-    await playerA.playAction(Chancellor.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.inPlay, [Chancellor.instance]);
-    expectBufferHasCards(playerA.discarded, []);
-    expectBufferHasCards(playerA.deck, deck);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(2));
-  });
-  test("Chancellor - Discard Deck", () async {
-    List<Card> cards = playerA.hand.toList();
-    List<Card> deck = playerA.deck.toList();
-    ctrlA.confirm = (player, context, question) async => true;
-    playerA.hand.receive(Chancellor.instance);
-    await playerA.playAction(Chancellor.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.inPlay, [Chancellor.instance]);
-    expectBufferHasCards(playerA.discarded, deck);
-    expectBufferHasCards(playerA.deck, []);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(2));
-  });
-  test("Harbinger", () async {
-    var cards = playerA.hand.toList();
-    var deck = playerA.deck.toList();
-    ctrlA.cardsFrom = (player, cards, question, min, max) async {
-      expect(player, equals(playerA));
-      expect(cards, equals([Gold.instance]));
-      expect(min, 0);
-      expect(max, 1);
-      return [cards.first];
-    };
-    playerA.hand.receive(Harbinger.instance);
-    playerA.discarded.receive(Gold.instance);
-    cards.add(playerA.deck[0]);
-    deck[0] = Gold.instance;
-    await playerA.playAction(Harbinger.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.inPlay, [Harbinger.instance]);
-    expectBufferHasCards(playerA.discarded, []);
-    expectBufferHasCards(playerA.deck, deck);
-    expect(playerA.turn.actions, equals(1));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-  test("Vassal - With Village", () async {
-    var hand = playerA.hand.toList();
-    playerA.hand.receive(Vassal.instance);
-    playerA.deck.top.receive(Village.instance);
-    ctrlA.confirm = (player, context, question) async {
-      expect(player, equals(playerA));
-      expect(context, equals(Village.instance));
-      return true;
-    };
-    hand.add(playerA.deck[1]);
-    await playerA.playAction(Vassal.instance);
-    expectBufferHasCards(playerA.hand, hand);
-    expectBufferHasCards(playerA.inPlay, [Vassal.instance, Village.instance]);
-    expectBufferHasCards(playerA.discarded, []);
-    expect(playerA.turn.actions, equals(2));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(2));
-  });
-  test("Workshop", () async {
-    List<Card> cards = playerA.hand.toList();
-    ctrlA.cardFromSupply =
-        (player, event, conditions, allowNone) async => Silver.instance;
-    playerA.hand.receive(Workshop.instance);
-    await playerA.playAction(Workshop.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.inPlay, [Workshop.instance]);
-    expectBufferHasCards(playerA.discarded, [Silver.instance]);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-  test("Feast", () async {
-    List<Card> cards = playerA.hand.toList();
-    ctrlA.cardFromSupply =
-        (player, event, conditions, allowNone) async => Duchy.instance;
-    playerA.hand.receive(Feast.instance);
-    await playerA.playAction(Feast.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.inPlay, []);
-    expectBufferHasCards(engine.trashPile, [Feast.instance]);
-    expectBufferHasCards(playerA.discarded, [Duchy.instance]);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-  test("Poacher - two empty supplies", () async {
-    ctrlA.cardsFromHand = (player, context, conds, min, max) async {
-      return [player.hand[0], player.hand[1]];
-    };
-    for (var i = 0; i < 10; i++) {
-      engine.supply.gain(Smithy.instance, playerB, playerB.discarded);
-      engine.supply.gain(Village.instance, playerB, playerB.discarded);
-    }
-    var hand = playerA.hand.toList();
-    var discarded = [hand.removeAt(0), hand.removeAt(0)];
-    playerA.hand.receive(Poacher.instance);
-    hand.add(playerA.deck[0]);
-    await playerA.playAction(Poacher.instance);
-    expectBufferHasCards(playerA.hand, hand);
-    expectBufferHasCards(playerA.inPlay, [Poacher.instance]);
-    expectBufferHasCards(playerA.discarded, discarded);
-    expect(playerA.turn.actions, equals(1));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(1));
-  });
-  test("Remodel", () async {
-    playerA.hand = makeBuffer([Adventurer.instance, Remodel.instance]);
-    ctrlA.cardsFromHand =
-        (player, context, conds, min, max) async => [Adventurer.instance];
-    ctrlA.cardFromSupply =
-        (player, event, conditions, allowNone) async => Province.instance;
-    await playerA.playAction(Remodel.instance);
-    expectBufferHasCards(playerA.hand, []);
-    expectBufferHasCards(playerA.inPlay, [Remodel.instance]);
-    expectBufferHasCards(engine.trashPile, [Adventurer.instance]);
-    expectBufferHasCards(playerA.discarded, [Province.instance]);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-  // TODO(jathak): Test bandit with a choice
-  test("Library - Keep Actions", () async {
-    List<Card> cards = playerA.hand.toList();
-    playerA.deck = makeDeck(
-        [Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
-    ctrlA.confirm = (player, _a, _b) async => false;
-    playerA.hand.receive(Library.instance);
-    cards.add(Village.instance);
-    cards.add(Silver.instance);
-    await playerA.playAction(Library.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.deck, [Smithy.instance, Gold.instance]);
-    expectBufferHasCards(playerA.inPlay, [Library.instance]);
-    expectBufferHasCards(playerA.discarded, []);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-  test("Library - Discard Actions", () async {
-    List<Card> cards = playerA.hand.toList();
-    playerA.deck = makeDeck(
-        [Village.instance, Silver.instance, Smithy.instance, Gold.instance]);
-    ctrlA.confirm = (player, ctx, _b) async => true;
-    playerA.hand.receive(Library.instance);
-    cards.add(Silver.instance);
-    cards.add(Gold.instance);
-    await playerA.playAction(Library.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.deck, []);
-    expectBufferHasCards(playerA.inPlay, [Library.instance]);
-    expectBufferHasCards(
-        playerA.discarded, [Village.instance, Smithy.instance]);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-  test("Mine", () async {
-    playerA.hand = makeBuffer([Silver.instance, Mine.instance]);
-    ctrlA.cardsFromHand =
-        (player, context, conds, min, max) async => [Silver.instance];
-    ctrlA.cardFromSupply =
-        (player, event, conditions, allowNone) async => Gold.instance;
-    await playerA.playAction(Mine.instance);
-    expectBufferHasCards(playerA.hand, [Gold.instance]);
-    expectBufferHasCards(playerA.inPlay, [Mine.instance]);
-    expectBufferHasCards(engine.trashPile, [Silver.instance]);
-    expectBufferHasCards(playerA.discarded, []);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-  // TODO(jathak): Test Sentry
-  // TODO(jathak): Test Artisan
-}
-
-attackTests() {
-  test("Bureaucrat", () async {
-    List<Card> cards = playerA.hand.toList();
-    List<Card> deck = playerA.deck.toList();
-    List<Card> deckB = playerB.deck.toList();
-    List<Card> cardsB = playerB.hand.toList();
-    // default TestController behavior will select first victory card it sees.
-    playerB.hand =
-        makeBuffer([Province.instance]..addAll(playerB.hand.toList()));
-
-    playerA.hand.receive(Bureaucrat.instance);
-    deck.insert(0, Silver.instance);
-    deckB.insert(0, Province.instance);
-    await playerA.playAction(Bureaucrat.instance);
-    expectBufferHasCards(playerA.hand, cards);
-    expectBufferHasCards(playerA.deck, deck);
-    expectBufferHasCards(playerB.hand, cardsB);
-    expectBufferHasCards(playerB.deck, deckB);
-    expectBufferHasCards(playerA.inPlay, [Bureaucrat.instance]);
-    expect(playerA.turn.actions, equals(0));
-    expect(playerA.turn.buys, equals(1));
-    expect(playerA.turn.coins, equals(0));
-  });
-}
-
-gardensTests() {
-  test(" with 10 Cards", () async {
-    int vp = Gardens.instance.getVictoryPoints(playerA);
-    expect(vp, equals(1));
-  });
-  test(" with 15 Cards", () async {
-    for (int i = 0; i < 5; i++) playerA.deck.receive(Copper.instance);
-    int vp = Gardens.instance.getVictoryPoints(playerA);
-    expect(vp, equals(1));
-  });
-  test(" with 50 Cards", () async {
-    for (int i = 0; i < 40; i++) playerA.deck.receive(Copper.instance);
-    int vp = Gardens.instance.getVictoryPoints(playerA);
-    expect(vp, equals(5));
-  });
-  test(" with 99 Cards", () async {
-    for (int i = 0; i < 89; i++) playerA.deck.receive(Copper.instance);
-    int vp = Gardens.instance.getVictoryPoints(playerA);
-    expect(vp, equals(9));
-  });
-}
-
-    CardRegistry.register(Militia.instance);
-    CardRegistry.register(Spy.instance);
-    CardRegistry.register(Thief.instance);
-    Moat reaction test
-*/

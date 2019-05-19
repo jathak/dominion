@@ -144,7 +144,7 @@ class Vassal extends Card with Action, BaseSet {
       player.turn.actions++; // since playAction will use one
       await player.playAction(card, from: buffer);
     } else {
-      await player.discardFrom(player.deck);
+      await player.discardFrom(buffer);
     }
   }
 }
@@ -323,8 +323,10 @@ class Remodel extends Card with Action, BaseSet {
   final String name = "Remodel";
 
   onPlay(Player player) async {
-    var card = await player.controller
-        .selectCardFromHand("Select card to trash", context: this);
+    var card = await player.controller.selectCardFromHand(
+        "Select card to trash",
+        context: this,
+        event: EventType.TrashCard);
     if (card == null) return;
     await player.trashFrom(card, player.hand);
     var gain = await player.selectCardToGain(
@@ -463,7 +465,7 @@ class ThroneRoom extends Card with Action, BaseSet {
   final String name = "Throne Room";
 
   Future<NextTurnAction> onPlayCanPersist(Player player) async {
-    var card = await player.controller.selectActionCard();
+    var card = await player.controller.selectActionCard(context: this);
     if (card == null) return null;
     player.turn.actions++; // since playAction will decrement this
     var index = await player.playAction(card);
@@ -630,7 +632,7 @@ class Mine extends Card with Action, BaseSet {
   onPlay(Player player) async {
     var trash = await player.controller.selectCardFrom(
         player.hand.whereType<Treasure>(), "Select treasure to trash?",
-        context: this, optional: true);
+        context: this, event: EventType.TrashCard, optional: true);
     if (trash == null) return;
     player.trashFrom(trash, player.hand);
     Card card = await player.selectCardToGain(

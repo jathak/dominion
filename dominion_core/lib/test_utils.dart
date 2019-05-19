@@ -62,14 +62,8 @@ abstract class GameplayTester {
       if (numPlayers > 2) playerC = engine.players[2];
       if (numPlayers > 3) playerD = engine.players[3];
       for (var player in engine.players) {
-        player.deck = makeDeck([
-          Estate.instance,
-          Estate.instance,
-          Estate.instance,
-          Copper.instance,
-          Copper.instance
-        ]);
-        player.hand = makeBuffer(List.generate(5, (_) => Copper.instance));
+        player.deck = makeDeck(startingDeck);
+        player.hand = makeBuffer(startingHand);
       }
       playerA.turn = Turn();
     });
@@ -87,8 +81,38 @@ abstract class GameplayTester {
       _steps = [GameplayStep()];
       body();
       for (var step in _steps) {
-        await step.run();
+        await step.run(engine);
       }
+    });
+  }
+
+  testPlayAction(Action card,
+      {void before(),
+      void after(),
+      @required int actions,
+      @required int buys,
+      @required int coins,
+      int drewCards: 0,
+      List<Card> trashPile: const [],
+      List<Card> discarded: const []}) {
+    testGameplay(card.toString(), () {
+      (before ?? () => null)();
+      var hand = playerA.hand.toList();
+      var deck = playerB.deck.toList();
+      for (var i = 0; i < drewCards; i++) {
+        hand.add(deck.removeAt(0));
+      }
+      putCardInHand(card);
+      playAction(card);
+      (after ?? () => null)();
+      playerShouldHave(
+          actions: actions,
+          buys: buys,
+          coins: coins,
+          hand: hand,
+          deck: deck,
+          inPlay: [card],
+          discarded: discarded);
     });
   }
 
@@ -178,6 +202,15 @@ abstract class GameplayTester {
     });
   }
 
+  List<Card> get startingHand => List.generate(5, (_) => Copper.instance);
+  List<Card> get startingDeck => [
+        Estate.instance,
+        Estate.instance,
+        Estate.instance,
+        Copper.instance,
+        Copper.instance
+      ];
+
   void playerShouldHave(
       {Player player,
       int actions,
@@ -237,7 +270,7 @@ class GameplayStep {
 
   GameStateCheck expectedGameState;
 
-  run() async {
+  run(DominionEngine engine) async {
     for (var query in expectedQueries) {
       query();
     }
@@ -248,6 +281,12 @@ class GameplayStep {
     expectedGameState?.findMismatches(mismatches);
     if (mismatches.isNotEmpty) {
       fail(mismatches.join('\n'));
+    }
+    for (var player in engine.players) {
+      var ctrl = player.controller as TestController;
+      if (ctrl.answerers.isNotEmpty) fail("answerQuestion not called!");
+      if (ctrl.confirmers.isNotEmpty) fail("confirmAction not called!");
+      if (ctrl.selectors.isNotEmpty) fail("selectCardsFrom not called!");
     }
   }
 }
@@ -309,10 +348,10 @@ void _checkBuffer(String description, CardBuffer buffer, List<Card> expected,
     {String indent = '  '}) {
   if (expected == null) return;
   var actual = buffer.toList();
-  var equal = actual.length == buffer.length;
+  var equal = actual.length == expected.length;
   if (equal) {
     for (var i = 0; i < actual.length; i++) {
-      if (actual[i] != buffer[i]) {
+      if (actual[i] != expected[i]) {
         equal = false;
         break;
       }
@@ -398,7 +437,8 @@ class TestController extends PlayerController {
     }
     return fail("Unexpected controller call: "
             "askQuestion($prompt, $options, context: $card" +
-        (event == null ? '' : ', event: $event'));
+        (event == null ? '' : ', event: $event') +
+        ")");
   }
 
   @override
@@ -411,7 +451,8 @@ class TestController extends PlayerController {
     }
     return fail("Unexpected controller call: "
             "confirmAction($prompt, context: $context" +
-        (event == null ? '' : ', event: $event'));
+        (event == null ? '' : ', event: $event') +
+        ")");
   }
 
   @override
@@ -425,7 +466,8 @@ class TestController extends PlayerController {
     return fail("Unexpected controller call: "
             "selectCardsFrom($cards, $prompt, context: $context" +
         (event == null ? '' : ', event: $event') +
-        (min == null ? '' : ', min: $event') +
-        (max == null ? '' : ', max: $event'));
+        (min == null ? '' : ', min: $min') +
+        (max == null ? '' : ', max: $max') +
+        ")");
   }
 }
