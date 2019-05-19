@@ -1,10 +1,8 @@
 import 'package:dominion_core/dominion_core.dart';
-// ignore: unused_import
 import 'package:dominion_sets/base_set.dart';
-// ignore: unused_import
 import 'package:dominion_sets/intrigue.dart';
-// ignore: unused_import
 import 'package:dominion_sets/seaside.dart';
+import 'package:dominion_sets/prosperity.dart';
 
 import 'dart:io';
 import 'dart:async';
@@ -13,6 +11,10 @@ List<String> expansions = [];
 
 main(var args) {
   expansions = args;
+  registerBaseSet();
+  registerIntrigue();
+  registerSeaside();
+  registerProsperity();
   start();
 }
 
@@ -105,7 +107,7 @@ class CLIController extends PlayerController {
   /// returns option from options
   Future<String> askQuestion(String question, List<String> options,
       {Card context, EventType event}) async {
-    print((card == null ? "" : "$context: ") + question);
+    print((context == null ? "" : "$context: ") + question);
     return selectFromList(options, false);
   }
 
@@ -113,7 +115,7 @@ class CLIController extends PlayerController {
   Future<List<T>> selectCardsFrom<T extends Card>(
       List<T> cards, String question,
       {Card context, EventType event, int min: 0, int max}) async {
-    print((card == null ? "" : "$context: ") + question);
+    print((context == null ? "" : "$context: ") + question);
     if (max == -1) max = cards.length;
     while (true) {
       List<T> selections = selectMultiple(cards, min == 0, max == cards.length);

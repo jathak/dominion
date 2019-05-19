@@ -436,7 +436,7 @@ class TestController extends PlayerController {
       }
     }
     return fail("Unexpected controller call: "
-            "askQuestion($prompt, $options, context: $card" +
+            "askQuestion($prompt, $options, context: $context" +
         (event == null ? '' : ', event: $event') +
         ")");
   }

@@ -11,6 +11,7 @@ TestController ctrlA;
 TestController ctrlB;
 
 main() {
+  registerIntrigue();
   setUp(() {
     ctrlA = new TestController("A");
     ctrlB = new TestController("B");

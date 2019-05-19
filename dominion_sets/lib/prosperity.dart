@@ -8,7 +8,34 @@ abstract class Prosperity {
   final String expansion = "Prosperity";
 }
 
-@card
+void registerProsperity() => CardRegistry.register([
+      Loan.instance,
+      TradeRoute.instance,
+      Watchtower.instance,
+      Bishop.instance,
+      Monument.instance,
+      Quarry.instance,
+      Talisman.instance,
+      WorkersVillage.instance,
+      City.instance,
+      Contraband.instance,
+      CountingHouse.instance,
+      Mint.instance,
+      Mountebank.instance,
+      Rabble.instance,
+      RoyalSeal.instance,
+      Vault.instance,
+      Venture.instance,
+      Goons.instance,
+      GrandMarket.instance,
+      Hoard.instance,
+      Bank.instance,
+      Expand.instance,
+      Forge.instance,
+      KingsCourt.instance,
+      Peddler.instance
+    ]);
+
 class Loan extends Card with Treasure, Prosperity {
   Loan._();
   static Loan instance = Loan._();
@@ -42,7 +69,6 @@ class Loan extends Card with Treasure, Prosperity {
   }
 }
 
-@card
 class TradeRoute extends Card with Action, Prosperity {
   TradeRoute._();
   static TradeRoute instance = TradeRoute._();
@@ -59,7 +85,6 @@ class TradeRoute extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Watchtower extends Card with Action, GainReaction, Prosperity {
   Watchtower._();
   static Watchtower instance = Watchtower._();
@@ -95,7 +120,6 @@ class Watchtower extends Card with Action, GainReaction, Prosperity {
   }
 }
 
-@card
 class Bishop extends Card with Action, Prosperity {
   Bishop._();
   static Bishop instance = Bishop._();
@@ -122,7 +146,6 @@ class Bishop extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Monument extends Card with Action, Prosperity {
   Monument._();
   static Monument instance = Monument._();
@@ -136,7 +159,6 @@ class Monument extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Quarry extends Card with Treasure, Prosperity {
   Quarry._();
   static Quarry instance = Quarry._();
@@ -155,7 +177,6 @@ class Quarry extends Card with Treasure, Prosperity {
   }
 }
 
-@card
 class Talisman extends Card with Treasure, GainListener, Prosperity {
   Talisman._();
   static Talisman instance = Talisman._();
@@ -174,7 +195,6 @@ class Talisman extends Card with Treasure, GainListener, Prosperity {
   }
 }
 
-@card
 class WorkersVillage extends Card with Action, Prosperity {
   WorkersVillage._();
   static WorkersVillage instance = WorkersVillage._();
@@ -189,7 +209,6 @@ class WorkersVillage extends Card with Action, Prosperity {
   }
 }
 
-@card
 class City extends Card with Action, Prosperity {
   City._();
   static City instance = City._();
@@ -209,7 +228,6 @@ class City extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Contraband extends Card with Treasure, Prosperity {
   Contraband._();
   static Contraband instance = Contraband._();
@@ -233,7 +251,6 @@ class Contraband extends Card with Treasure, Prosperity {
   }
 }
 
-@card
 class CountingHouse extends Card with Action, Prosperity {
   CountingHouse._();
   static CountingHouse instance = CountingHouse._();
@@ -253,7 +270,6 @@ class CountingHouse extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Mint extends Card with Action, Prosperity {
   Mint._();
   static Mint instance = Mint._();
@@ -282,7 +298,6 @@ class Mint extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Mountebank extends Card with Action, Attack, Prosperity {
   Mountebank._();
   static Mountebank instance = Mountebank._();
@@ -306,7 +321,6 @@ class Mountebank extends Card with Action, Attack, Prosperity {
   }
 }
 
-@card
 class Rabble extends Card with Action, Attack, Prosperity {
   Rabble._();
   static Rabble instance = Rabble._();
@@ -341,7 +355,6 @@ class Rabble extends Card with Action, Attack, Prosperity {
   }
 }
 
-@card
 class RoyalSeal extends Card with Treasure, GainListener, Prosperity {
   RoyalSeal._();
   static RoyalSeal instance = RoyalSeal._();
@@ -364,7 +377,6 @@ class RoyalSeal extends Card with Treasure, GainListener, Prosperity {
   }
 }
 
-@card
 class Vault extends Card with Action, Prosperity {
   Vault._();
   static Vault instance = Vault._();
@@ -389,7 +401,6 @@ class Vault extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Venture extends Card with Treasure, Prosperity {
   Venture._();
   static Venture instance = Venture._();
@@ -415,7 +426,6 @@ class Venture extends Card with Treasure, Prosperity {
   }
 }
 
-@card
 class Goons extends Card with Action, Attack, GainListener, Prosperity {
   Goons._();
   static Goons instance = Goons._();
@@ -441,7 +451,6 @@ class Goons extends Card with Action, Attack, GainListener, Prosperity {
   }
 }
 
-@card
 class GrandMarket extends Card with Action, Prosperity {
   GrandMarket._();
   static GrandMarket instance = GrandMarket._();
@@ -459,7 +468,6 @@ class GrandMarket extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Hoard extends Card with Treasure, GainListener, Prosperity {
   Hoard._();
   static Hoard instance = Hoard._();
@@ -478,7 +486,6 @@ class Hoard extends Card with Treasure, GainListener, Prosperity {
   }
 }
 
-@card
 class Bank extends Card with Treasure, Prosperity {
   Bank._();
   static Bank instance = Bank._();
@@ -490,7 +497,6 @@ class Bank extends Card with Treasure, Prosperity {
       player.inPlay.toList().where((card) => card is Treasure).length;
 }
 
-@card
 class Expand extends Card with Action, Prosperity {
   Expand._();
   static Expand instance = Expand._();
@@ -511,7 +517,6 @@ class Expand extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Forge extends Card with Action, Prosperity {
   Forge._();
   static Forge instance = Forge._();
@@ -533,7 +538,6 @@ class Forge extends Card with Action, Prosperity {
   }
 }
 
-@card
 class KingsCourt extends Card with Action, Prosperity {
   KingsCourt._();
   static KingsCourt instance = KingsCourt._();
@@ -560,7 +564,6 @@ class KingsCourt extends Card with Action, Prosperity {
   }
 }
 
-@card
 class Peddler extends Card with Action, Prosperity {
   Peddler._();
   static Peddler instance = Peddler._();

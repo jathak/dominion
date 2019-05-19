@@ -8,7 +8,35 @@ abstract class Seaside {
   final String expansion = "Seaside";
 }
 
-@card
+void registerSeaside() => CardRegistry.register([
+      Embargo.instance,
+      Haven.instance,
+      Lighthouse.instance,
+      NativeVillage.instance,
+      PearlDiver.instance,
+      Ambassador.instance,
+      FishingVillage.instance,
+      Lookout.instance,
+      Smugglers.instance,
+      Warehouse.instance,
+      Caravan.instance,
+      Cutpurse.instance,
+      Island.instance,
+      Navigator.instance,
+      PirateShip.instance,
+      Salvager.instance,
+      SeaHag.instance,
+      TreasureMap.instance,
+      Bazaar.instance,
+      Explorer.instance,
+      GhostShip.instance,
+      MerchantShip.instance,
+      Outpost.instance,
+      Tactician.instance,
+      Treasury.instance,
+      Wharf.instance
+    ]);
+
 class Embargo extends Card with Action, Seaside {
   Embargo._();
   static Embargo instance = Embargo._();
@@ -27,7 +55,6 @@ class Embargo extends Card with Action, Seaside {
   }
 }
 
-@card
 class Haven extends Card with Action, Duration, Seaside {
   Haven._();
   static Haven instance = Haven._();
@@ -49,7 +76,6 @@ class Haven extends Card with Action, Duration, Seaside {
   }
 }
 
-@card
 class Lighthouse extends Card with Action, Duration, Seaside {
   Lighthouse._();
   static Lighthouse instance = Lighthouse._();
@@ -66,7 +92,6 @@ class Lighthouse extends Card with Action, Duration, Seaside {
   }
 }
 
-@card
 class NativeVillage extends Card with Action, Seaside {
   NativeVillage._();
   static NativeVillage instance = NativeVillage._();
@@ -98,7 +123,6 @@ class NativeVillage extends Card with Action, Seaside {
   }
 }
 
-@card
 class PearlDiver extends Card with Action, Seaside {
   PearlDiver._();
   static PearlDiver instance = PearlDiver._();
@@ -124,7 +148,6 @@ class PearlDiver extends Card with Action, Seaside {
   }
 }
 
-@card
 class Ambassador extends Card with Action, Attack, Seaside {
   Ambassador._();
   static Ambassador instance = Ambassador._();
@@ -155,7 +178,6 @@ class Ambassador extends Card with Action, Attack, Seaside {
   }
 }
 
-@card
 class FishingVillage extends Card with Action, Duration, Seaside {
   FishingVillage._();
   static FishingVillage instance = FishingVillage._();
@@ -173,7 +195,6 @@ class FishingVillage extends Card with Action, Duration, Seaside {
   }
 }
 
-@card
 class Lookout extends Card with Action, Seaside {
   Lookout._();
   static Lookout instance = Lookout._();
@@ -195,12 +216,11 @@ class Lookout extends Card with Action, Seaside {
         buffer.toList(), "Select a card to discard",
         context: this);
     await player.discardFrom(buffer, toDiscard);
+    player.notify("You return ${buffer[0]} to the top of your deck");
     buffer.drawTo(player.deck.top);
-    player.notify("You return $card to the top of your deck");
   }
 }
 
-@card
 class Smugglers extends Card with Action, Seaside {
   Smugglers._();
   static Smugglers instance = Smugglers._();
@@ -227,7 +247,6 @@ class Smugglers extends Card with Action, Seaside {
   }
 }
 
-@card
 class Warehouse extends Card with Action, Seaside {
   Warehouse._();
   static Warehouse instance = Warehouse._();
@@ -242,7 +261,6 @@ class Warehouse extends Card with Action, Seaside {
   }
 }
 
-@card
 class Caravan extends Card with Action, Duration, Seaside {
   Caravan._();
   static Caravan instance = Caravan._();
@@ -257,7 +275,6 @@ class Caravan extends Card with Action, Duration, Seaside {
   }
 }
 
-@card
 class Cutpurse extends Card with Action, Attack, Seaside {
   Cutpurse._();
   static Cutpurse instance = Cutpurse._();
@@ -278,7 +295,6 @@ class Cutpurse extends Card with Action, Attack, Seaside {
   }
 }
 
-@card
 class Island extends Card with Action, Victory, Seaside {
   Island._();
   static Island instance = Island._();
@@ -304,7 +320,6 @@ class Island extends Card with Action, Victory, Seaside {
   }
 }
 
-@card
 class Navigator extends Card with Action, Seaside {
   Navigator._();
   static Navigator instance = Navigator._();
@@ -337,7 +352,6 @@ class Navigator extends Card with Action, Seaside {
   }
 }
 
-@card
 class PirateShip extends Card with Action, Attack, Seaside {
   PirateShip._();
   static PirateShip instance = PirateShip._();
@@ -395,7 +409,6 @@ class PirateShipMat extends Mat {
       PirateShipMat()..coinTokens = data['coinTokens'];
 }
 
-@card
 class Salvager extends Card with Action, Seaside {
   Salvager._();
   static Salvager instance = Salvager._();
@@ -413,7 +426,6 @@ class Salvager extends Card with Action, Seaside {
   }
 }
 
-@card
 class SeaHag extends Card with Action, Attack, Seaside {
   SeaHag._();
   static SeaHag instance = SeaHag._();
@@ -429,7 +441,6 @@ class SeaHag extends Card with Action, Attack, Seaside {
   }
 }
 
-@card
 class TreasureMap extends Card with Action, Seaside {
   TreasureMap._();
   static TreasureMap instance = TreasureMap._();
@@ -448,7 +459,6 @@ class TreasureMap extends Card with Action, Seaside {
   }
 }
 
-@card
 class Bazaar extends Card with Action, Seaside {
   Bazaar._();
   static Bazaar instance = Bazaar._();
@@ -463,7 +473,6 @@ class Bazaar extends Card with Action, Seaside {
   }
 }
 
-@card
 class Explorer extends Card with Action, Seaside {
   Explorer._();
   static Explorer instance = Explorer._();
@@ -484,7 +493,6 @@ class Explorer extends Card with Action, Seaside {
   }
 }
 
-@card
 class GhostShip extends Card with Action, Attack, Seaside {
   GhostShip._();
   static GhostShip instance = GhostShip._();
@@ -512,7 +520,6 @@ class GhostShip extends Card with Action, Attack, Seaside {
   }
 }
 
-@card
 class MerchantShip extends Card with Action, Duration, Seaside {
   MerchantShip._();
   static MerchantShip instance = MerchantShip._();
@@ -526,7 +533,6 @@ class MerchantShip extends Card with Action, Duration, Seaside {
   }
 }
 
-@card
 class Outpost extends Card with Action, Duration, Seaside {
   Outpost._();
   static Outpost instance = Outpost._();
@@ -541,7 +547,6 @@ class Outpost extends Card with Action, Duration, Seaside {
   }
 }
 
-@card
 class Tactician extends Card with Action, Duration, Seaside {
   Tactician._();
   static Tactician instance = Tactician._();
@@ -562,7 +567,6 @@ class Tactician extends Card with Action, Duration, Seaside {
   }
 }
 
-@card
 class Treasury extends Card with Action, Seaside {
   Treasury._();
   static Treasury instance = Treasury._();
@@ -587,7 +591,6 @@ class Treasury extends Card with Action, Seaside {
   }
 }
 
-@card
 class Wharf extends Card with Action, Duration, Seaside {
   Wharf._();
   static Wharf instance = Wharf._();

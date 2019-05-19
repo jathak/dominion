@@ -1,16 +1,19 @@
 import 'package:dominion_core/dominion_core.dart';
-// ignore: unused_import
 import 'package:dominion_sets/base_set.dart';
-// ignore: unused_import
 import 'package:dominion_sets/intrigue.dart';
-// ignore: unused_import
 import 'package:dominion_sets/seaside.dart';
-// ignore: unused_import
 import 'package:dominion_sets/prosperity.dart';
 
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
+
+void registerCards() {
+  registerBaseSet();
+  registerIntrigue();
+  registerSeaside();
+  registerProsperity();
+}
 
 Map<String, dynamic> encodeCard(Card card) => card.serialize();
 

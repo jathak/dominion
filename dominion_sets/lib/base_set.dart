@@ -10,7 +10,41 @@ mixin BaseSet {
   final bool inSecondEdition = true;
 }
 
-@card
+void registerBaseSet() => CardRegistry.register([
+      Cellar.instance,
+      Chapel.instance,
+      Moat.instance,
+      Harbinger.instance,
+      Merchant.instance,
+      Vassal.instance,
+      Village.instance,
+      Workshop.instance,
+      Bureaucrat.instance,
+      Gardens.instance,
+      Militia.instance,
+      Moneylender.instance,
+      Poacher.instance,
+      Remodel.instance,
+      Smithy.instance,
+      ThroneRoom.instance,
+      Bandit.instance,
+      CouncilRoom.instance,
+      Festival.instance,
+      Laboratory.instance,
+      Library.instance,
+      Market.instance,
+      Mine.instance,
+      Sentry.instance,
+      Witch.instance,
+      Artisan.instance,
+      Chancellor.instance,
+      Woodcutter.instance,
+      Feast.instance,
+      Spy.instance,
+      Thief.instance,
+      Adventurer.instance
+    ]);
+
 class Cellar extends Card with Action, BaseSet {
   Cellar._();
   static Cellar instance = Cellar._();
@@ -25,7 +59,6 @@ class Cellar extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Chapel extends Card with Action, BaseSet {
   Chapel._();
   static Chapel instance = Chapel._();
@@ -42,7 +75,6 @@ class Chapel extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Moat extends Card with Action, BaseSet, AttackReaction {
   Moat._();
   static Moat instance = Moat._();
@@ -61,7 +93,6 @@ class Moat extends Card with Action, BaseSet, AttackReaction {
   Future<bool> onReactToAttack(Player player, Card attack) async => true;
 }
 
-@card
 class Chancellor extends Card with Action, BaseSet {
   Chancellor._();
   static Chancellor instance = Chancellor._();
@@ -81,7 +112,6 @@ class Chancellor extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Harbinger extends Card with Action, BaseSet {
   Harbinger._();
   static Harbinger instance = Harbinger._();
@@ -103,7 +133,6 @@ class Harbinger extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Merchant extends Card with Action, BaseSet {
   Merchant._();
   static Merchant instance = Merchant._();
@@ -124,7 +153,6 @@ class Merchant extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Vassal extends Card with Action, BaseSet {
   Vassal._();
   static Vassal instance = Vassal._();
@@ -149,7 +177,6 @@ class Vassal extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Village extends Card with Action, BaseSet {
   Village._();
   static Village instance = Village._();
@@ -163,7 +190,6 @@ class Village extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Woodcutter extends Card with Action, BaseSet {
   Woodcutter._();
   static Woodcutter instance = Woodcutter._();
@@ -179,7 +205,6 @@ class Woodcutter extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Workshop extends Card with Action, BaseSet {
   Workshop._();
   static Workshop instance = Workshop._();
@@ -195,7 +220,6 @@ class Workshop extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Bureaucrat extends Card with Action, BaseSet, Attack {
   Bureaucrat._();
   static Bureaucrat instance = Bureaucrat._();
@@ -224,7 +248,6 @@ class Bureaucrat extends Card with Action, BaseSet, Attack {
   }
 }
 
-@card
 class Feast extends Card with Action, BaseSet {
   Feast._();
   static Feast instance = Feast._();
@@ -242,7 +265,6 @@ class Feast extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Gardens extends Card with Victory, BaseSet {
   Gardens._();
   static Gardens instance = Gardens._();
@@ -256,7 +278,6 @@ class Gardens extends Card with Victory, BaseSet {
   }
 }
 
-@card
 class Militia extends Card with Action, BaseSet, Attack {
   Militia._();
   static Militia instance = Militia._();
@@ -274,7 +295,6 @@ class Militia extends Card with Action, BaseSet, Attack {
   }
 }
 
-@card
 class Moneylender extends Card with Action, BaseSet {
   Moneylender._();
   static Moneylender instance = Moneylender._();
@@ -289,7 +309,6 @@ class Moneylender extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Poacher extends Card with Action, BaseSet {
   Poacher._();
   static Poacher instance = Poacher._();
@@ -314,7 +333,6 @@ class Poacher extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Remodel extends Card with Action, BaseSet {
   Remodel._();
   static Remodel instance = Remodel._();
@@ -336,7 +354,6 @@ class Remodel extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Smithy extends Card with Action, BaseSet {
   Smithy._();
   static Smithy instance = Smithy._();
@@ -349,7 +366,6 @@ class Smithy extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Spy extends Card with Action, BaseSet, Attack {
   Spy._();
   static Spy instance = Spy._();
@@ -390,7 +406,6 @@ class Spy extends Card with Action, BaseSet, Attack {
   }
 }
 
-@card
 class Thief extends Card with Action, BaseSet, Attack {
   Thief._();
   static Thief instance = Thief._();
@@ -456,7 +471,6 @@ class Thief extends Card with Action, BaseSet, Attack {
   }
 }
 
-@card
 class ThroneRoom extends Card with Action, BaseSet {
   ThroneRoom._();
   static ThroneRoom instance = ThroneRoom._();
@@ -481,7 +495,6 @@ class ThroneRoom extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Bandit extends Card with Action, Attack, BaseSet {
   Bandit._();
   static Bandit instance = Bandit._();
@@ -517,7 +530,6 @@ class Bandit extends Card with Action, Attack, BaseSet {
   }
 }
 
-@card
 class CouncilRoom extends Card with Action, BaseSet {
   CouncilRoom._();
   static CouncilRoom instance = CouncilRoom._();
@@ -534,7 +546,6 @@ class CouncilRoom extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Festival extends Card with Action, BaseSet {
   Festival._();
   static Festival instance = Festival._();
@@ -549,7 +560,6 @@ class Festival extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Laboratory extends Card with Action, BaseSet {
   Laboratory._();
   static Laboratory instance = Laboratory._();
@@ -563,7 +573,6 @@ class Laboratory extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Library extends Card with Action, BaseSet {
   Library._();
   static Library instance = Library._();
@@ -589,7 +598,6 @@ class Library extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Market extends Card with Action, BaseSet {
   Market._();
   static Market instance = Market._();
@@ -605,7 +613,6 @@ class Market extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Mine extends Card with Action, BaseSet {
   Mine._();
   static Mine instance = Mine._();
@@ -628,7 +635,6 @@ class Mine extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Sentry extends Card with Action, BaseSet {
   Sentry._();
   static Sentry instance = Sentry._();
@@ -668,7 +674,6 @@ class Sentry extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Witch extends Card with Action, BaseSet, Attack {
   Witch._();
   static Witch instance = Witch._();
@@ -684,7 +689,6 @@ class Witch extends Card with Action, BaseSet, Attack {
   }
 }
 
-@card
 class Adventurer extends Card with Action, BaseSet {
   Adventurer._();
   static Adventurer instance = Adventurer._();
@@ -717,7 +721,6 @@ class Adventurer extends Card with Action, BaseSet {
   }
 }
 
-@card
 class Artisan extends Card with Action, BaseSet {
   Artisan._();
   static Artisan instance = Artisan._();

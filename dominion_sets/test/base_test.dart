@@ -5,6 +5,7 @@ import "package:test/test.dart";
 import "package:dominion_core/test_utils.dart";
 
 main() {
+  registerBaseSet();
   BaseSetTester().main();
 }
 

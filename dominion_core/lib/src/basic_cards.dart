@@ -2,10 +2,9 @@ part of dominion_core;
 
 // Basic Treasure Cards
 
-@card
 class Copper extends Card with Treasure {
   Copper._();
-  static Copper instance = new Copper._();
+  static Copper instance = Copper._();
 
   final int cost = 0;
   final String name = "Copper";
@@ -15,10 +14,9 @@ class Copper extends Card with Treasure {
   int supplyCount(int playerCount) => 60 - 7 * playerCount;
 }
 
-@card
 class Silver extends Card with Treasure {
   Silver._();
-  static Silver instance = new Silver._();
+  static Silver instance = Silver._();
 
   final int cost = 3;
   final String name = "Silver";
@@ -28,10 +26,9 @@ class Silver extends Card with Treasure {
   int supplyCount(int playerCount) => 40;
 }
 
-@card
 class Gold extends Card with Treasure {
   Gold._();
-  static Gold instance = new Gold._();
+  static Gold instance = Gold._();
 
   final int cost = 6;
   final String name = "Gold";
@@ -41,10 +38,9 @@ class Gold extends Card with Treasure {
   int supplyCount(int playerCount) => 30;
 }
 
-@card
 class Platinum extends Card with Treasure {
   Platinum._();
-  static Platinum instance = new Platinum._();
+  static Platinum instance = Platinum._();
 
   final int cost = 9;
   final String name = "Platinum";
@@ -56,10 +52,9 @@ class Platinum extends Card with Treasure {
 
 // Basic Victory Point Cards
 
-@card
 class Estate extends Card with Victory {
   Estate._();
-  static Estate instance = new Estate._();
+  static Estate instance = Estate._();
 
   final int cost = 2;
   final String name = "Estate";
@@ -67,10 +62,9 @@ class Estate extends Card with Victory {
   final int points = 1;
 }
 
-@card
 class Duchy extends Card with Victory {
   Duchy._();
-  static Duchy instance = new Duchy._();
+  static Duchy instance = Duchy._();
 
   final int cost = 5;
   final String name = "Duchy";
@@ -78,10 +72,9 @@ class Duchy extends Card with Victory {
   final int points = 3;
 }
 
-@card
 class Province extends Card with Victory {
   Province._();
-  static Province instance = new Province._();
+  static Province instance = Province._();
 
   final int cost = 8;
   final String name = "Province";
@@ -96,10 +89,9 @@ class Province extends Card with Victory {
   }
 }
 
-@card
 class Colony extends Card with Victory {
   Colony._();
-  static Colony instance = new Colony._();
+  static Colony instance = Colony._();
 
   final int cost = 11;
   final String name = "Colony";
@@ -108,10 +100,9 @@ class Colony extends Card with Victory {
 }
 
 // Curse card
-@card
 class Curse extends Card implements VictoryOrCurse {
   Curse._();
-  static Curse instance = new Curse._();
+  static Curse instance = Curse._();
 
   final int cost = 0;
   final String name = "Curse";
@@ -124,10 +115,9 @@ class Curse extends Card implements VictoryOrCurse {
 }
 
 // Potion card
-@card
 class Potion extends Card with Treasure {
   Potion._();
-  static Potion instance = new Potion._();
+  static Potion instance = Potion._();
 
   final int cost = 4;
   final String name = "Potion";

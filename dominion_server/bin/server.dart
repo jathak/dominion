@@ -27,6 +27,7 @@ Future<void> main(var args) async {
     "Laboratory",
     "Market"
   ];
+  game.registerCards();
   games["test"] = game.Game("test", testKingdom, false, saveGame("test"));
   await restoreGames();
   await for (var request in server) {
@@ -167,7 +168,6 @@ Future Function() saveGame(String id) => () async {
         }
         await savedGamesFile.create();
         await savedGamesFile.writeAsString(json.encode(serializedGames));
-        print('Saved game "$id"');
       } catch (e, st) {
         print('Failed to save game "$id"');
         print(e);
