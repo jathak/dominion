@@ -117,12 +117,19 @@ void loadHandlers() {
     querySelector('.current-player').text =
         player == username ? "Your Turn" : "$player's Turn";
     querySelector('.deck-size').text = "${msg['deckSize']} cards left in deck";
+    querySelector('.vp-tokens').text = msg['vpTokens'] > 0
+        ? "${msg['vpTokens']} victory points from tokens"
+        : "";
     var label = querySelector('.hand-label');
     if (username == null) {
       label.text = 'Their Hand';
     } else {
       label.text = 'Your Hand';
     }
+    querySelector('.hand-label').text =
+        username == null ? 'Their Hand' : 'Your Hand';
+    // TODO(jathak): Better display for durations
+    makeHeaders(convertToCards(msg['inPlay']), querySelector(".played"));
     if (msg.containsKey('turn')) {
       var turn = msg['turn'];
       querySelector('.turn-wrapper').style.display = 'block';
@@ -130,8 +137,6 @@ void loadHandlers() {
       querySelector('.actions').text = turn['actions'].toString();
       querySelector('.buys').text = turn['buys'].toString();
       querySelector('.coins').text = turn['coins'].toString();
-      // TODO(jathak): Better display for durations
-      makeHeaders(convertToCards(msg['inPlay']), querySelector(".played"));
     } else {
       querySelector('.turn-wrapper').style.display = 'none';
     }
@@ -144,26 +149,11 @@ void loadHandlers() {
   handlers['request'] = (msg) async {
     var result = null;
     switch (msg['request']) {
-      case 'selectCardsFromHand':
-        result = await selectCardsFromHand(msg['metadata']);
-        break;
-      case 'selectCardFromSupply':
-        result = await selectCardFromSupply(msg['metadata']);
-        break;
-      case 'confirmAction':
-        result = await confirmAction(msg['metadata']);
-        break;
       case 'askQuestion':
         result = await askQuestion(msg['metadata']);
         break;
       case 'selectCardsFrom':
         result = await selectCardsFrom(msg['metadata']);
-        break;
-      case 'selectActionCard':
-        result = await selectActionCard(msg['metadata']);
-        break;
-      case 'selectTreasureCards':
-        result = await selectTreasureCards(msg['metadata']);
         break;
     }
     var response = {
@@ -213,8 +203,14 @@ Element makeCardElement(CardStub card) {
       ..text = "${card.count}"
       ..classes = ['status'];
     el.append(status);
-  } else {
+  } else if (card.count != null) {
     el.classes.add('disabled');
+  }
+  if (card.cost != null) {
+    var cost = new DivElement()
+      ..text = "${card.cost}"
+      ..classes = ['cost'];
+    el.append(cost);
   }
   if (card.selectable) el.classes.add('selectable');
   var hash = md5.convert("$name.jpg".codeUnits).toString();
@@ -230,15 +226,15 @@ Element makeHeaderElement(CardStub card) {
 
 class CardStub {
   String name, expansion;
-  int count = null;
+  int count;
+  int cost;
   bool selectable = false;
-  CardStub(this.name, [this.expansion = null]);
+  CardStub(this.name, [this.expansion]);
 
   static CardStub fromMsg(cardMsg) {
     var stub = new CardStub(cardMsg['name'], cardMsg['expansion']);
-    if (cardMsg.containsKey('count')) {
-      stub.count = cardMsg['count'];
-    }
+    if (cardMsg.containsKey('count')) stub.count = cardMsg['count'];
+    if (cardMsg.containsKey('cost')) stub.cost = cardMsg['cost'];
     return stub;
   }
 }

@@ -70,9 +70,9 @@ class DominionEngine {
       if (missingTurn.length == 1) {
         log("${missingTurn[0].name} wins!");
       } else if (missingTurn.length == 0) {
-        print("Tie between: $maxPlayers");
+        log("Tie between ${maxPlayers.map((p) => p.name).toList()}");
       } else {
-        print("Tie between: $missingTurn");
+        log("Tie between ${missingTurn.map((p) => p.name).toList()}");
       }
     }
   }
@@ -243,7 +243,8 @@ class Player extends Object with CardSource {
 
     // play actions
     while (turn.actions > 0 && hasActions()) {
-      Action actionCard = await controller.selectActionCard();
+      Action actionCard =
+          await controller.selectActionCard(event: EventType.ActionPhase);
       if (actionCard == null) break;
       await playAction(actionCard);
       log(null);
@@ -251,7 +252,8 @@ class Player extends Object with CardSource {
     turn.phase = Phase.Buy;
     // play treasures
     while (hasTreasures()) {
-      List<Treasure> treasures = await controller.selectTreasureCards();
+      List<Treasure> treasures =
+          await controller.selectTreasureCards(event: EventType.BuyPhase);
       if (treasures.length == 0) break;
       for (Treasure treasure in treasures) {
         await playTreasure(treasure);

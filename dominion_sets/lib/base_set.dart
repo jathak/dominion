@@ -480,7 +480,7 @@ class ThroneRoom extends Card with Action, BaseSet {
       } else {
         player.inPlay.actions[index] = () async {
           var persist = false;
-          var newNTAs = [];
+          var newNTAs = <NextTurnAction>[];
           for (var nta in ntas) {
             if (await nta()) {
               persist = true;

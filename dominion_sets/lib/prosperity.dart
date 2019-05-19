@@ -559,7 +559,7 @@ class KingsCourt extends Card with Action, Prosperity {
       } else {
         player.inPlay.actions[index] = () async {
           var persist = false;
-          var newNTAs = [];
+          var newNTAs = <NextTurnAction>[];
           for (var nta in ntas) {
             if (await nta()) {
               persist = true;

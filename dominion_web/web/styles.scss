@@ -29,6 +29,10 @@ html, body {
     color: #fff;
     background: #57f;
   }
+  .cost {
+    color: #212121;
+    background: #ffc107;
+  }
   .order {
     color: #fff;
     background: #4caf50;
@@ -39,7 +43,7 @@ html, body {
 }
 
 .disabled {
-  -webkit-filter: contrast(50%) saturate(20%);
+  filter: contrast(50%) saturate(20%);
 }
 
 .button {
@@ -74,7 +78,7 @@ html, body {
 
 .selectable:hover {
   border-color: #57f;
-  -webkit-filter: saturate(150%);
+  filter: saturate(150%);
   cursor: pointer;
 }
 
@@ -89,7 +93,7 @@ html, body {
     height: 473px * $ratio;
     border-radius: 16px * $ratio;
     border-width: 8px * $ratio;
-    .status, .order {
+    .status, .order, .cost {
       border-radius: 12px ;//* $ratio;
       font-size: 16px ;//* $ratio;
       position: absolute;
@@ -98,9 +102,13 @@ html, body {
       top: 20px * $ratio;
       right: 16px * $ratio;
     }
-    .order {
+    .order, .cost {
       top: auto;
       bottom: 20px * $ratio;
+    }
+    .cost {
+      left: 16px * $ratio;
+      right: auto;
     }
   }
 }

@@ -12,17 +12,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 
-dynamic encodeOption(var option) {
-  if (option is Card) {
-    return <String, dynamic>{
-      'name': option.name,
-      'expansion': option.expansion
-    };
-  } else if (option is bool || option is num) {
-    return option;
-  }
-  return option.toString();
-}
+Map<String, dynamic> encodeCard(Card card) =>
+    {'name': card.name, 'expansion': card.expansion};
 
 class Game {
   DominionEngine engine;
@@ -61,8 +52,14 @@ class Game {
   }
 
   encodeSupply(Card card) {
-    var stub = encodeOption(card);
+    var stub = encodeCard(card);
     stub['count'] = engine.supply.supplyOf(card).count;
+    if (engine.currentPlayer != null) {
+      var actualCost = card.calculateCost(engine.currentPlayer);
+      if (card.calculateCost(engine.currentPlayer) != card.cost) {
+        stub['cost'] = actualCost;
+      }
+    }
     return stub;
   }
 
@@ -171,11 +168,12 @@ class Game {
   }
 
   updateHand(Player player) {
-    var cards = player.hand.toList().map(encodeOption).toList();
+    var cards = player.hand.toList().map(encodeCard).toList();
     var msg = {'type': 'hand-update', 'hand': cards};
     msg['currentPlayer'] = engine.currentPlayer.name;
     msg['deckSize'] = player.deck.length;
-    msg['inPlay'] = player.inPlay.toList().map(encodeOption).toList();
+    msg['inPlay'] = player.inPlay.toList().map(encodeCard).toList();
+    msg['vpTokens'] = player.vpTokens;
     var toSendTo = []..addAll(sockets[player.name]);
     if (player.turn != null) {
       msg['turn'] = {
@@ -195,8 +193,9 @@ class Game {
   Map<int, PlayerRequest> activeRequests = {};
 
   requestFromUser(String username, String request, var metadata) {
-    var player = controllers[username].player;
-    if (player != null) updateHand(player);
+    for (var player in engine.players) {
+      updateHand(player);
+    }
     var controller = new StreamController();
     var msg = {
       'type': 'request',
@@ -264,82 +263,40 @@ class NetworkController extends PlayerController {
 
   NetworkController(this.name, this.game);
 
-  /// returns an ordered list of cards
-  /// selected from those meeting conditions
-  /// If max is < 0, there is no maximum
-  Future<List<Card>> selectCardsFromHand(
-      Card context, CardConditions conditions, int min, int max) async {
-    var metadata = {
-      'context': encodeOption(context),
-      'currentPlayer': game.engine.currentPlayer.name,
-      'min': min,
-      'max': max,
-      'validCards': player.hand
-          .toList()
-          .where((card) => conditions.allowsFor(card, player))
-          .map(encodeOption)
-          .toList()
-    };
-    var result =
-        await game.requestFromUser(name, 'selectCardsFromHand', metadata);
-    return result
-        .whereType<String>()
-        .map(CardRegistry.find)
-        .whereType<Card>()
-        .toList();
-  }
-
-  /// returns a card meeting conditions or null to select no card if allowNone is true
-  Future<Card> selectCardFromSupply(
-      EventType event, CardConditions conditions, bool allowNone) async {
-    var supply = game.engine.supply;
-    var supplyCards =
-        supply.cardsInSupply.where((c) => supply.supplyOf(c).count > 0);
-    var metadata = {
-      'event': event.toString(),
-      'currentPlayer': game.engine.currentPlayer.name,
-      'allowNone': allowNone,
-      'validCards': supplyCards
-          .where((card) => conditions.allowsFor(card, player))
-          .map(game.encodeSupply)
-          .toList()
-    };
-    var result =
-        await game.requestFromUser(name, 'selectCardFromSupply', metadata);
-    return result is String ? CardRegistry.find(result) : null;
-  }
-
-  /// returns true to complete action, false to not
-  Future<bool> confirmAction(Card context, String question) async {
-    var metadata = {
-      'context': encodeOption(context),
-      'currentPlayer': game.engine.currentPlayer.name,
-      'question': question
-    };
-    var result = await game.requestFromUser(name, 'confirmAction', metadata);
-    return result is bool ? result : false;
-  }
-
   /// returns option from options
-  Future askQuestion(Card context, String question, List options) async {
+  Future<String> askQuestion(String question, List<String> options,
+      {Card context, EventType event}) async {
     var metadata = {
-      'context': encodeOption(context),
+      if (context != null) 'context': encodeCard(context),
+      if (event != null) 'event': event.toString(),
       'currentPlayer': game.engine.currentPlayer.name,
       'question': question,
-      'options': options.map(encodeOption).toList()
+      'options': options
     };
     var result = await game.requestFromUser(name, 'askQuestion', metadata);
     var card = result is String ? CardRegistry.find(result) : null;
     return card ?? result;
   }
 
-  /// like selectCardsFromHand but for any list of cards
-  Future<List<Card>> selectCardsFromListImpl(
-      List<Card> cards, String question, int min, int max) async {
+  Future<List<T>> selectCardsFrom<T extends Card>(
+      List<T> cards, String question,
+      {Card context, EventType event, int min: 0, int max}) async {
     var metadata = {
+      if (context != null) 'context': encodeCard(context),
+      if (event != null) 'event': event.toString(),
       'currentPlayer': game.engine.currentPlayer.name,
       'question': question,
-      'cards': cards.map(encodeOption).toList(),
+      'cards': cards
+          .map([
+            EventType.BuyCard,
+            EventType.Contraband,
+            EventType.Embargo,
+            EventType.GainCard,
+            EventType.GainCard
+          ].contains(event)
+              ? game.encodeSupply
+              : encodeCard)
+          .toList(),
       'min': min,
       'max': max
     };
@@ -347,39 +304,7 @@ class NetworkController extends PlayerController {
     return result
         .whereType<String>()
         .map(CardRegistry.find)
-        .whereType<Card>()
-        .toList();
-  }
-
-  /// returns an ActionCard or null to prematurely end action phase
-  Future<Action> selectActionCard() async {
-    var metadata = {
-      'cards': player.hand
-          .toList()
-          .where((c) => c is Action)
-          .map(encodeOption)
-          .toList()
-    };
-    var result = await game.requestFromUser(name, 'selectActionCard', metadata);
-    var card = CardRegistry.find(result);
-    return card is Action ? card : null;
-  }
-
-  /// returns a list of TreasureCards or an empty list to stop playing treasures
-  Future<List<Treasure>> selectTreasureCards() async {
-    var metadata = {
-      'cards': player.hand
-          .toList()
-          .where((c) => c is Treasure)
-          .map(encodeOption)
-          .toList()
-    };
-    var result =
-        await game.requestFromUser(name, 'selectTreasureCards', metadata);
-    return result
-        .whereType<String>()
-        .map(CardRegistry.find)
-        .whereType<Treasure>()
+        .whereType<T>()
         .toList();
   }
 

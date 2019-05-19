@@ -95,7 +95,9 @@ abstract class PlayerController {
           {@required Card context, CardConditions conditions, bool optional}) =>
       selectCardFrom(
           player.engine.supply.cardsInSupply
-              .where((card) => conditions.allowsFor(card, player))
+              .where((card) =>
+                  conditions.allowsFor(card, player) &&
+                  player.engine.supply.supplyOf(card).count > 0)
               .toList(),
           prompt,
           context: context,
@@ -103,18 +105,19 @@ abstract class PlayerController {
           optional: optional);
 
   /// returns an ActionCard or null to prematurely end action phase
-  Future<Action> selectActionCard({Card context}) async {
+  Future<Action> selectActionCard({Card context, EventType event}) async {
     var actions = player.hand.whereType<Action>();
     if (actions.isEmpty) return null;
     return selectCardFrom<Action>(actions, "Select an Action card to play",
-        context: context, optional: true);
+        context: context, event: event, optional: true);
   }
 
   /// returns a list of TreasureCards or an empty list to stop playing treasures
-  Future<List<Treasure>> selectTreasureCards({int min: 0, int max}) =>
+  Future<List<Treasure>> selectTreasureCards(
+          {Card context, EventType event, int min: 0, int max}) =>
       selectCardsFrom(player.hand.whereType<Treasure>(),
           "Select Treasure cards to play in order",
-          context: null, min: min, max: max);
+          context: context, event: event, min: min, max: max);
 
   /// player's name
   String name;
@@ -256,7 +259,9 @@ enum EventType {
   TrashCard,
   Embargo,
   Contraband,
-  Reaction
+  Reaction,
+  ActionPhase,
+  BuyPhase
 }
 
 class Mat {

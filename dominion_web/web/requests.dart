@@ -1,14 +1,6 @@
 part of main;
 
-selectCardsFromHand(var metadata) {
-  var context = metadata['context']['name'];
-  var name = metadata['currentPlayer'];
-  var stubs = metadata['validCards'].map(CardStub.fromMsg);
-  return cardSelector(
-      stubs, "$name played a $context", metadata['min'], metadata['max']);
-}
-
-selectCardFromSupply(var metadata) {
+/*selectCardFromSupply(var metadata) {
   var event = metadata['event'];
   //var name = metadata['currentPlayer'];
   var stubs = metadata['validCards'].map(CardStub.fromMsg);
@@ -31,12 +23,18 @@ selectCardFromSupply(var metadata) {
 
 confirmAction(var metadata) async {
   var question = metadata['question'];
+  if (metadata.containsKey('context')) {
+    question = metadata['context']['name'] + ": $question";
+  }
   var answer = await firstOrNull(cardSelector(['Yes', 'No'], question, 1, 1));
   return answer == 'Yes';
-}
+}*/
 
 askQuestion(var metadata) {
   var question = metadata['question'];
+  if (metadata.containsKey('context')) {
+    question = metadata['context']['name'] + ": $question";
+  }
   var options =
       metadata['options'].map((c) => c is String ? c : CardStub.fromMsg(c));
   return firstOrNull(cardSelector(options, question, 1, 1));
@@ -44,20 +42,12 @@ askQuestion(var metadata) {
 
 selectCardsFrom(var metadata) {
   var question = metadata['question'];
+  if (metadata.containsKey('context')) {
+    question = metadata['context']['name'] + ": $question";
+  }
   var stubs = metadata['cards'].map(CardStub.fromMsg);
-  return cardSelector(stubs, question, metadata['min'], metadata['max']);
-}
-
-selectActionCard(var metadata) {
-  var stubs = metadata['cards'].map(CardStub.fromMsg);
-  return firstOrNull(
-      cardSelector(stubs, 'Select an action card to play', 0, 1));
-}
-
-selectTreasureCards(var metadata) {
-  var stubs = metadata['cards'].map(CardStub.fromMsg);
-  return cardSelector(
-      stubs, "Select treasure cards to play for your buy phase", 0, -1, true);
+  return cardSelector(stubs, question, metadata['min'], metadata['max'],
+      selectAll: metadata['event'] == "EventType.BuyPhase");
 }
 
 firstOrNull(var futureList) async {
@@ -67,21 +57,27 @@ firstOrNull(var futureList) async {
 }
 
 cardSelector(Iterable<dynamic> stubsIter, String prompt, int min, int max,
-    [bool selectAll = false]) async {
+    {bool selectAll: false}) async {
   var stubs = stubsIter.toList();
   var overlay = querySelector('.overlay');
   var promptEl = overlay.querySelector('.prompt')..innerHtml = "";
   var subpromptEl = overlay.querySelector('.subprompt')..innerHtml = "";
+  var numbersEl = overlay.querySelector('.numbers')..innerHtml = "";
   var cardsEl = overlay.querySelector('.cards')..innerHtml = "";
   var confirm = overlay.querySelector('.confirm');
   promptEl.text = prompt;
   String subprompt = "Select at least $min and at most $max";
   if (min == max) subprompt = "Select exactly $min";
   if (min == 0) subprompt = "Select at most $max";
-  if (max == -1) subprompt = "Select at least $min";
-  if (min == 0 && max == -1) subprompt = "Select any amount (including none)";
-  if (max == -1) max = stubs.length;
+  if (max == null) subprompt = "Select at least $min";
+  if (min == 0 && max == null) subprompt = "Select any amount (including none)";
+  if (max == null) max = stubs.length;
   subpromptEl.text = subprompt;
+  if (querySelector('.current-player').text == "Your Turn") {
+    numbersEl.text = "You have ${querySelector('.actions').text} actions, "
+        "${querySelector('.buys').text} buys, "
+        "and ${querySelector('.coins').text} coins";
+  }
   var selected = [];
   if (selectAll) selected.addAll(stubs);
   updateButton() {
@@ -122,7 +118,7 @@ cardSelector(Iterable<dynamic> stubsIter, String prompt, int min, int max,
         if (max > 1) {
           int current = int.parse(myText);
           for (var order in orders) {
-            int orderNum = int.parse(order.text, onError: (s) => 0);
+            int orderNum = int.tryParse(order.text) ?? 0;
             if (orderNum == current) {
               order.text = "";
             } else if (orderNum > current) {

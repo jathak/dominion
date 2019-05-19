@@ -102,99 +102,26 @@ class CLIController extends PlayerController {
 
   Player player;
 
-  /// returns an ordered list of cards
-  /// selected from those meeting conditions
-  /// If max is < 0, there is no maximum
-  Future<List<Card>> selectCardsFromHand(
-      Card context, CardConditions conditions, int min, int max) async {
-    List<Card> cards = [];
-    for (int i = 0; i < player.hand.length; i++) {
-      Card c = player.hand[i];
-      if (conditions.allowsFor(c, player)) {
-        cards.add(c);
-      }
-    }
-    if (max == -1) max = cards.length;
-    while (true) {
-      List<Card> selections =
-          selectMultiple(cards, min == 0, max == cards.length);
-      if (selections.length >= min && selections.length <= max) {
-        return selections;
-      }
-      print("Please select between $min and $max cards!");
-    }
-  }
-
-  /// returns a single card type
-  Future<Card> selectCardFromSupply(
-      EventType event, CardConditions conditions, bool allowNone) async {
-    var extra = "";
-    if (event == EventType.GainCard) extra = " to gain";
-    if (event == EventType.BuyCard)
-      extra =
-          " to buy. You have ${player.turn.coins} coins and ${player.turn.buys} buys";
-    print("Select a card$extra.");
-    List<Card> cards = [];
-    for (Card c in player.engine.supply.cardsInSupply) {
-      if (conditions.allowsFor(c, player)) {
-        cards.add(c);
-      }
-    }
-    return selectFromList(cards, allowNone);
-  }
-
-  /// returns true to complete action, false to not
-  Future<bool> confirmAction(Card context, String question) async {
-    print(question);
-    print("Context: $context");
-    return yesNo("(y/n): ");
-  }
-
   /// returns option from options
-  Future askQuestion(Card context, String question, List options) async {
-    print(question);
+  Future<String> askQuestion(String question, List<String> options,
+      {Card context, EventType event}) async {
+    print((card == null ? "" : "$context: ") + question);
     return selectFromList(options, false);
   }
 
   /// like selectCardsFromHand but for any list of cards
-  Future<List<Card>> selectCardsFromListImpl(
-      List<Card> cards, String question, int min, int max) async {
-    print(question);
+  Future<List<T>> selectCardsFrom<T extends Card>(
+      List<T> cards, String question,
+      {Card context, EventType event, int min: 0, int max}) async {
+    print((card == null ? "" : "$context: ") + question);
     if (max == -1) max = cards.length;
     while (true) {
-      List<Card> selections =
-          selectMultiple(cards, min == 0, max == cards.length);
+      List<T> selections = selectMultiple(cards, min == 0, max == cards.length);
       if (selections.length >= min && selections.length <= max) {
         return selections;
       }
       print("Please select between $min and $max cards!");
     }
-  }
-
-  /// returns an ActionCard or null to prematurely end action phase
-  Future<Action> selectActionCard() async {
-    print("Select an action card to play");
-    List<Action> cards = [];
-    for (int i = 0; i < player.hand.length; i++) {
-      Card c = player.hand[i];
-      if (c is Action) {
-        cards.add(c);
-      }
-    }
-    return selectFromList(cards);
-  }
-
-  /// returns a list of TreasureCards or an empty list to stop playing treasures
-  Future<List<Treasure>> selectTreasureCards() async {
-    print("Select treasure cards to play");
-    List<Treasure> cards = [];
-    for (int i = 0; i < player.hand.length; i++) {
-      Card c = player.hand[i];
-      if (c is Treasure) {
-        cards.add(c);
-      }
-    }
-    return selectMultiple(cards);
   }
 
   static String lastMsg = null;
