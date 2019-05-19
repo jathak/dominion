@@ -12,8 +12,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 
-Map<String, dynamic> encodeCard(Card card) =>
-    {'name': card.name, 'expansion': card.expansion};
+Map<String, dynamic> encodeCard(Card card) => card.serialize();
 
 class Game {
   DominionEngine engine;
@@ -60,6 +59,7 @@ class Game {
         stub['cost'] = actualCost;
       }
     }
+    stub['embargoTokens'] = engine.supply.supplyOf(card).embargoTokens;
     return stub;
   }
 
@@ -174,6 +174,8 @@ class Game {
     msg['deckSize'] = player.deck.length;
     msg['inPlay'] = player.inPlay.toList().map(encodeCard).toList();
     msg['vpTokens'] = player.vpTokens;
+    msg['mats'] = player.serializeMats();
+
     var toSendTo = []..addAll(sockets[player.name]);
     if (player.turn != null) {
       msg['turn'] = {
@@ -331,6 +333,8 @@ List<String> generateKingdom([List<String> existing]) {
   while (cards.length < 10) {
     var card = registry.removeAt(0);
     if (card.expansion != null && !cards.contains(card)) {
+      if (card is BaseSet && !(card as BaseSet).inSecondEdition) continue;
+      if (card is Intrigue && !(card as Intrigue).inSecondEdition) continue;
       cards.add(card);
     }
   }

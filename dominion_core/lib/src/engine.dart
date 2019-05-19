@@ -145,6 +145,8 @@ class Player extends Object with CardSource {
       {@required Card context,
       CardConditions conditions,
       bool optional: false}) {
+    conditions ??= CardConditions();
+    conditions.mustBeAvailable = true;
     return controller.selectCardFromSupply(
         "Select a card to gain", EventType.GainCard,
         context: context, conditions: conditions, optional: optional);
@@ -468,6 +470,19 @@ class Player extends Object with CardSource {
   bool takeOutpostTurn = false;
 
   final mats = <Card, Mat>{};
+
+  Map<String, dynamic> serializeMats() =>
+      {for (var card in mats.keys) card.name: mats[card].serialize()};
+
+  static Map<Card, Mat> deserializeMats(
+          data, Mat pirateShipDeserializer(data)) =>
+      {
+        for (var cardName in data.keys)
+          CardRegistry.find(cardName):
+              (data[cardName]['type'] == 'PirateShipMat'
+                  ? pirateShipDeserializer(data[cardName])
+                  : Mat.deserialize(data))
+      };
 }
 
 class Supply {

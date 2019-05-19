@@ -460,9 +460,8 @@ class SecretPassage extends Card with Action, Intrigue {
   onPlay(Player player) async {
     player.draw(2);
     player.turn.actions += 1;
-    var card = await player.controller.selectCardFromHand(
-        "Select card to put on top of your deck",
-        context: this);
+    var card = await player.controller
+        .selectCardFromHand("Select card to put in your deck", context: this);
     if (player.deck.length == 0) {
       player.notifyAnnounce("You put a $card on top of your",
           "puts a card on top of their", "deck");

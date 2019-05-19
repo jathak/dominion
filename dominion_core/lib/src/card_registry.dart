@@ -44,7 +44,7 @@ class CardRegistry {
     }
   }
 
-  static getCards() => new List.from(_cards.values);
+  static List<Card> getCards() => _cards.values.toList();
 }
 
 class CardConditions {
@@ -64,6 +64,9 @@ class CardConditions {
 
   /// Whether `card.buyable` must return true for the given player.
   bool mustBeBuyable = false;
+
+  /// Whether the card must be available in the supply
+  bool mustBeAvailable = false;
 
   /// Sets both minCost and maxCost
   set cost(int c) {
@@ -109,6 +112,11 @@ class CardConditions {
     if (player != null) cardCost = card.calculateCost(player);
     if (minCost != null && cardCost < minCost) return false;
     if (maxCost != null && cardCost > maxCost) return false;
+    if (player != null &&
+        mustBeAvailable &&
+        (player.engine.supply.supplyOf(card)?.count ?? 0) == 0) {
+      return false;
+    }
     return true;
   }
 

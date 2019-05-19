@@ -1,35 +1,5 @@
 part of main;
 
-/*selectCardFromSupply(var metadata) {
-  var event = metadata['event'];
-  //var name = metadata['currentPlayer'];
-  var stubs = metadata['validCards'].map(CardStub.fromMsg);
-  var question = "Select a card from the supply";
-  print(event);
-  if (event == "EventType.GainCard") {
-    question = "Select a card from the supply to gain";
-  } else if (event == "EventType.BuyCard") {
-    question = "Select a card from the supply to buy";
-  } else if (event == "EventType.BlockCard") {
-    question = "Select a card from the supply to block";
-  } else if (event == "EventType.GuessCard") {
-    question = "Guess a card from the supply";
-  } else if (event == "EventType.GainForOpponent") {
-    question = "Select a card for an opponent to gain";
-  }
-  return firstOrNull(
-      cardSelector(stubs, question, metadata['allowNone'] ? 0 : 1, 1));
-}
-
-confirmAction(var metadata) async {
-  var question = metadata['question'];
-  if (metadata.containsKey('context')) {
-    question = metadata['context']['name'] + ": $question";
-  }
-  var answer = await firstOrNull(cardSelector(['Yes', 'No'], question, 1, 1));
-  return answer == 'Yes';
-}*/
-
 askQuestion(var metadata) {
   var question = metadata['question'];
   if (metadata.containsKey('context')) {
@@ -63,7 +33,9 @@ cardSelector(Iterable<dynamic> stubsIter, String prompt, int min, int max,
   var promptEl = overlay.querySelector('.prompt')..innerHtml = "";
   var subpromptEl = overlay.querySelector('.subprompt')..innerHtml = "";
   var numbersEl = overlay.querySelector('.numbers')..innerHtml = "";
-  var cardsEl = overlay.querySelector('.cards')..innerHtml = "";
+  var cardsEl = overlay.querySelector('.cards')
+    ..innerHtml = ""
+    ..classes = ['cards', if (stubsIter.length > 12) 'smaller'];
   var confirm = overlay.querySelector('.confirm');
   promptEl.text = prompt;
   String subprompt = "Select at least $min and at most $max";
@@ -144,10 +116,10 @@ cardSelector(Iterable<dynamic> stubsIter, String prompt, int min, int max,
     cardsEl.append(cardEl);
   }
   updateButton();
-  overlay.style.display = 'block';
+  overlay.classes.add('visible');
   await confirm.onClick
       .firstWhere((e) => selected.length >= min && selected.length <= max);
-  overlay.style.display = 'none';
+  overlay.classes.remove('visible');
   return selected
       .map((stub) => stub is CardStub ? stub.name : "$stub")
       .toList();

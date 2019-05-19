@@ -83,7 +83,7 @@ class NativeVillage extends Card with Action, Seaside {
 
   onPlay(Player player) async {
     player.turn.actions += 2;
-    player.mats.putIfAbsent(this, () => Mat("Native Village"));
+    player.mats.putIfAbsent(this, () => Mat("Native Village", false));
     var options = [
       "Put top card of deck on mat",
       "Put all cards from mat in hand"
@@ -142,10 +142,17 @@ class Ambassador extends Card with Action, Attack, Seaside {
   onPlay(Player player) async {
     var card = await player.controller
         .selectCardFromHand("Select card to return", context: this);
-    var returnable = player.hand.toList().where((item) => item == card);
+    var returnable =
+        player.hand.toList().where((item) => item == card).toList();
     var toReturn = await player.controller.selectCardsFrom(
         returnable, "Select cards to return",
         context: this, max: 2);
+    if (toReturn.length == 1) {
+      player.notifyAnnounce("You return", "returns", "a $card to the supply");
+    } else if (toReturn.length == 2) {
+      player.notifyAnnounce(
+          "You return", "returns", "two copies of $card to the supply");
+    }
     for (var card in toReturn) {
       player.hand.moveTo(card, player.engine.supply.supplyOf(card));
     }
@@ -295,15 +302,15 @@ class Island extends Card with Action, Victory, Seaside {
   final int points = 2;
 
   onPlay(Player player) async {
-    player.mats.putIfAbsent(this, () => Mat("Island"));
+    player.mats.putIfAbsent(this, () => Mat("Island", true));
     var card = player.hand.length == 0
         ? null
         : await player.controller
             .selectCardFromHand("Select a card to set aside", context: this);
     var island = player.mats[this].buffer;
-    player.discarded.moveTo(this, island);
+    player.inPlay.moveTo(this, island);
     if (card != null) {
-      player.discarded.moveTo(card, island);
+      player.hand.moveTo(card, island);
     }
     var extra = card == null ? "" : " with a $card";
     player.notifyAnnounce("You set", "sets", "aside an Island$extra");
@@ -392,7 +399,13 @@ class PirateShip extends Card with Action, Attack, Seaside {
 class PirateShipMat extends Mat {
   int coinTokens = 0;
 
-  PirateShipMat() : super("Pirate Ship");
+  PirateShipMat() : super("Pirate Ship", true);
+
+  Map<String, dynamic> serialize() =>
+      {'type': 'PirateShipMat', 'coinTokens': coinTokens};
+
+  static PirateShipMat deserialize(data) =>
+      PirateShipMat()..coinTokens = data['coinTokens'];
 }
 
 @card

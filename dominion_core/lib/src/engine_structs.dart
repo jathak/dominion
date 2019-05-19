@@ -92,12 +92,12 @@ abstract class PlayerController {
 
   /// Context may be null when buying a card during the buy phase.
   Future<Card> selectCardFromSupply(String prompt, EventType event,
-          {@required Card context, CardConditions conditions, bool optional}) =>
+          {@required Card context,
+          CardConditions conditions,
+          bool optional: false}) =>
       selectCardFrom(
           player.engine.supply.cardsInSupply
-              .where((card) =>
-                  conditions.allowsFor(card, player) &&
-                  player.engine.supply.supplyOf(card).count > 0)
+              .where((card) => conditions?.allowsFor(card, player) ?? true)
               .toList(),
           prompt,
           context: context,
@@ -155,7 +155,9 @@ class Turn {
   /// List of cards bought on this turn
   List<Card> bought = [];
 
-  CardConditions buyConditions = CardConditions()..mustBeBuyable = true;
+  CardConditions buyConditions = CardConditions()
+    ..mustBeBuyable = true
+    ..mustBeAvailable = true;
 
   /// The number of times any given type of card has been played this turn.
   Map<Card, int> playCounts = {};
@@ -167,9 +169,6 @@ class Turn {
   List<PlayListener> playListeners = [];
 
   List<CostProcessor> costProcessors = [];
-
-  /// Used by various cards to store data that should only persist for one turn
-  Map misc = {};
 }
 
 typedef Future PlayListener(Card card);
@@ -266,7 +265,18 @@ enum EventType {
 
 class Mat {
   final String name;
-  final buffer = CardBuffer();
+  var buffer = CardBuffer();
+  final bool public;
 
-  Mat(this.name);
+  Mat(this.name, this.public);
+
+  Map<String, dynamic> serialize() => {
+        'type': 'Mat',
+        'name': name,
+        'buffer': buffer.serialize(),
+        'public': public
+      };
+
+  static Mat deserialize(data) =>
+      Mat(data['name'], data['public'])..buffer = data['buffer'];
 }

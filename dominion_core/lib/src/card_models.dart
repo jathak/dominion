@@ -71,6 +71,11 @@ abstract class Card implements Comparable<Card> {
     return this.cost - other.cost;
   }
 
+  Map<String, dynamic> serialize() =>
+      {'type': 'Card', 'name': name, 'expansion': expansion};
+
+  static deserialize(data) => CardRegistry.find(data['name']);
+
   String toString() => name;
 }
 

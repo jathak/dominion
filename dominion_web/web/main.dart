@@ -111,6 +111,7 @@ void loadHandlers() {
   };
   handlers['hand-update'] = (msg) {
     print("hand-update $msg");
+    querySelector(".in-play").text = "In Play";
     var hand = convertToCards(msg['hand']);
     makeHeaders(hand, querySelector('.hand'));
     var player = msg['currentPlayer'];
@@ -128,7 +129,6 @@ void loadHandlers() {
     }
     querySelector('.hand-label').text =
         username == null ? 'Their Hand' : 'Your Hand';
-    // TODO(jathak): Better display for durations
     makeHeaders(convertToCards(msg['inPlay']), querySelector(".played"));
     if (msg.containsKey('turn')) {
       var turn = msg['turn'];
@@ -139,6 +139,40 @@ void loadHandlers() {
       querySelector('.coins').text = turn['coins'].toString();
     } else {
       querySelector('.turn-wrapper').style.display = 'none';
+    }
+    var mats = querySelector('.mats');
+    mats.text = '';
+    for (var card in msg['mats']?.keys ?? []) {
+      var mat = msg['mats'][card];
+      if (mat['type'] == 'PirateShipMat') {
+        var coinTokens = mat['coinTokens'];
+        mats.append(HeadingElement.h3()
+          ..classes = ['mat-label']
+          ..text = "Pirate Ship Mat");
+        mats.append(DivElement()
+          ..classes = ['mat-text']
+          ..text = '$coinTokens coin token${coinTokens == 1 ? "" : "s"}');
+      } else {
+        var name = mat['name'];
+        mats.append(HeadingElement.h3()
+          ..classes = ['mat-label']
+          ..text = name);
+        var public = mat['public'];
+        if (mat['buffer']['cards'].isEmpty) {
+          mats.append(DivElement()
+            ..classes = ['mat-text']
+            ..text = 'No cards on mat');
+        } else if (public || username != null) {
+          var container = DivElement()..classes = ['mat-cards'];
+          mats.append(container);
+          makeHeaders(convertToCards(mat['buffer']['cards']), container);
+        } else {
+          var count = mat['buffer']['cards'].length;
+          mats.append(DivElement()
+            ..classes = ['mat-text']
+            ..text = '$count card${count == 1 ? "" : "s"} on mat');
+        }
+      }
     }
   };
   handlers['log'] = (msg) {
@@ -173,50 +207,90 @@ Iterable<CardStub> convertToCards(var cardListFromMsg) sync* {
   }
 }
 
-void makeHeaders(Iterable<CardStub> stubs, var element) {
-  element.innerHtml = "";
+void makeHeaders(Iterable<CardStub> stubs, Element element) {
+  element.innerHtml = '';
   stubs.forEach(makeHeaderAdder(element));
 }
+
+final cachedStubs = <String, CardStub>{};
+final cachedElements = <String, Element>{};
 
 void makeSupply(Iterable<CardStub> kingdom, Iterable<CardStub> treasures,
     Iterable<CardStub> vps) {
   var supply = querySelector('.supply');
-  kingdom
-      .forEach(makeCardAdder(supply.querySelector('.kingdom')..innerHtml = ""));
-  treasures.forEach(
-      makeCardAdder(supply.querySelector('.treasures')..innerHtml = ""));
-  vps.forEach(makeCardAdder(supply.querySelector('.vps')..innerHtml = ""));
+  kingdom.forEach(makeCardAdder(supply.querySelector('.kingdom'), true));
+  treasures.forEach(makeCardAdder(supply.querySelector('.treasures'), true));
+  vps.forEach(makeCardAdder(supply.querySelector('.vps'), true));
 }
 
-makeCardAdder(element) =>
-    (CardStub stub) => element.append(makeCardElement(stub));
+makeCardAdder(container, bool forSupply) => (CardStub stub) {
+      if (forSupply && cachedStubs.containsKey(stub.name)) {
+        if (stub != cachedStubs[stub.name]) {
+          var oldElement = cachedElements[stub.name];
+          var newElement = makeCardElement(stub);
+          oldElement.replaceWith(newElement);
+          cachedElements[stub.name] = newElement;
+        }
+      } else {
+        var element = makeCardElement(stub);
+        container.append(element);
+        if (forSupply) {
+          cachedStubs[stub.name] = stub;
+          cachedElements[stub.name] = element;
+        }
+      }
+    };
+
 makeHeaderAdder(element) =>
     (CardStub stub) => element.append(makeHeaderElement(stub));
+
+var alreadyLoadedCards = <String>{};
 
 Element makeCardElement(CardStub card) {
   var name = card.name;
   name = name.replaceAll(' ', '_');
-  var el = new DivElement();
+  var el = DivElement();
   el.classes = ['card'];
   if (card.count != null && card.count > 0) {
-    var status = new DivElement()
+    el.append(DivElement()
       ..text = "${card.count}"
-      ..classes = ['status'];
-    el.append(status);
+      ..classes = ['status']);
   } else if (card.count != null) {
     el.classes.add('disabled');
   }
   if (card.cost != null) {
-    var cost = new DivElement()
+    el.append(DivElement()
       ..text = "${card.cost}"
-      ..classes = ['cost'];
-    el.append(cost);
+      ..classes = ['cost']);
+  }
+  if ((card.embargoTokens ?? 0) > 0) {
+    var x = card.embargoTokens == 1 ? "" : " x${card.embargoTokens}";
+    el.append(DivElement()
+      ..text = "Embargo$x"
+      ..classes = ['embargo']);
   }
   if (card.selectable) el.classes.add('selectable');
   var hash = md5.convert("$name.jpg".codeUnits).toString();
   var path = hash[0] + '/' + hash.substring(0, 2);
-  el.style.backgroundImage =
-      'url("http://wiki.dominionstrategy.com/images/$path/$name.jpg")';
+  var domain = "http://wiki.dominionstrategy.com";
+  // loadThumb always works, but is not properly cached by the browser
+  // thumb will always be present immediately after loadThumb is loaded, and
+  // will be properly cached.
+  // Therefore, we try loading `thumb` first, then try `loadThumb` if it fails.
+  // Once either successfully loads, we can set `thumb` as the background.
+  var thumb = "$domain/images/thumb/$path/$name.jpg/300px-$name.jpg";
+  var loadThumb = "$domain/index.php/Special:FilePath/$name.jpg?width=300";
+  if (alreadyLoadedCards.contains(card.name)) {
+    el.style.backgroundImage = 'url("$thumb")';
+    return el;
+  }
+  var image = ImageElement(src: thumb);
+  image.onLoad.listen((event) {
+    el.style.backgroundImage = 'url("$thumb")';
+  });
+  image.onError.listen((event) {
+    image.src = loadThumb;
+  });
   return el;
 }
 
@@ -228,6 +302,7 @@ class CardStub {
   String name, expansion;
   int count;
   int cost;
+  int embargoTokens;
   bool selectable = false;
   CardStub(this.name, [this.expansion]);
 
@@ -235,6 +310,18 @@ class CardStub {
     var stub = new CardStub(cardMsg['name'], cardMsg['expansion']);
     if (cardMsg.containsKey('count')) stub.count = cardMsg['count'];
     if (cardMsg.containsKey('cost')) stub.cost = cardMsg['cost'];
+    if (cardMsg.containsKey('embargoTokens')) {
+      stub.embargoTokens = cardMsg['embargoTokens'];
+    }
     return stub;
   }
+
+  bool operator ==(other) =>
+      other is CardStub &&
+      name == other.name &&
+      expansion == other.expansion &&
+      count == other.count &&
+      cost == other.cost &&
+      embargoTokens == other.embargoTokens &&
+      selectable == other.selectable;
 }

@@ -91,15 +91,35 @@ class CardBuffer extends CardSourceAndTarget {
   List<Card> toList() => _cards.toList();
 
   List<T> whereType<T extends Card>() => _cards.whereType<T>().toList();
+
+  Map<String, dynamic> serialize() => {
+        'type': 'CardBuffer',
+        'cards': _cards.map((card) => card.serialize()).toList()
+      };
+
+  static CardBuffer deserialize(data) =>
+      CardBuffer.from(data['cards'].map(Card.deserialize));
 }
 
 class Deck extends CardBuffer {
+  Deck();
+
+  Deck.from(Iterable<Card> cards) : super.from(cards);
+
   TopOfDeck get top => TopOfDeck(this);
   BottomOfDeck get bottom => BottomOfDeck(this);
 
   addToTop(Card card) => _cards.insert(0, card);
 
   Card removeFromBottom() => _cards.removeLast();
+
+  Map<String, dynamic> serialize() => {
+        'type': 'Deck',
+        'cards': _cards.map((card) => card.serialize()).toList()
+      };
+
+  static Deck deserialize(data) =>
+      Deck.from(data['cards'].map(Card.deserialize));
 }
 
 class TopOfDeck extends CardSourceAndTarget {
@@ -170,4 +190,17 @@ class SupplyPile extends CardSourceAndTarget {
     }
     count++;
   }
+
+  Map<String, dynamic> serialize() => {
+        'type': 'SupplyPile',
+        'card': card.serialize(),
+        'count': count,
+        'used': used,
+        'embargoTokens': embargoTokens
+      };
+
+  static SupplyPile deserialize(data) =>
+      SupplyPile(Card.deserialize(data['card']), data['count'])
+        ..used = data['used']
+        ..embargoTokens = data['embargoTokens'];
 }
