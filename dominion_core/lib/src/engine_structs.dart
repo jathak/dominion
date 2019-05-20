@@ -317,6 +317,15 @@ class Mat {
 
   static Mat deserialize(data) =>
       Mat(data['name'], data['public'])..buffer = data['buffer'];
+
+  bool operator ==(other) =>
+      other is Mat &&
+      name == other.name &&
+      public == other.public &&
+      buffer.length == other.buffer.length &&
+      [for (var i = 0; i < buffer.length; i++) buffer[i] == other.buffer[i]]
+          .where((x) => !x)
+          .isEmpty;
 }
 
 /// Represents a set of tasks to run at the start of the next turn.

@@ -407,6 +407,9 @@ class PirateShipMat extends Mat {
 
   static PirateShipMat deserialize(data) =>
       PirateShipMat()..coinTokens = data['coinTokens'];
+
+  operator ==(other) =>
+      other is PirateShipMat && coinTokens == other.coinTokens;
 }
 
 class Salvager extends Card with Action, Seaside {

@@ -222,6 +222,7 @@ class Game {
     var msg = {'type': 'hand-update', 'hand': cards};
     msg['currentPlayer'] = engine.currentPlayer.name;
     msg['deckSize'] = player.deck.length;
+    msg['discardSize'] = player.discarded.length;
     msg['inPlay'] = player.inPlay.toList().map(encodeCard).toList();
     msg['vpTokens'] = player.vpTokens;
     msg['mats'] = player.serializeMats();
@@ -233,6 +234,7 @@ class Game {
         'buys': player.turn.buys,
         'coins': player.turn.coins,
         'phase': player.turn.phase.toString(),
+        'phaseIndex': player.turn.phase.index
       };
       toSendTo.addAll(spectators);
     }
@@ -286,7 +288,12 @@ class Game {
     });
     return {
       'type': 'supply-update',
-      'supply': {
+
+      // For clients that use DominionClient
+      'supply': supply.serialize(),
+
+      // For the legacy web interface
+      'legacy-supply': {
         'kingdom': (kingdom.toList()..sort()).map(encodeSupply).toList(),
         'treasures': (treasures.toList()..sort()).map(encodeSupply).toList(),
         'vps': (vps.toList()..sort()).map(encodeSupply).toList()

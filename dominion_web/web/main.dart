@@ -103,7 +103,7 @@ void loadHandlers() {
   handlers['supply-update'] = (msg) {
     print("supply-update $msg");
     querySelector('.start-game').style.display = "none";
-    supply = msg['supply'];
+    supply = msg['legacy-supply'];
     var kingdom = convertToCards(supply['kingdom']);
     var treasures = convertToCards(supply['treasures']);
     var vps = convertToCards(supply['vps']);
