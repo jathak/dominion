@@ -3,7 +3,7 @@ version: 0.0.1
 description: An absolute bare-bones web app.
 
 environment:
-  sdk: '>=2.3.0 <3.0.0'
+  sdk: '>=2.3.0-dev.0 <3.0.0'
 
 dependencies:
   crypto: ^2.0.6

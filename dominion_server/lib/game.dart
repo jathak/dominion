@@ -290,7 +290,7 @@ class Game {
       'type': 'supply-update',
 
       // For clients that use DominionClient
-      'supply': supply.serialize(),
+      'supply': supply.serialize(includeCostFor: engine?.currentPlayer),
 
       // For the legacy web interface
       'legacy-supply': {
@@ -325,13 +325,12 @@ class NetworkController extends PlayerController {
     var metadata = {
       if (context != null) 'context': encodeCard(context),
       if (event != null) 'event': event.toString(),
+      if (event != null) 'eventIndex': event.index,
       'currentPlayer': game.engine.currentPlayer.name,
       'question': question,
       'options': options
     };
-    var result = await game.requestFromUser(name, 'askQuestion', metadata);
-    var card = result is String ? CardRegistry.find(result) : null;
-    return card ?? result;
+    return await game.requestFromUser(name, 'askQuestion', metadata);
   }
 
   Future<List<T>> selectCardsFrom<T extends Card>(
@@ -340,6 +339,7 @@ class NetworkController extends PlayerController {
     var metadata = {
       if (context != null) 'context': encodeCard(context),
       if (event != null) 'event': event.toString(),
+      if (event != null) 'eventIndex': event.index,
       'currentPlayer': game.engine.currentPlayer.name,
       'question': question,
       'cards': cards

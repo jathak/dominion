@@ -2,11 +2,11 @@ name: dominion_sets
 description: Implementation of various Dominion kingdom card sets
 version: 0.0.1
 environment:
-  sdk: '>=2.3.0 <3.0.0'
+  sdk: '>=2.3.0-dev.0.5.flutter-a1668566e5 <3.0.0'
 
 dependencies:
     dominion_core:
         path: "../dominion_core"
 
 dev_dependencies:
-    test: ^1.6.3
+    test: ^1.6.1

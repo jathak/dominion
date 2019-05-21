@@ -164,6 +164,12 @@ class SupplyPile extends CardSourceAndTarget {
   /// Whether someone has taken a card from this pile or not.
   bool used = false;
 
+  /// The current cost of this card.
+  ///
+  /// Note: This should always be null on the server. It should only be set
+  /// by the deserializer on the client.
+  int currentCost;
+
   SupplyPile(this.card, this.count);
 
   bool remove(Card c) {
@@ -191,16 +197,19 @@ class SupplyPile extends CardSourceAndTarget {
     count++;
   }
 
-  Map<String, dynamic> serialize() => {
+  Map<String, dynamic> serialize({Player includeCostFor}) => {
         'type': 'SupplyPile',
         'card': card.serialize(),
         'count': count,
         'used': used,
-        'embargoTokens': embargoTokens
+        'embargoTokens': embargoTokens,
+        if (includeCostFor != null)
+          'currentCost': card.calculateCost(includeCostFor)
       };
 
   static SupplyPile deserialize(data) =>
       SupplyPile(Card.deserialize(data['card']), data['count'])
         ..used = data['used']
-        ..embargoTokens = data['embargoTokens'];
+        ..embargoTokens = data['embargoTokens']
+        ..currentCost = data['currentCost'];
 }

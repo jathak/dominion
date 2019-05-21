@@ -641,11 +641,11 @@ class Supply {
     return false;
   }
 
-  Map<String, dynamic> serialize() => {
+  Map<String, dynamic> serialize({Player includeCostFor}) => {
         'type': 'Supply',
         'supplies': {
           for (var card in _supplies.keys)
-            card.name: _supplies[card].serialize()
+            card.name: _supplies[card].serialize(includeCostFor: includeCostFor)
         },
         'kingdomCards': _kingdomCards.map((card) => card.name).toList(),
         'playerCount': _playerCount,

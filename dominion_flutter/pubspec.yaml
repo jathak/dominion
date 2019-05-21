@@ -14,11 +14,16 @@ description: A new Flutter project.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.3.0-dev.0.5.flutter-a1668566e5 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  tuple: ^1.0.2
+  dominion_core:
+    path: ../dominion_core
+  dominion_server:
+    path: ../dominion_server
 
 dev_dependencies:
   flutter_test:
