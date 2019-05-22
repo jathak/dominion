@@ -195,7 +195,7 @@ class GameState {
   var _supplyData;
   Supply get supply => _supply;
 
-  final _supplyCtrl = StreamController<Supply>();
+  final _supplyCtrl = StreamController<Supply>.broadcast();
   final _supplyCountCtrl = <Card, StreamController<int>>{};
   final _supplyCostCtrl = <Card, StreamController<int>>{};
   final _supplyEmbargoCtrl = <Card, StreamController<int>>{};
@@ -416,7 +416,7 @@ class TurnMessage {
   int coins;
   Phase phase;
 
-  TurnMessage(int actions, int buys, int coins, Phase phase);
+  TurnMessage(this.actions, this.buys, this.coins, this.phase);
 
   operator ==(other) =>
       other is TurnMessage &&
@@ -424,6 +424,10 @@ class TurnMessage {
       buys == other.buys &&
       coins == other.coins &&
       phase == other.phase;
+
+  String get phaseWord => phase == Phase.Action
+      ? "Action"
+      : phase == Phase.Buy ? "Buy" : phase == Phase.Cleanup ? "Cleanup" : "";
 }
 
 bool _jsonEqual(blobA, blobB) {
