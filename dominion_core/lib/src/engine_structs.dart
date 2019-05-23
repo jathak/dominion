@@ -315,8 +315,8 @@ class Mat {
         'public': public
       };
 
-  static Mat deserialize(data) =>
-      Mat(data['name'], data['public'])..buffer = data['buffer'];
+  static Mat deserialize(data) => Mat(data['name'], data['public'])
+    ..buffer = CardBuffer.deserialize(data['buffer']);
 
   bool operator ==(other) =>
       other is Mat &&

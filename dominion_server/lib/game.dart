@@ -348,7 +348,7 @@ class NetworkController extends PlayerController {
             EventType.Contraband,
             EventType.Embargo,
             EventType.GainCard,
-            EventType.GainCard
+            EventType.GainForOpponent
           ].contains(event)
               ? game.encodeSupply
               : encodeCard)
