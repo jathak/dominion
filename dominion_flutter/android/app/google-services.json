@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "675818429470",
+    "firebase_url": "https://dominion-defiant.firebaseio.com",
+    "project_id": "dominion-defiant",
+    "storage_bucket": "dominion-defiant.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:675818429470:android:b274399ceee1f497",
+        "android_client_info": {
+          "package_name": "com.jenthakar.dominion"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "675818429470-2ua6iq2v7jkboesotctea5dnd8ur0g66.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jenthakar.dominion",
+            "certificate_hash": "3556b774ca67b1282ac838568210c22fba71bb64"
+          }
+        },
+        {
+          "client_id": "675818429470-fgsioahalcnobkj3gvuo3i54o82tt1os.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2Q3YDZEgU9CI4CQah8Ybnzo03JYiDQwk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "675818429470-fgsioahalcnobkj3gvuo3i54o82tt1os.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

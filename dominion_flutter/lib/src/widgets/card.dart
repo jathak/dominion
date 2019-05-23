@@ -12,8 +12,10 @@ class CardWidget extends StatelessWidget {
   final game.Card card;
   final bool inSupply;
   final bool onlyHeader;
+  // null means not selected. 0 means only selected (no number)
+  final int selectedOrder;
   CardWidget(this.state, this.card,
-      {this.inSupply: false, this.onlyHeader: false});
+      {this.inSupply: false, this.onlyHeader: false, this.selectedOrder});
 
   @override
   Widget build(BuildContext context) =>
@@ -30,6 +32,8 @@ class CardWidget extends StatelessWidget {
                           : card is game.Curse ? Colors.purple : Colors.white,
           elevation: 2,
           shape: RoundedRectangleBorder(
+            side: BorderSide(
+                color: Colors.green, width: selectedOrder == null ? 0 : 8),
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
           borderOnForeground: true,
@@ -58,7 +62,6 @@ class CardWidget extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
                 child: imageForCard(
-                  card,
                   ratio: constraints.maxWidth / 300,
                   onlyHeader: onlyHeader,
                 ),
@@ -87,82 +90,67 @@ class CardWidget extends StatelessWidget {
                         background: Colors.blue,
                         ratio: pow(constraints.maxWidth / 300, 0.5),
                       ),
+                ),
+              if (selectedOrder != null && selectedOrder > 0)
+                _badge(
+                  value: selectedOrder,
+                  alignment: Alignment.bottomRight,
+                  background: Colors.green,
+                  ratio: pow(constraints.maxWidth / 300, 0.5),
                 )
             ],
           ),
         );
       });
-}
 
-Widget imageForCard(game.Card card,
-    {int width: 300, double ratio: 1.0, bool onlyHeader: false}) {
-  var path = "http://wiki.dominionstrategy.com/index.php/"
-      "Special:FilePath/${card.name.replaceAll(' ', '_')}.jpg?width=$width";
-  var footerHeight = 54.0;
-  if (card.expansion == null) footerHeight = 64.0;
-  if (card is game.Curse) footerHeight = 60.0;
-  return Stack(
-    alignment: Alignment.bottomCenter,
-    children: [
-      Image.network(
-        path,
-        fit: BoxFit.fitWidth,
-        width: width.toDouble(),
-        height: onlyHeader ? 33 * ratio : 480 * ratio,
-        alignment: onlyHeader && card.expansion == null
-            ? Alignment(0, -0.93)
-            : Alignment.topCenter,
-      ),
-      if (!onlyHeader)
-        Container(
-          alignment: Alignment.bottomCenter,
-          width: width.toDouble(),
-          height: footerHeight * ratio,
-          child: ClipRect(
-            child: Image.network(
-              path,
-              fit: BoxFit.fitWidth,
-              width: width.toDouble(),
-              alignment: Alignment.bottomCenter,
-            ),
-          ),
-        )
-    ],
-  );
-}
-
-Widget _badge(
-        {@required int value,
-        @required Alignment alignment,
-        @required Color background,
-        Color textColor: Colors.white,
-        double ratio: 1.0}) =>
-    Container(
-      width: 300,
-      height: 480,
-      padding: EdgeInsets.only(
-        left: 14 * ratio,
-        bottom: 18 * ratio,
-        top: 8 * ratio,
-        right: 8 * ratio,
-      ),
-      alignment: alignment,
-      child: Container(
-        width: 36 * ratio,
-        height: 36 * ratio,
-        alignment: Alignment.center,
-        decoration: ShapeDecoration(
-          color: background,
-          shape: CircleBorder(),
-        ),
-        child: Text(
-          "$value",
-          style: TextStyle(
-            fontSize: 20 * pow(ratio, 0.5),
-            color: textColor,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ),
+  Widget imageForCard(
+      {int width: 300, double ratio: 1.0, bool onlyHeader: false}) {
+    var path = "http://wiki.dominionstrategy.com/index.php/"
+        "Special:FilePath/${card.name.replaceAll(' ', '_')}.jpg?width=$width";
+    return Image.network(
+      path,
+      fit: BoxFit.fitWidth,
+      width: width.toDouble(),
+      height: onlyHeader ? 33 * ratio : 480 * ratio,
+      alignment: onlyHeader && card.expansion == null
+          ? Alignment(0, -0.93)
+          : Alignment.topCenter,
     );
+  }
+
+  Widget _badge(
+          {@required int value,
+          @required Alignment alignment,
+          @required Color background,
+          Color textColor: Colors.white,
+          double ratio: 1.0}) =>
+      Container(
+        width: 300,
+        height: 480,
+        padding: EdgeInsets.only(
+          left: 14 * ratio,
+          bottom: 18 * ratio,
+          top: 8 * ratio,
+          right: 8 * ratio,
+        ),
+        alignment: alignment,
+        child: Container(
+          width: 36 * ratio,
+          height: 36 * ratio,
+          alignment: Alignment.center,
+          decoration: ShapeDecoration(
+            color: background,
+            shape: CircleBorder(),
+          ),
+          child: Text(
+            "$value",
+            style: TextStyle(
+              fontSize: 20 * pow(ratio, 0.5),
+              color: textColor,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+}

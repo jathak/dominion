@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:dominion_core/dominion_core.dart';
 import 'package:dominion_server/client.dart';
 
+import 'controller.dart';
+
 Widget _build<T>(T initial, Stream<T> stream, Widget builder(T data)) =>
     StreamBuilder(
         initialData: initial,
@@ -60,3 +62,7 @@ Widget withDiscardSize(GameState state,
 Widget withVpTokens(GameState state,
         {@required Widget builder(int vpTokens)}) =>
     _build(state.vpTokens, state.onVpTokensChange, builder);
+
+Widget withPlayerRequest(FlutterController controller,
+        {@required Widget builder(PlayerRequest request)}) =>
+    _build(controller.lastRequest, controller.onRequest, builder);

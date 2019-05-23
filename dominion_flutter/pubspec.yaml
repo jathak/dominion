@@ -19,6 +19,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  firebase_core: ^0.4.0+1
+  firebase_auth: ^0.11.1
+  firebase_messaging: ^5.0.1+1
   tuple: ^1.0.2
   dominion_core:
     path: ../dominion_core

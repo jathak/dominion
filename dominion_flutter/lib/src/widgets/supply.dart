@@ -13,18 +13,14 @@ class SupplyWidget extends StatelessWidget {
   SupplyWidget(this.state, this.supply);
 
   @override
-  Widget build(BuildContext context) =>
-      LayoutBuilder(builder: (context, constraints) {
-        return GridView.extent(
-          maxCrossAxisExtent: 300,
-          childAspectRatio:
-              constraints.maxHeight > constraints.maxWidth ? 0.625 : 1.0,
-          children: [
-            for (var card in supply?.cardsInSupply ?? [])
-              CardWidget(state, card, inSupply: true),
-          ],
-        );
-      });
+  Widget build(BuildContext context) => GridView.extent(
+        maxCrossAxisExtent: 300,
+        childAspectRatio: 0.625,
+        children: [
+          for (var card in supply?.cardsInSupply ?? [])
+            CardWidget(state, card, inSupply: true),
+        ],
+      );
 }
 
 Widget makeSupplyWidget(GameState state) =>
