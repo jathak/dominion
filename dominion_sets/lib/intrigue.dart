@@ -78,7 +78,7 @@ class Lurker extends Card with Action, Intrigue {
     var gain = "Gain an Action card from the trash";
     var choice = await player.controller
         .askQuestion("Choose one", [trash, gain], context: this);
-    if (choice == gain) {
+    if (choice == trash) {
       var card = await player.controller.selectCardFromSupply(
           "Select a card to trash from the supply", EventType.TrashCard,
           context: this,
@@ -89,7 +89,7 @@ class Lurker extends Card with Action, Intrigue {
           "You trash", "trashes", "a $card from the supply. $remain");
       cardSupply.drawTo(player.engine.trashPile);
       await card.onTrash(player);
-    } else if (choice == trash) {
+    } else if (choice == gain) {
       var actions = player.engine.trashPile.whereType<Action>();
       if (actions.isEmpty) return;
       var card = await player.controller.selectCardFrom(

@@ -14,14 +14,14 @@ import 'src/socket.dart';
 bool _registeredCards = false;
 
 /// A client that can be used to connect to a Dominion server.
-class DominionClient {
+class DominionClient<T extends PlayerController> {
   final String _server;
   final bool _tls;
   WebSocketChannel _channel;
 
   String gameId;
   String username;
-  PlayerController controller;
+  final T controller;
 
   bool get spectating => username == null;
 
@@ -37,7 +37,7 @@ class DominionClient {
   ///
   /// Server should be the domain name of the server this client should
   /// communicate with
-  DominionClient(String server, {bool tls: true})
+  DominionClient(String server, this.controller, {bool tls: true})
       : _server = server,
         _tls = tls {
     if (!_registeredCards) {
@@ -56,54 +56,65 @@ class DominionClient {
   }
 
   /// Connects to the server over websockets.
-  void connect() {
+  Future connect(String gameId, {String username, bool spectate: false}) async {
+    assert((username == null && spectate) || (username != null && !spectate));
     _channel = socketConnect((_tls ? 'wss://' : 'ws://') + _server);
-    listen() async {
-      await for (var data in _channel.stream) {
-        var msg = json.decode(data);
-        switch (msg['type']) {
-          case 'log':
-            _logCtrl.add(msg['message'].toString());
-            break;
-          case 'supply-update':
-            state.updateSupply(msg['supply']);
-            if (_connectionCompleter != null &&
-                !_connectionCompleter.isCompleted) {
-              _connectionCompleter.complete();
-            }
-            break;
-          case 'hand-update':
+    reconnect([_]) => _channel == null
+        ? null
+        : connect(gameId, username: username, spectate: spectate);
+    _channel.stream.listen((data) {
+      var msg = json.decode(data);
+      switch (msg['type']) {
+        case 'log':
+          _logCtrl.add(msg['message'].toString());
+          break;
+        case 'supply-update':
+          state.updateSupply(msg['supply']);
+          if (_connectionCompleter != null &&
+              !_connectionCompleter.isCompleted) {
+            _connectionCompleter.complete();
+          }
+          break;
+        case 'hand-update':
+          if (msg['currentPlayer'] != null) {
             state.currentPlayer = msg['currentPlayer'];
-            state.hand = Card.deserializeList(msg['hand']);
-            state.inPlay = Card.deserializeList(msg['inPlay']);
-            state.deckSize = msg['deckSize'];
-            state.discardSize = msg['discardSize'];
-            state.vpTokens = msg['vpTokens'];
-            state.mats =
-                Player.deserializeMats(msg['mats'], PirateShipMat.deserialize)
-                    .values
-                    .toList();
-            if (msg['turn'] != null) {
-              var turn = msg['turn'];
-              state.turn = TurnMessage(turn['actions'], turn['buys'],
-                  turn['coins'], Phase.values[turn['phaseIndex']]);
-            } else {
-              state.turn = null;
-            }
-            break;
-          case 'request':
-            // Don't await here, since we don't want to block future messages
-            // on this response
-            _handleRequest(msg);
-            break;
-          default:
-            print('$msg');
-        }
+          }
+          state.hand = Card.deserializeList(msg['hand']);
+          state.inPlay = Card.deserializeList(msg['inPlay']);
+          state.deckSize = msg['deckSize'];
+          state.discardSize = msg['discardSize'];
+          state.vpTokens = msg['vpTokens'];
+          state.mats =
+              Player.deserializeMats(msg['mats'], PirateShipMat.deserialize)
+                  .values
+                  .toList();
+          if (msg['turn'] != null) {
+            var turn = msg['turn'];
+            state.turn = TurnMessage(turn['actions'], turn['buys'],
+                turn['coins'], Phase.values[turn['phaseIndex']]);
+          } else {
+            state.turn = null;
+          }
+          break;
+        case 'request':
+          // Don't await here, since we don't want to block future messages
+          // on this response
+          _handleRequest(msg);
+          break;
+        default:
+          print('$msg');
       }
-      if (_channel != null) connect();
-    }
+    }, onError: reconnect, onDone: reconnect);
 
-    listen();
+    this.gameId = gameId;
+    this.username = username;
+    if (spectate) {
+      _sendMessage({'type': 'spectate-game', 'game-id': gameId});
+    } else {
+      _sendMessage(
+          {'type': 'join-game', 'game-id': gameId, 'username': username});
+    }
+    await _connection;
   }
 
   void _handleRequest(msg) async {
@@ -122,7 +133,7 @@ class DominionClient {
         break;
       case 'selectCardsFrom':
         result = (await controller.selectCardsFrom(
-                Card.deserializeList(['cards']), meta['question'],
+                Card.deserializeList(meta['cards']), meta['question'],
                 context: context,
                 event: event,
                 min: meta['min'],
@@ -139,7 +150,6 @@ class DominionClient {
   }
 
   void _sendMessage(msg) {
-    if (_channel == null) connect();
     _channel.sink.add(json.encode(msg));
   }
 
@@ -163,28 +173,6 @@ class DominionClient {
     }
     _connectionCompleter = Completer();
     return _connectionCompleter.future;
-  }
-
-  /// Connects the client to a game as a spectator.
-  Future startSpectating(String gameId) async {
-    this.gameId = gameId;
-    username = null;
-    _sendMessage({'type': 'spectate-game', 'game-id': gameId});
-    await _connection;
-  }
-
-  /// Connects this client to a game as [username].
-  ///
-  /// Note: The only methods that will ever be called on [controller] are
-  /// `askQuestion` and `selectCardsFrom`
-  Future joinGame(
-      String username, String gameId, PlayerController controller) async {
-    this.gameId = gameId;
-    this.username = username;
-    this.controller = controller;
-    _sendMessage(
-        {'type': 'join-game', 'game-id': gameId, 'username': username});
-    await _connection;
   }
 }
 
@@ -286,8 +274,7 @@ class GameState {
   final _currentPlayerChangeCtrl = StreamController<String>.broadcast();
   Stream<String> get onCurrentPlayerChange => _currentPlayerChangeCtrl.stream;
   void set currentPlayer(String newCurrentPlayer) {
-    if (_currentPlayer == null ||
-        !_jsonEqual(newCurrentPlayer, _currentPlayer)) {
+    if (_currentPlayer == null || newCurrentPlayer != _currentPlayer) {
       _currentPlayer = newCurrentPlayer;
       _currentPlayerChangeCtrl.add(newCurrentPlayer);
     }
