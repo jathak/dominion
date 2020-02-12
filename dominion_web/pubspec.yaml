@@ -9,6 +9,10 @@ dependencies:
   crypto: ^2.0.6
 
 dev_dependencies:
-  sass_builder: ^2.1.2
-  build_runner: any
-  build_web_compilers: any
+  sass_builder: ^2.1.3
+  build_runner: ^1.7.3
+  build_web_compilers: ^2.7.2
+  webdev: ^2.5.4
+
+dependency_overrides:
+  web_socket_channel: ^1.1.0

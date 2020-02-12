@@ -1,0 +1,31 @@
+#!/bin/sh
+
+rm -rf /tmp/dominion_deploy || true
+
+cd dominion_web
+rm -r build
+pub get
+pub run webdev build
+cd ..
+
+mkdir -p /tmp/dominion_deploy/dominion_web
+cp -r dominion_web/build /tmp/dominion_deploy/dominion_web/build
+rm -r /tmp/dominion_deploy/dominion_web/build/packages
+
+mkdir -p /tmp/dominion_deploy/dominion_server/bin/
+cd dominion_server
+pub get
+dart2native bin/server.dart -o /tmp/dominion_deploy/dominion_server/bin/server
+
+cd /tmp/dominion_deploy
+echo 'web: dominion_server/bin/server $PORT /app/storage/data.json' > Procfile
+mkdir .heroku
+touch .heroku/run.sh
+echo 'export BUILDPACK_URL=https://github.com/niteoweb/heroku-buildpack-shell' > .env
+
+git init
+git add .
+git commit -m "deploy"
+git remote add dokku dokku@asteria.jenthakar.com:dominion
+git push -f dokku master
+
